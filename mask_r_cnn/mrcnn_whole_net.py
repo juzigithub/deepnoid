@@ -6,7 +6,7 @@ class MaskRCNN():
     """Encapsulates the Mask RCNN model functionality.
     The actual Keras model is in the keras_model property.
     """
-
+    #
     def __init__(self, mode, config, model_dir):
         """
         mode: Either "training" or "inference"
@@ -38,6 +38,9 @@ class MaskRCNN():
         # Inputs
         input_image = KL.Input(
             shape=[None, None, 3], name="input_image")
+
+        # IMAGE_META_SIZE = image_id(1) + original_image_shape(3 = h w c) + 변형된 image_shape(3 = h w c)
+        #                   + window(4 = y1,x1,y2,x2) + scale(1) + num_class
         input_image_meta = KL.Input(shape=[config.IMAGE_META_SIZE],
                                     name="input_image_meta")
         if mode == "training":
