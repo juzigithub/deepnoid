@@ -3,7 +3,7 @@ import cv2
 import os
 import numpy as np
 import _pickle as cpickle
-import Unet.aneurysm_unet.config as cfg
+import config as cfg
 
 
 class DataLoader:
