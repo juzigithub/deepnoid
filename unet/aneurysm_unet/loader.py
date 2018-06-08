@@ -132,10 +132,21 @@ class DataLoader:
         valX_list, valY_list, _ = self.data_list_load(cfg.VAL_DATA_PATH, mode=mode)
         trainX = self.read_image_grey_resized(trainX_list)
         trainY = self.read_label_grey_resized(trainY_list)
+        judge_valX = []
+
+#########################################################
+        for valX in valX_list :
+            if 'abnorm' in valX:
+                judge_valX.append(0)
+            elif 'norm' in valX:
+                judge_valX.append(1)
+            else:
+                judge_valX.append(2)
+##########################################################
         valX = self.read_image_grey_resized(valX_list)
         valY = self.read_label_grey_resized(valY_list)
 
-        total_dataset = [trainX, trainY, valX, valY]
+        total_dataset = [trainX, trainY, [judge_valX, valX] , valY] ############################################
         with open(cfg.PKL_DATA_PATH + cfg.PKL_NAME, 'wb') as f:
             cpickle.dump(total_dataset, f, protocol=3)
             print('Making' + cfg.PKL_NAME + 'Completed')
@@ -160,3 +171,4 @@ class DataLoader:
             pass
 
 #######################################################################
+
