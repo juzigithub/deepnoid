@@ -1,8 +1,7 @@
 ### Path info ###
 
-
 # lINUX #
-MODE = 'linux'                 # 'window' or 'linux'
+MODE = 'linux'
 DATA_PATH = '/home/mspark/project/data/Brain_Aneurysm_new_dataset'
 TRAIN_DATA_PATH = DATA_PATH + '/train'
 VAL_DATA_PATH = DATA_PATH + '/test'
@@ -11,7 +10,7 @@ LOG_DATA_PATH = '/home/mspark/project/aneurysm/unet/results/'
 PKL_NAME = 'train.pkl'
 
 # WINDOW #
-# MODE = 'window'                 # 'window' or 'linux'
+# MODE = 'window'
 # DATA_PATH = 'D:\\dataset\\Brain_Aneurysm_new_dataset'
 # TRAIN_DATA_PATH = DATA_PATH + '\\train'
 # VAL_DATA_PATH = DATA_PATH + '\\test'
