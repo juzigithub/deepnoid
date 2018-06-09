@@ -55,12 +55,7 @@ class Train:
     def __init__(self):
         self.p_eval = pe.performance()
         self.data_loader = loader.DataLoader(img_size=cfg.IMG_SIZE)
-        self.model = model.Model(img_size=cfg.IMG_SIZE,
-                                 n_channel=1,
-                                 n_class=2,
-                                 batch_size=cfg.BATCH_SIZE,
-                                 n_filter=cfg.INIT_N_FILTER,
-                                 depth=cfg.DEPTH)
+        self.model = model.Model()
 
         # TB
         self.merged_summary = tf.summary.merge_all()

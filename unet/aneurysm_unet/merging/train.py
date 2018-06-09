@@ -87,7 +87,7 @@ class Train:
         self.model_save_path = '.{0}model{0}{1}{0}Unet.ckpt'.format(cfg.PATH_SLASH, str(epoch + 1))
 
         # 모델을 저장할 경로를 확인하고 없으면 만들어줍니다.
-        tl.files.exists_or_mkdir('.{0}mode{0}{1}'.format(cfg.PATH_SLASH, str(epoch + 1)))
+        tl.files.exists_or_mkdir('.{0}model{0}{1}'.format(cfg.PATH_SLASH, str(epoch + 1)))
 
         ### 밸리데이션 결과 이미지 저장 ###
 
@@ -327,24 +327,34 @@ class Train:
     def _masking_rgb(self, img, color, name):
         # 라벨이미지 저장을 위해 3채널 RGB 데이터가 필요하고 배치 차원을 맞춰주기 위해 차원확장을 진행합니다.
         # 이미지의 차원은 현재 [B, H, W, C] 로 배치, 세로, 가로, 채널로 되어있습니다.
-
-        img = np.expand_dims(img, axis=0)
-
         # cv2의 결과는 2차원(H, W) 입니다. 따라서 pred_img에 0차원과 4차원에 차원을 덧대주어서 차원을 맞춰줍니다.
-        if name != 'test' :
+
+        if name == 'pred':
             img = np.expand_dims(img, axis=3)
+            img = np.expand_dims(img, axis=0)
+
+        elif name == 'label' :
+            img = np.expand_dims(img, axis=0)
+            img = np.expand_dims(img, axis=3)
+
+        else:
+            img = np.expand_dims(img, axis=0)
+        # img = np.expand_dims(img, axis = 0)
+        #
+        # if name != 'test':
+        #     img = np.expand_dims(img, axis=3)
 
         # 마스크 색을 결정합니다.
         # 예측이미지값을 R에 넣으면 빨간 마스킹 이미지가, B에 넣으면 파란 마스킹 이미지가, G에 넣으면 녹색 마스킹 이미지가 생성됩니다.
         if name == 'pred':
             rgb_dic = {'green': 0, 'blue': 1, 'red': 2}
-            rgb_list = [np.zeros([1, 2, 2, 1]) for _ in range(3)]
+            rgb_list = [np.zeros([1, cfg.IMG_SIZE, cfg.IMG_SIZE, 1]) for _ in range(3)]
             rgb_list[rgb_dic[color]] = img
-            G, B, R = rgb_list
+            B, G, R = rgb_list
 
         # test_image 와 label_image 는 원본이 그대로 필요하므로 R, G, B 모두에 데이터를 넣어줍니다.
         else:
-            G = B = R = img
+            B = G = R = img
 
         # R, G, B 채널을 concat 해서 하나의 차원에 정렬해줍니다.
         concat_img = np.concatenate((B, G, R), axis=3)
@@ -368,7 +378,7 @@ class Train:
 
             # 라벨이미지를 가져옵니다.
             test_image = x_list[img_idx]
-            test_image = self._masking_rgb(test_image, name='test')
+            test_image = self._masking_rgb(test_image, cfg.MASKING_COLOR, name='test')
             test_image = test_image.astype(float)
 
             # 예측 결과를 threshold(기준 값을 경계로 0과 1 바이너리화를 진행합니다.)
@@ -376,10 +386,10 @@ class Train:
             # 옵션을 cv2.THRESH_BINARY로 진행하면 검은색 흰색 이미지가, cv2.THRESH_BINARY_INV로 진행하면 흰색 검은색 이미지가 저장됩니다.
             # 자세한 사항은 cv2 홈페이지를 참조하세요.
             _, pred_image = cv2.threshold(label, 0.5, 1.0, cv2.THRESH_BINARY)
-            pred_image = self._masking_rgb(pred_image, color=cfg.MASKING_COLOR, name='pred')
+            pred_image = self._masking_rgb(pred_image, cfg.MASKING_COLOR, name='pred')
 
             label_image = y_list[img_idx][:, :, 0]
-            label_image = self._masking_rgb(label_image, name='label')
+            label_image = self._masking_rgb(label_image, cfg.MASKING_COLOR, name='label')
 
             result_image = cv2.addWeighted(pred_image, float(100 - w) * p, test_image, float(w) * p, 0)
             result_image *= 255

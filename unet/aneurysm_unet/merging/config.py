@@ -54,7 +54,7 @@ N_CLASS = 2
 
 MASKING_COLOR = 'red'          # validation 마스킹 색 (red or green or blue)
 W = 40                         # 마스킹 비율
-p = 0.0001                     # 각 이미지의 적용비율
+P = 0.0001                     # 각 이미지의 적용비율
 
 
 
