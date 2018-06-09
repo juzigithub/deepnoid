@@ -4,42 +4,23 @@ model construct
 by 신형은 주임
 '''
 import tensorflow as tf
-import tensorlayer as tl
-from tensorlayer.layers import *
-import numpy as np
 import utils
-
-from tensorlayer.layers import *
-
+import config as cfg
 
 class Model:
-    def __init__(self, batch_size, img_size, n_channel, n_class, depth, n_filter):
-
-        self.batch_size = batch_size
-        self.img_size = img_size
-        self.n_channel = n_channel
-        self.n_class = n_class
-        self.depth = depth
-        self.n_filter = n_filter
-
+    def __init__(self):
         self.drop_rate = tf.placeholder(tf.float32, name='drop_rate')
         self.training = tf.placeholder(tf.bool, name='training')
-        self.X = tf.placeholder(tf.float32, [None, img_size, img_size, n_channel], name='X')
-        self.Y = tf.placeholder(tf.float32, [None, img_size, img_size, n_class], name='Y')
+        self.X = tf.placeholder(tf.float32, [None, cfg.IMG_SIZE, cfg.IMG_SIZE, cfg.RGB_CHANNEL], name='X')
+        self.Y = tf.placeholder(tf.float32, [None, cfg.IMG_SIZE, cfg.IMG_SIZE, cfg.N_CLASS], name='Y')
         self.X_ADD = tf.placeholder(tf.int32, [None, 3], name='X_ADD')
 
-
-
-#############################################################
-        self.dataset = tf.data.Dataset.from_tensor_slices((self.X, self.Y, self.X_ADD)).shuffle(buffer_size=3000)  ### buffer_size 를 cfg로
-        self.dataset = self.dataset.batch(self.batch_size).repeat()
-
+        # iterator 설정
+        self.dataset = tf.data.Dataset.from_tensor_slices((self.X, self.Y, self.X_ADD)).shuffle(buffer_size=cfg.BUFFER_SIZE)
+        self.dataset = self.dataset.batch(cfg.BATCH_SIZE).repeat()
+        # self.features, self.labels, self.address 를 iterator 변수로 설정 -> iterator 변수 호출 시 다음 데이터를 불러옵니다.
         self.iter = self.dataset.make_initializable_iterator()
         self.features, self.labels, self.address = self.iter.get_next()  #### self.X, self.Y 들어갈 자리에 self.features, self.labels 입력
-#############################################################
-
-
-
 
         self.logit = self.u_net()
 
@@ -56,23 +37,24 @@ class Model:
     def u_net(self):
         # start down sampling by depth n.
 
-        up_conv = [0] * self.depth
-        up_deconv = [0] * self.depth
-        up_norm = [0] * self.depth
-        up_act = [0] * self.depth
-        up_concat = [0] * self.depth
-        down_conv = [0] * self.depth
-        down_norm = [0] * self.depth
-        down_act = [0] * self.depth
-        down_pool = [0] * self.depth
+        up_conv = [0] * cfg.DEPTH
+        up_deconv = [0] * cfg.DEPTH
+        up_norm = [0] * cfg.DEPTH
+        up_act = [0] * cfg.DEPTH
+        up_concat = [0] * cfg.DEPTH
+        down_conv = [0] * cfg.DEPTH
+        down_norm = [0] * cfg.DEPTH
+        down_act = [0] * cfg.DEPTH
+        down_pool = [0] * cfg.DEPTH
 
         with tf.variable_scope('down'):
 
-            inputs = self.features
-            channel_n = self.n_filter
-            pool_size = self.img_size
+            inputs = self.features     # iterator 변수 self.features 를 이용해 inputs 생성
+            channel_n = cfg.INIT_N_FILTER
+            pool_size = cfg.IMG_SIZE
 
-            for i in range(self.depth):
+            # 처음 실행하면 모델 구조 나오도록 ?!
+            for i in range(cfg.DEPTH):
 
                 down_conv[i] = utils.conv2D(str(i) + '_conv1', inputs, channel_n, [3,3], [1,1], padding = 'SAME')
                 down_norm[i] = utils.Normalization(down_conv[i], 'batch',self.training, str(i) + '_norm1')
@@ -98,7 +80,7 @@ class Model:
 
             inputs = down_act_f
 
-            for i in reversed(range(self.depth)):
+            for i in reversed(range(cfg.DEPTH)):
 
                 pool_size *=2
 
@@ -122,7 +104,7 @@ class Model:
                 inputs = up_act[i]
 
             up_conv_f = utils.conv2D('final_upconv1', inputs, 2, [1,1], [1,1], 'SAME')
-            print(up_conv_f)
+
         return up_conv_f
 
 

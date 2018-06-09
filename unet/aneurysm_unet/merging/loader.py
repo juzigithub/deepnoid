@@ -3,9 +3,7 @@ import cv2
 import os
 import numpy as np
 import _pickle as cpickle
-
-import Unet.aneurysm_unet.merging.config as cfg
-# import config as cfg
+import config as cfg
 
 class DataLoader:
     def __init__(self, img_size):
@@ -30,10 +28,9 @@ class DataLoader:
 
 
         #################
-        x_path = '/x' if cfg.MODE == 'linux' else '\\x'
-        y_path = '/y' if cfg.MODE == 'linux' else '\\x'
-        x_pathplus = '/x/' if x_path == '/x' else '\\x\\'
-        y_pathplus = '/y/' if y_path == '/y' else '\\y\\'
+        x_path = '{0}x'.format(cfg.PATH_SLASH)
+        x_pathplus = '{0}x{0}'.format(cfg.PATH_SLASH)
+        y_pathplus = '{0}y{0}'.format(cfg.PATH_SLASH)
         #################
 
 
@@ -189,27 +186,7 @@ class DataLoader:
 
         else:
             pass    ############## mode = 'test' 일 때
-import tensorflow as tf
-#######################################################################
+
+
 if __name__ == '__main__':
     loader = DataLoader(cfg.IMG_SIZE)
-    # loader._data_list_load(cfg.TRAIN_DATA_PATH, mode='train')
-    # a, b = loader._data_list_load(cfg.VAL_DATA_PATH, mode='train')
-    # val_batch_xs_list[img_idx].split(os.path.sep)[-5] \
-    # + '_' + val_batch_xs_list[img_idx].split(os.path.sep)[-4] \
-    # + '_' + val_batch_xs_list[img_idx].split(os.path.sep)[-1]
-
-    # print(a[0].split(os.path.sep)[-5])
-    # print(a[0].split(os.path.sep)[-4])
-    # print(a[0].split(os.path.sep)[-1])
-    a,b,c,d = loader.load_data('train')
-    # print(np.shape(c[0]))
-    # print(np.shape(c[1]))
-    # print(np.shape(a[0]))
-    # e = tf.placeholder(tf.int32, [None,3])
-    # with tf.Session() as sess:
-    #     f = sess.run(e, feed_dict={e:c[0]})
-    #     print(f)
-    print(np.shape(a[1]))
-    print(np.shape(b))
-    print(c[0])
