@@ -26,16 +26,16 @@ class Model:
         self.training = tf.placeholder(tf.bool)
         self.X = tf.placeholder(tf.float32, [self.batch_size, img_size, img_size, n_channel], name='X')
         self.Y = tf.placeholder(tf.float32, [self.batch_size, img_size, img_size, n_class], name='Y')
-
+        self.X_ADD = tf.placeholder(tf.int32, [self.batch_size, 1, 3], name='X_ADD')
 
 
 
 #############################################################
-        self.dataset = tf.data.Dataset.from_tensor_slices((self.X, self.Y)).shuffle(buffer_size=3000)  ### buffer_size 를 cfg로
+        self.dataset = tf.data.Dataset.from_tensor_slices((self.X, self.Y, self.Y_ADD)).shuffle(buffer_size=3000)  ### buffer_size 를 cfg로
         self.dataset = self.dataset.batch(self.batch_size).repeat()
 
         self.iter = self.dataset.make_initializable_iterator()
-        self.features, self.labels = self.iter.get_next()  #### self.X, self.Y 들어갈 자리에 self.features, self.labels 입력
+        self.features, self.labels, self.address = self.iter.get_next()  #### self.X, self.Y 들어갈 자리에 self.features, self.labels 입력
 #############################################################
 
 
@@ -50,9 +50,6 @@ class Model:
         # 라벨이미지 역시 foreground와 background로 분리합니다
         self.foreground_truth, self.background_truth = tf.split(self.Y, [1, 1], 3) ########### self.Y -> self.labels 로
         self.loss = utils.cross_entropy(output=self.foreground_predicted, target=self.foreground_truth)
-
-
-
         self.results = list(utils.iou_coe(output=self.foreground_predicted, target=self.foreground_truth))
 
 

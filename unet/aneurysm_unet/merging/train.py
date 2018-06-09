@@ -26,41 +26,31 @@ if __name__ == '__main__':
     trainer.train()
 '''
 
-# import config as cfg
-import model
-import utils
+
+
 import tensorlayer as tl
 import tensorflow as tf
-import loader
 import time
 import os
 import numpy as np
 import cv2
-import performance_eval as pe
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+import Unet.aneurysm_unet.merging.performance_eval as pe
+import Unet.aneurysm_unet.merging.config as cfg
+import Unet.aneurysm_unet.merging.model as model
+# import Unet.aneurysm_unet.merging.utils as utils
+import Unet.aneurysm_unet.merging.loader as loader  ####################
+
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "6" ####################################### 1 -> 6
 
 
 class Train:
     # class initialize
-    def __init__(self, batch_size, img_size, n_class, depth, n_filter, training_path, init_learning,
-                 decay_rate, validation_ratio, decay_step, n_epoch):
-        self.batch_size = batch_size
-        self.img_size = img_size
-        self.n_class = n_class
-        self.depth = depth
-        self.n_filter = n_filter
-        self.training_path = training_path
-        self.init_learning = init_learning
-        self.decay_rate = decay_rate
-        self.validation_ratio = validation_ratio
-        self.decay_step = decay_step
-        self.n_epoch = n_epoch
+    def __init__(self):
         self.p_eval = pe.performance()
+        self.data_loader = loader.DataLoader(img_size=cfg.IMG_SIZE)
 
-        self.data_loader = loader.DataLoader(img_size=img_size)
-
-        self.trainX, self.trainY, self.data_count = self.data_loader.data_list_load(self.training_path, mode='train')
 
         print('')
         print('>>> Data Loading Started')
@@ -68,32 +58,45 @@ class Train:
 
         dstime = time.time()
 
+        # data_list_loader + img_grey_size 까지 진행 -> pkl 데이터로 저장 -> pkl 데이터 로드
+        # 다른 변수와 달리 valX = [abnorm(0) or norm(1) or else(2), img_da1ta] 로 구성
+        self.trainX, self.trainY, self.valX, self.valY = self.data_loader.load_data(mode='train')
+
         detime = time.time()
 
+        print('')
         print('>>> Data Loading Complete. Consumption Time :', detime - dstime)
         print('')
-        print('>>> Dataset Split Started')
-        print('')
-        dsstime = time.time()
 
-        self.trainX, self.trainY, self.valX, self.valY = self.data_loader.data_split(self.trainX, self.trainY,
-                                                                                     val_size=self.validation_ratio)
 
-        self.model = model.Model(img_size=img_size, n_channel=1, n_class=2,
-                                 batch_size=self.batch_size, n_filter=self.n_filter, depth=self.depth)
+        self.model = model.Model(img_size=cfg.IMG_SIZE,
+                                 n_channel=1,
+                                 n_class=2,
+                                 batch_size=cfg.BATCH_SIZE,
+                                 n_filter=cfg.INIT_N_FILTER,
+                                 depth=cfg.DEPTH)
+        self.p_eval = pe.performance()
+
 
         # TB
         self.merged_summary = tf.summary.merge_all()
         self.writer = tf.summary.FileWriter('./logs')
 
     def optimizer(self, global_step):
-        exponential_decay_learning_rate = tf.train.exponential_decay(learning_rate=self.init_learning,
+        exponential_decay_learning_rate = tf.train.exponential_decay(learning_rate=cfg.INIT_LEARNING_RATE,
                                                                      global_step=global_step,
-                                                                     decay_steps=self.decay_step,
-                                                                     decay_rate=self.decay_rate, staircase=True,
+                                                                     decay_steps=cfg.DECAY_STEP,
+                                                                     decay_rate=cfg.DECAY_RATE,
+                                                                     staircase=cfg.DECAY_STAIRCASE,
                                                                      name='learning_rate')
+
         self.optimizer = tf.train.AdamOptimizer(learning_rate=exponential_decay_learning_rate).minimize(self.model.loss,
                                                                                                         global_step=global_step)
+    def save_yn(self, epoch):
+        if epoch == 0 or epoch + 1 == cfg.EPOCHS or epoch % cfg.SAVING_EPOCH == 0:
+            return True
+        else :
+            return False
 
     def train(self):
 
@@ -105,8 +108,8 @@ class Train:
             self.optimizer(global_step)
 
         # 각각의 전체 데이터셋을 배치사이즈로 나누어 한 에폭당 몇 스텝이 진행되는가 계산합니다.
-        train_step = int(len(self.trainX) / self.batch_size)
-        val_step = int(len(self.valX) / self.batch_size)
+        train_step = int(len(self.trainX) / cfg.BATCH_SIZE)
+        val_step = int(len(self.valX) / cfg.BATCH_SIZE)
 
         print('>>> Train step:', train_step, 'Validation step:', val_step)
         print('')
@@ -123,13 +126,23 @@ class Train:
             # 세션상의 글로벌 변수 초기화를 진행합니다. 변수 초기값은 개별 변수별로 지정해줘야합니다.
             sess.run(tf.global_variables_initializer())
 
+            ####################################################
+            # Iterator 위한 feed_dict
+            tr_feed_dict = {self.model.X: self.trainX, self.model.Y: self.trainY,
+                            self.model.training: True, self.model.drop_rate: cfg.DROPOUT_RATE}
+            sess.run(self.model.iter.initializer, feed_dict=tr_feed_dict)
+            ####################################################
+
+
+
             print("BEGIN TRAINING")
 
             total_training_time = 0
 
             # ==========================  Traing start  =========================================#
             # 전달 받은 epoch 수 만큼 학습을 진행하는 loop 문 입니다.
-            for epoch in range(self.n_epoch):
+            for epoch in range(cfg.EPOCHS):
+
                 mean_iou_list = []
                 unfiltered_iou_list = []
                 loss_list = []
@@ -138,62 +151,96 @@ class Train:
 
                 total_cost, total_val_iou, total_val_unfiltered_iou, step = 0, 0, 0, 0
 
+
                 # 한 에폭마다 학습하는 각 개별 스텝을 진행하는 loop 문 입니다.
                 # shuffles every batch and iterates
                 # for batch in tl.iterate.minibatches(inputs=self.trainX, targets=self.trainY,
                 #                                     batch_size=self.batch_size, shuffle=True):
                 # 경로 내의 학습데이터를 마찬가지로 랜덤 셔플해줍니다. 경로 셔플과 마찬가지의 효과를 줍니다.
-                trainX, trainY = self.data_loader.data_shuffle(self.trainX, self.trainY)
+                # trainX, trainY = self.data_loader.data_shuffle(self.trainX, self.trainY)
 
                 # 한 에폭마다 학습하는 각 개별 스텝을 진행하는 loop 문 입니다.
-                for batch in range(train_step):
+                # for batch in range(train_step):
                     # 데이터모듈을 이용하여 매 스탭마다 학습에 사용할 데이터 경로를 불러오며 스텝이 진행되면 다음 배치데이터를 불러옵니다.
-                    batch_xs_list, batch_ys_list = self.data_loader.next_batch(data_list=trainX, label=trainY,
-                                                                               idx=batch,
-                                                                               batch_size=self.batch_size)
+                    # batch_xs_list, batch_ys_list = self.data_loader.next_batch(data_list=trainX, label=trainY,
+                    #                                                            idx=batch,
+                    #                                                            batch_size=cfg.BATCH_SIZE)
 
                     # 데이터모듈을 이용하여 위에서 불러온 데이터 경로에서 이미지 데이터를 읽어서 배치데이터를 만듭니다.
-                    batch_xs = self.data_loader.read_image_grey_resized(batch_xs_list)
-                    batch_ys = self.data_loader.read_label_grey_resized(batch_ys_list)
+                    # batch_xs = self.data_loader.read_image_grey_resized(batch_xs_list)
+                    # batch_ys = self.data_loader.read_label_grey_resized(batch_ys_list)
 
                     # 모델에 데이터를 넣어 줄 Feed Dict입니다.
-                    tr_feed_dict = {self.model.X: batch_xs, self.model.Y: batch_ys, self.model.training: True,
-                                    self.model.drop_rate: 0.2}
+                    # tr_feed_dict = {self.model.X: batch_xs, self.model.Y: batch_ys, self.model.training: True,
+                    #                 self.model.drop_rate: 0.2}
 
                     # 모델을 위에서 선언한 session을 run 시켜서 학습시키고 결과물로 cost값을 받습니다.
+                    # cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
+                    #
+                    # total_cost += cost
+                    # step += 1
+                    #
+                    # 학습 과정에서의 현재 에폭과 스텝 그리고 배치 Loss 값을 출력합니다.
+                    # print('Epoch:', '[%d' % (epoch + 1), '/ %d]  ' % cfg.EPOCHS, 'Step:', step, '/', train_step,
+                    #       '  Batch loss:', cost)
+
+                for _ in range(train_step):
                     cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
 
                     total_cost += cost
                     step += 1
 
                     # 학습 과정에서의 현재 에폭과 스텝 그리고 배치 Loss 값을 출력합니다.
-                    print('Epoch:', '[%d' % (epoch + 1), '/ %d]  ' % self.n_epoch, 'Step:', step, '/', train_step,
+                    print('Epoch:', '[%d' % (epoch + 1), '/ %d]  ' % cfg.EPOCHS, 'Step:', step, '/', train_step,
                           '  Batch loss:', cost)
 
-                for batch in range(val_step):
 
-                    # 데이터모듈을 이용하여 매 스탭마다 밸리데이션에 사용할 데이터 경로를 불러오며 스텝이 진행되면 다음 배치데이터를 불러옵니다.
-                    val_batch_xs_list, val_batch_ys_list = self.data_loader.next_batch(data_list=self.valX,
-                                                                                       label=self.valY, idx=batch,
-                                                                                       batch_size=self.batch_size)
 
-                    # 데이터모듈을 이용하여 위에서 불러온 데이터 경로에서 이미지 데이터를 읽어서 배치데이터를 만듭니다.
-                    val_batch_xs = self.data_loader.read_image_grey_resized(val_batch_xs_list)
-                    val_batch_ys = self.data_loader.read_label_grey_resized(val_batch_ys_list)
+                for _ in range(val_step):
+
+
+                    #
+                    # # 데이터모듈을 이용하여 매 스탭마다 밸리데이션에 사용할 데이터 경로를 불러오며 스텝이 진행되면 다음 배치데이터를 불러옵니다.
+                    # val_batch_xs_list, val_batch_ys_list = self.data_loader.next_batch(data_list=self.valX,
+                    #                                                                    label=self.valY, idx=batch,
+                    #                                                                    batch_size=cfg.BATCH_SIZE)
+                    #
+                    # # 데이터모듈을 이용하여 위에서 불러온 데이터 경로에서 이미지 데이터를 읽어서 배치데이터를 만듭니다.
+                    # val_batch_xs = self.data_loader.read_image_grey_resized(val_batch_xs_list)
+                    # val_batch_ys = self.data_loader.read_label_grey_resized(val_batch_ys_list)
+                    #
+                    # # 모델에 데이터를 넣어 줄 Feed Dict입니다.
+                    # val_feed_dict = {self.model.X: val_batch_xs, self.model.Y: val_batch_ys,
+                    #                  self.model.training: False, self.model.drop_rate: 0}
+                    #
+                    # # 밸리데이션 결과 IoU(Intersection of Union)을 계산합니다. Image Segmentation에선 IoU를 보통 Accuracy로 사용합니다.
+                    # # model.iou에선 [acc, mean_iou, unfiltered_iou]를 리턴합니다.
+                    # val_results, predicted_result = sess.run([self.model.results, self.model.foreground_predicted],
+                    #                                          feed_dict=val_feed_dict)
+                    # # acc, val_mean_iou, val_unfiltered_iou = val_results
+
+
+
 
                     # 모델에 데이터를 넣어 줄 Feed Dict입니다.
-                    val_feed_dict = {self.model.X: val_batch_xs, self.model.Y: val_batch_ys,
-                                     self.model.training: False, self.model.drop_rate: 0}
+                    val_feed_dict = {self.model.X: self.valX[1], self.model.Y: self.valY, self.model.X_ADD: self.valX[0],
+                                     self.model.training: False, self.model.drop_rate: 0}  #################################################
 
                     # 밸리데이션 결과 IoU(Intersection of Union)을 계산합니다. Image Segmentation에선 IoU를 보통 Accuracy로 사용합니다.
                     # model.iou에선 [acc, mean_iou, unfiltered_iou]를 리턴합니다.
-                    val_results, predicted_result = sess.run([self.model.results, self.model.foreground_predicted],
-                                                             feed_dict=val_feed_dict)
+                    val_results, predicted_result, x_list, y_list, address = sess.run([self.model.results,
+                                                                                       self.model.foreground_predicted,
+                                                                                       self.model.X,
+                                                                                       self.model.Y,
+                                                                                       self.model.X_ADD],
+                                                                                      feed_dict=val_feed_dict)
                     # acc, val_mean_iou, val_unfiltered_iou = val_results
+
 
                     # 받은 배치 IoU값을 리스트로 변환합니다.
                     ious = list(val_results[0])
                     unfiltered_iou = np.mean(ious)
+
 
                     # IoU가 0.01 이상, 즉 일정이상 예측해낸 IoU 값들만 모아서 진단 정확도와 질병으로 판단 했을 때의 IoU 값을 따로 계산합니다.
                     iou_list = []
@@ -207,7 +254,7 @@ class Train:
 
                     # val_batch_acc = after_filtered_length / before_filtered_length
 
-                    if len(iou_list) == 0:
+                    if after_filtered_length == 0: ####### len(iou_list) -> after_filtered_length
                         mean_iou = 0
 
                     else:
@@ -217,8 +264,12 @@ class Train:
                     total_val_iou += mean_iou
                     total_val_unfiltered_iou += unfiltered_iou
 
+#################################### 함수로 #########################################
                     # 학습 시작 에폭과 끝에폭 그리고 saving epoch의 배수마다 이미지와 모델을 저장하게 합니다.
-                    if (epoch + 1) % 2 == 0 or epoch + 1 == self.n_epoch or epoch == 0:
+                    # if epoch == 0 or epoch + 1 == cfg.EPOCHS or epoch % cfg.SAVING_EPOCH == 0 : # (epoch+1) % 2 -> epoch % cfg.SAVING_EPOCH
+
+
+                    if self.save_yn(epoch) :
 
                         # 밸리데이션 결과 이미지를 저장하는 경로입니다.
                         # val_img_save_path 는 학습이미지(원본이미지)와 예측이미지를 Overlap 시켜 환부에 마스크 이미지를 씌워주며
@@ -234,25 +285,21 @@ class Train:
                         tl.files.exists_or_mkdir(label_val_img_save_path)
 
                         # 예측된 배치 결과를 loop하면서 개별 이미지로 저장하는 loop문입니다.
+
                         for img_idx, label in enumerate(predicted_result):
                             # 각 이미지 종류별 이미지를 저장하는 절대경로입니다. 이미지 파일명은 '밸리데이션 index'_'이미지 번호'.png 로 저장됩니다.
-                            val_img_fullpath = val_img_save_path \
-                                               + '/' + val_batch_xs_list[img_idx].split(os.path.sep)[-5] \
-                                               + '_' + val_batch_xs_list[img_idx].split(os.path.sep)[-4] \
-                                               + '_' + val_batch_xs_list[img_idx].split(os.path.sep)[-1]
+                            # path/abnorm_100_FILE00086.png
+                            # ex) address_list[img_idx] = [0, 100, 96]
 
-                            raw_val_img_fullpath = raw_val_img_save_path \
-                                                   + '/' + val_batch_xs_list[img_idx].split(os.path.sep)[-5] \
-                                                   + '_' + val_batch_xs_list[img_idx].split(os.path.sep)[-4] \
-                                                   + '_' + val_batch_xs_list[img_idx].split(os.path.sep)[-1]
+                            add1, add2, add3 = address[img_idx]
+                            full_add = '/{0}_{1}_FILE{2}.png'.format('abnorm' if add1 == 0 else 'norm', add2, add3)
 
-                            label_val_img_fullpath = label_val_img_save_path \
-                                                     + '/' + val_batch_xs_list[img_idx].split(os.path.sep)[-5] \
-                                                     + '_' + val_batch_xs_list[img_idx].split(os.path.sep)[-4] \
-                                                     + '_' + val_batch_xs_list[img_idx].split(os.path.sep)[-1]
+                            val_img_fullpath = val_img_save_path + full_add
+                            raw_val_img_fullpath = raw_val_img_save_path + full_add
+                            label_val_img_fullpath = label_val_img_save_path + full_add
 
                             # 라벨이미지를 가져옵니다.
-                            test_image = val_batch_xs[img_idx]
+                            test_image = x_list[img_idx]
 
                             # 라벨이미지 저장을 위해 3채널 RGB 데이터가 필요하고 배치 차원을 맞춰주기 위해 차원확장을 진행합니다.
                             # 이미지의 차원은 현재 [B, H, W, C] 로 배치, 세로, 가로, 채널로 되어있습니다.
@@ -290,7 +337,7 @@ class Train:
                             test_image = np.squeeze(test_image)
 
                             # 위 과정을 label_img도 동일하게 진행해줍니다.
-                            label_image = val_batch_ys[img_idx][:, :, 0]
+                            label_image = y_list[img_idx][:, :, 0]
                             label_image = np.expand_dims(label_image, axis=0)
                             label_image = np.expand_dims(label_image, axis=3)
 
@@ -317,7 +364,9 @@ class Train:
                             result = cv2.addWeighted(pred_image, float(100 - w) * p, test_image, float(w) * p, 0)
                             cv2.imwrite(val_img_fullpath, result * 255)
 
-                if (epoch + 1) % 2 == 0 or epoch + 1 == self.n_epoch or epoch == 0:
+
+                ################### 저장 ##################
+                if self.save_yn(epoch):  # (epoch+1) % 2 -> epoch % cfg.SAVING_EPOCH
                     # 모델을 저장할 경로를 확인하고 없으면 만들어줍니다.
                     tl.files.exists_or_mkdir('./model' + '/' + str(epoch + 1))
 
@@ -337,7 +386,7 @@ class Train:
                 Valdation_IoU = total_val_iou / val_step
                 Valdation_Unfiltered_IoU = total_val_unfiltered_iou / val_step
 
-                print('Epoch:', '[%d' % (epoch + 1), '/ %d]  ' % self.n_epoch,
+                print('Epoch:', '[%d' % (epoch + 1), '/ %d]  ' % cfg.EPOCHS,
                       'Loss =', '{:.4f}  '.format(Loss),
                       'Valdation IoU:{:.4f}   '.format(Valdation_IoU),
                       'Valdation Unfiltered IoU:{:.4f}   '.format(Valdation_Unfiltered_IoU),
@@ -358,18 +407,11 @@ class Train:
             print("TRAINING COMPLETE")
 
 if __name__ == "__main__":
-    data_path = '/home/hshin255/data/BRATS_ORI/training/HGG'
+    # data_path = '/home/hshin255/data/BRATS_ORI/training/HGG'
     # data_path = "C:\\Users\\hshin\\Desktop\\sample_files\\BRATS_ORI\\training\\HGG"
-    trainer = Train(batch_size=28,
-                    n_epoch=200,
-                    img_size=256,
-                    n_class=1,
-                    depth=4,
-                    n_filter=32,
-                    training_path=data_path,
-                    init_learning=0.005,
-                    decay_rate=0.9,
-                    validation_ratio=15,
-                    decay_step=2500)
+    
+    
+
+    trainer = Train()
 
     trainer.train()

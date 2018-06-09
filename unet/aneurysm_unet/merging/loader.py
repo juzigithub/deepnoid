@@ -3,7 +3,8 @@ import cv2
 import os
 import numpy as np
 import _pickle as cpickle
-import config as cfg
+
+import Unet.aneurysm_unet.merging.config as cfg
 
 
 class DataLoader:
@@ -25,7 +26,17 @@ class DataLoader:
         return files
 
     # 데이터 경로 로더
-    def data_list_load(self, path, mode):
+    def _data_list_load(self, path, mode):
+
+
+        #################
+        x_path = '/x' if cfg.MODE == 'linux' else '\\x'
+        y_path = '/y' if cfg.MODE == 'linux' else '\\x'
+        x_pathplus = '/x/' if x_path == '/x' else '\\x\\'
+        y_pathplus = '/y/' if y_path == '/y' else '\\y\\'
+        #################
+
+
         if mode == 'train':
             # 데이터셋 경로를 담아 둘 빈 리스트 생성
             image_list = []
@@ -36,15 +47,16 @@ class DataLoader:
                     for dir in dirs:
                         dir_path = os.path.join(root, dir)
 
+
                         # windows에서는 path가 안 읽힘 : \x나 그런 식으로 바꿔야 될듯함.
-                        if '/x' in dir_path:
+                        if x_path in dir_path:
                             if len(os.listdir(dir_path)) != 0:
 
                                 x_path_list = [os.path.join(dir_path, file) for file in os.listdir(dir_path)]
 
                                 y_path_list = [os.path.join(dir_path, file) for file in os.listdir(dir_path)]
                                 # y_path_list = [path.replace('/x/', '/x_filtered/') for path in y_path_list]
-                                y_path_list = [path.replace('/x/', '/y/') for path in y_path_list]
+                                y_path_list = [path.replace(x_pathplus, y_pathplus) for path in y_path_list]
 
                                 images_files = self._sort_by_number(x_path_list)
                                 labels_files = self._sort_by_number(y_path_list)
@@ -57,7 +69,7 @@ class DataLoader:
                                     label_list.append(label)
                                     # print('ydata:', label)
 
-            return image_list, label_list, len(image_list)
+            return image_list, label_list
 
         elif mode == 'test':
             # 데이터셋 경로를 담아 둘 빈 리스트 생성
@@ -69,7 +81,7 @@ class DataLoader:
                 for root, dirs, files in os.walk(data_path):
                     for dir in dirs:
                         dir_path = os.path.join(root, dir)
-                        if '/x' in dir_path:
+                        if x_path in dir_path:
                             if len(os.listdir(dir_path)) != 0:
                                 x_path_list = [os.path.join(dir_path, file) for file in os.listdir(dir_path)]
 
@@ -81,7 +93,7 @@ class DataLoader:
             return image_list, len(image_list)
 
 
-    def read_image_grey_resized(self, data_list):
+    def _read_image_grey_resized(self, data_list):
         if type(data_list) != str:
             data_list = data_list
         elif type(data_list) == str:
@@ -96,7 +108,7 @@ class DataLoader:
 
         return np.array(data).reshape([-1, self.img_size, self.img_size, 1])
 
-    def read_label_grey_resized(self, data_list):
+    def _read_label_grey_resized(self, data_list):
         if type(data_list) != str:
             data_list = data_list
         elif type(data_list) == str:
@@ -119,52 +131,76 @@ class DataLoader:
 
 
 ########################################################################################################
-    def check_pkl(self, mode='train'):
+    def _check_pkl(self, mode='train'):
+        # pkl 저장 폴더 없는 경우 폴더 생성
         if not os.path.exists(cfg.PKL_DATA_PATH):
             os.mkdir(cfg.PKL_DATA_PATH)
-        if not os.path.isfile(cfg.PKL_DATA_PATH + cfg.PKL_NAME) or cfg.REBUILD_PKL:
-            self.make_pkl(mode=mode)
+        # pkl 파일 없거나 새로 만들어야 할 때(cfg.REBUILD_PKL = TRUE) pkl 파일 생성
+        if not os.path.isfile(cfg.PKL_DATA_PATH + cfg.PKL_NAME) or cfg.REBUILD_PKL: #
+            self._make_pkl(mode=mode)
 
-    def make_pkl(self, mode='train'):
-        trainX_list, trainY_list, _ = self.data_list_load(cfg.TRAIN_DATA_PATH, mode=mode)
-        valX_list, valY_list, _ = self.data_list_load(cfg.VAL_DATA_PATH, mode=mode)
-        trainX = self.read_image_grey_resized(trainX_list)
-        trainY = self.read_label_grey_resized(trainY_list)
+    def _make_pkl(self, mode='train'):
 
-        judge_valX = []
+        trainX_list, trainY_list = self._data_list_load(cfg.TRAIN_DATA_PATH, mode=mode)
+        valX_list, valY_list = self._data_list_load(cfg.VAL_DATA_PATH, mode=mode)
+        trainX = self._read_image_grey_resized(trainX_list)
+        trainY = self._read_label_grey_resized(trainY_list)
+
+
+
+        # Validation Acc 계산 시 필요한 abnorm(0) / norm(1) 여부도 저장 -> valX = [abnorm or norm 여부, img data]
+        address = []
         for valX in valX_list:
             if 'abnorm' in valX:
-                judge_valX.append(0)
-            elif 'norm' in valX:
-                judge_valX.append(1)
+                add1 = 0
             else:
-                judge_valX.append(2)      
+                add1 = 1
 
-        valX = self.read_image_grey_resized(valX_list)
-        valY = self.read_label_grey_resized(valY_list)
+            add2 = int(valX.split(os.path.sep)[-4])
+            add3 = os.path.basename(valX)
+            add3 = int(os.path.splitext(add3)[0][4:])
 
-        total_dataset = [trainX, trainY, [judge_valX, valX], valY]
+            address.append([add1, add2, add3])
+
+
+        valX = self._read_image_grey_resized(valX_list)
+        valY = self._read_label_grey_resized(valY_list)
+
+        total_dataset = [trainX, trainY, [address, valX], valY]
+
         with open(cfg.PKL_DATA_PATH + cfg.PKL_NAME, 'wb') as f:
             cpickle.dump(total_dataset, f, protocol=3)
-            print('Making' + cfg.PKL_NAME + 'Completed')
+            print('Making ' + cfg.PKL_NAME + ' Completed')
 
-
-    def load_pkl(self, mode='train'):
+    def _load_pkl(self, mode='train'):
         if mode == 'train' :
             with open(cfg.PKL_DATA_PATH + cfg.PKL_NAME, 'rb') as f:
                 trainX, trainY, valX, valY = cpickle.load(f)
         else :
-            pass
+            pass   ############## mode = 'test' 일 때
 
         return trainX, trainY, valX, valY
 
     def load_data(self, mode='train'):
-        self.check_pkl(mode=mode)
+        self._check_pkl(mode=mode)
 
         if mode == 'train' :
-            return self.load_pkl(mode=mode)
+            return self._load_pkl(mode=mode)
 
         else:
-            pass
+            pass    ############## mode = 'test' 일 때
 
 #######################################################################
+if __name__ == '__main__':
+    loader = DataLoader(cfg.IMG_SIZE)
+    # loader._data_list_load(cfg.TRAIN_DATA_PATH, mode='train')
+    # a, b = loader._data_list_load(cfg.VAL_DATA_PATH, mode='train')
+    # val_batch_xs_list[img_idx].split(os.path.sep)[-5] \
+    # + '_' + val_batch_xs_list[img_idx].split(os.path.sep)[-4] \
+    # + '_' + val_batch_xs_list[img_idx].split(os.path.sep)[-1]
+
+    # print(a[0].split(os.path.sep)[-5])
+    # print(a[0].split(os.path.sep)[-4])
+    # print(a[0].split(os.path.sep)[-1])
+    a,b,c,d = loader.load_data('train')
+    print(c[0])
