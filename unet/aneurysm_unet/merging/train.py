@@ -34,12 +34,17 @@ import time
 import os
 import numpy as np
 import cv2
+#
+# import Unet.aneurysm_unet.merging.performance_eval as pe
+# import Unet.aneurysm_unet.merging.config as cfg
+# import Unet.aneurysm_unet.merging.model as model
+# import Unet.aneurysm_unet.merging.loader as loader  ####################
 
-import Unet.aneurysm_unet.merging.performance_eval as pe
-import Unet.aneurysm_unet.merging.config as cfg
-import Unet.aneurysm_unet.merging.model as model
-# import Unet.aneurysm_unet.merging.utils as utils
-import Unet.aneurysm_unet.merging.loader as loader  ####################
+import performance_eval as pe
+import config as cfg
+import model
+import loader
+
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "6" ####################################### 1 -> 6
@@ -50,7 +55,16 @@ class Train:
     def __init__(self):
         self.p_eval = pe.performance()
         self.data_loader = loader.DataLoader(img_size=cfg.IMG_SIZE)
+        self.model = model.Model(img_size=cfg.IMG_SIZE,
+                                 n_channel=1,
+                                 n_class=2,
+                                 batch_size=cfg.BATCH_SIZE,
+                                 n_filter=cfg.INIT_N_FILTER,
+                                 depth=cfg.DEPTH)
 
+        # TB
+        self.merged_summary = tf.summary.merge_all()
+        self.writer = tf.summary.FileWriter('./logs')
 
         print('')
         print('>>> Data Loading Started')
@@ -67,20 +81,6 @@ class Train:
         print('')
         print('>>> Data Loading Complete. Consumption Time :', detime - dstime)
         print('')
-
-
-        self.model = model.Model(img_size=cfg.IMG_SIZE,
-                                 n_channel=1,
-                                 n_class=2,
-                                 batch_size=cfg.BATCH_SIZE,
-                                 n_filter=cfg.INIT_N_FILTER,
-                                 depth=cfg.DEPTH)
-        self.p_eval = pe.performance()
-
-
-        # TB
-        self.merged_summary = tf.summary.merge_all()
-        self.writer = tf.summary.FileWriter('./logs')
 
     def optimizer(self, global_step):
         exponential_decay_learning_rate = tf.train.exponential_decay(learning_rate=cfg.INIT_LEARNING_RATE,
@@ -101,15 +101,15 @@ class Train:
     def train(self):
 
         # 배치정규화를 진행하는 경우 배치정규화의 스탭을 결정하는 변수로 0입니다.
-        global_step = tf.Variable(0, trainable=False)
+        global_step = tf.Variable(0, trainable=False, name='global_step')
 
         # 배치정규화를 진행하는 경우 배치별 이동평균과 표준편차를 갱신해주는 update operation을 실행하고 지정해줍니다.
         with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
             self.optimizer(global_step)
 
         # 각각의 전체 데이터셋을 배치사이즈로 나누어 한 에폭당 몇 스텝이 진행되는가 계산합니다.
-        train_step = int(len(self.trainX) / cfg.BATCH_SIZE)
-        val_step = int(len(self.valX) / cfg.BATCH_SIZE)
+        train_step = int(len(self.trainX[1]) / cfg.BATCH_SIZE)
+        val_step = int(len(self.valX[1]) / cfg.BATCH_SIZE)
 
         print('>>> Train step:', train_step, 'Validation step:', val_step)
         print('')
@@ -126,12 +126,7 @@ class Train:
             # 세션상의 글로벌 변수 초기화를 진행합니다. 변수 초기값은 개별 변수별로 지정해줘야합니다.
             sess.run(tf.global_variables_initializer())
 
-            ####################################################
-            # Iterator 위한 feed_dict
-            tr_feed_dict = {self.model.X: self.trainX, self.model.Y: self.trainY,
-                            self.model.training: True, self.model.drop_rate: cfg.DROPOUT_RATE}
-            sess.run(self.model.iter.initializer, feed_dict=tr_feed_dict)
-            ####################################################
+
 
 
 
@@ -184,6 +179,14 @@ class Train:
                     # print('Epoch:', '[%d' % (epoch + 1), '/ %d]  ' % cfg.EPOCHS, 'Step:', step, '/', train_step,
                     #       '  Batch loss:', cost)
 
+                ####################################################
+                # Iterator 위한 feed_dict
+                tr_feed_dict = {self.model.X: self.trainX[1], self.model.Y: self.trainY,
+                                self.model.X_ADD: self.trainX[0],
+                                self.model.training: True, self.model.drop_rate: cfg.DROPOUT_RATE}
+                sess.run(self.model.iter.initializer, feed_dict=tr_feed_dict)
+                ####################################################
+
                 for _ in range(train_step):
                     cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
 
@@ -221,18 +224,19 @@ class Train:
 
 
 
-
                     # 모델에 데이터를 넣어 줄 Feed Dict입니다.
                     val_feed_dict = {self.model.X: self.valX[1], self.model.Y: self.valY, self.model.X_ADD: self.valX[0],
                                      self.model.training: False, self.model.drop_rate: 0}  #################################################
+
+                    sess.run(self.model.iter.initializer, feed_dict=val_feed_dict)
 
                     # 밸리데이션 결과 IoU(Intersection of Union)을 계산합니다. Image Segmentation에선 IoU를 보통 Accuracy로 사용합니다.
                     # model.iou에선 [acc, mean_iou, unfiltered_iou]를 리턴합니다.
                     val_results, predicted_result, x_list, y_list, address = sess.run([self.model.results,
                                                                                        self.model.foreground_predicted,
-                                                                                       self.model.X,
-                                                                                       self.model.Y,
-                                                                                       self.model.X_ADD],
+                                                                                       self.model.features,
+                                                                                       self.model.labels,
+                                                                                       self.model.address],
                                                                                       feed_dict=val_feed_dict)
                     # acc, val_mean_iou, val_unfiltered_iou = val_results
 
@@ -392,7 +396,8 @@ class Train:
                       'Valdation Unfiltered IoU:{:.4f}   '.format(Valdation_Unfiltered_IoU),
                       'Training time: {:.2f}  '.format(training_time))
 
-                result_dict = {self.p_eval.mean_iou: Valdation_IoU, self.p_eval.tot_iou: Valdation_Unfiltered_IoU,
+                result_dict = {self.p_eval.mean_iou: Valdation_IoU,
+                               self.p_eval.tot_iou: Valdation_Unfiltered_IoU,
                                self.p_eval.loss: Loss}
 
                 # TB

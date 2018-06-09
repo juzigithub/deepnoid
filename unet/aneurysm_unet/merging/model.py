@@ -22,16 +22,16 @@ class Model:
         self.depth = depth
         self.n_filter = n_filter
 
-        self.drop_rate = tf.placeholder(tf.float32)
-        self.training = tf.placeholder(tf.bool)
-        self.X = tf.placeholder(tf.float32, [self.batch_size, img_size, img_size, n_channel], name='X')
-        self.Y = tf.placeholder(tf.float32, [self.batch_size, img_size, img_size, n_class], name='Y')
-        self.X_ADD = tf.placeholder(tf.int32, [self.batch_size, 1, 3], name='X_ADD')
+        self.drop_rate = tf.placeholder(tf.float32, name='drop_rate')
+        self.training = tf.placeholder(tf.bool, name='training')
+        self.X = tf.placeholder(tf.float32, [None, img_size, img_size, n_channel], name='X')
+        self.Y = tf.placeholder(tf.float32, [None, img_size, img_size, n_class], name='Y')
+        self.X_ADD = tf.placeholder(tf.int32, [None, 3], name='X_ADD')
 
 
 
 #############################################################
-        self.dataset = tf.data.Dataset.from_tensor_slices((self.X, self.Y, self.Y_ADD)).shuffle(buffer_size=3000)  ### buffer_size 를 cfg로
+        self.dataset = tf.data.Dataset.from_tensor_slices((self.X, self.Y, self.X_ADD)).shuffle(buffer_size=3000)  ### buffer_size 를 cfg로
         self.dataset = self.dataset.batch(self.batch_size).repeat()
 
         self.iter = self.dataset.make_initializable_iterator()
@@ -48,7 +48,7 @@ class Model:
         self.foreground_predicted, self.background_predicted = tf.split(self.pred, [1, 1], 3)
 
         # 라벨이미지 역시 foreground와 background로 분리합니다
-        self.foreground_truth, self.background_truth = tf.split(self.Y, [1, 1], 3) ########### self.Y -> self.labels 로
+        self.foreground_truth, self.background_truth = tf.split(self.labels, [1, 1], 3) ########### self.Y -> self.labels 로
         self.loss = utils.cross_entropy(output=self.foreground_predicted, target=self.foreground_truth)
         self.results = list(utils.iou_coe(output=self.foreground_predicted, target=self.foreground_truth))
 
@@ -122,7 +122,7 @@ class Model:
                 inputs = up_act[i]
 
             up_conv_f = utils.conv2D('final_upconv1', inputs, 2, [1,1], [1,1], 'SAME')
-
+            print(up_conv_f)
         return up_conv_f
 
 

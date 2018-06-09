@@ -1,24 +1,24 @@
 ### Path info ###
 
 # lINUX #
-TRAIN_DATA_PATH = '/home/mspark/project/data/Brain_Aneurysm_new_dataset/train'
-VAL_DATA_PATH = '/home/mspark/project/data/Brain_Aneurysm_new_dataset/test'
-PKL_DATA_PATH = '/home/mspark/project/data/Brain_Aneurysm_new_dataset/pkl/'
-LOG_DATA_PATH = '/home/mspark/project/aneurysm/unet/results/'
-PKL_NAME = 'train.pkl'
-
-# WINDOW #
-# TRAIN_DATA_PATH = 'D:\\dataset\\Brain_Aneurysm_new_dataset\\train'
-# VAL_DATA_PATH = 'D:\\dataset\\Brain_Aneurysm_new_dataset\\test'
-# PKL_DATA_PATH = 'D:\\dataset\\Brain_Aneurysm_new_dataset\\pkl'
+# TRAIN_DATA_PATH = '/home/mspark/project/data/Brain_Aneurysm_new_dataset/train'
+# VAL_DATA_PATH = '/home/mspark/project/data/Brain_Aneurysm_new_dataset/test'
+# PKL_DATA_PATH = '/home/mspark/project/data/Brain_Aneurysm_new_dataset/pkl/'
 # LOG_DATA_PATH = '/home/mspark/project/aneurysm/unet/results/'
 # PKL_NAME = 'train.pkl'
+
+# WINDOW #
+TRAIN_DATA_PATH = 'D:\\dataset\\Brain_Aneurysm_new_dataset\\train'
+VAL_DATA_PATH = 'D:\\dataset\\Brain_Aneurysm_new_dataset\\test'
+PKL_DATA_PATH = 'D:\\dataset\\Brain_Aneurysm_new_dataset\\pkl'
+LOG_DATA_PATH = '/home/mspark/project/aneurysm/unet/results/'
+PKL_NAME = 'train.pkl'
 
 
 ### pkl setting ###
 
-REBUILD_PKL = True             # pkl 파일 새로 만들지 결정 (pkl setting 바꿀 때 True)
-MODE = 'linux'                # 'window' or 'linux'
+REBUILD_PKL = False             # pkl 파일 새로 만들지 결정 (pkl setting 바꿀 때 True)
+MODE = 'window'                # 'window' or 'linux'
 IMG_SIZE = 256
 VALIDATION_RATIO = 15
 

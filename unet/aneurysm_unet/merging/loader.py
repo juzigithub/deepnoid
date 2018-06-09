@@ -5,7 +5,7 @@ import numpy as np
 import _pickle as cpickle
 
 import Unet.aneurysm_unet.merging.config as cfg
-
+# import config as cfg
 
 class DataLoader:
     def __init__(self, img_size):
@@ -139,6 +139,19 @@ class DataLoader:
         if not os.path.isfile(cfg.PKL_DATA_PATH + cfg.PKL_NAME) or cfg.REBUILD_PKL: #
             self._make_pkl(mode=mode)
 
+    def _make_address(self, data_list):
+        address = []
+        for data in data_list:
+            if 'abnorm' in data:
+                add1 = 0
+            else :
+                add1 = 1
+            add2 = int(data.split(os.path.sep)[-4])
+            add3 = os.path.basename(data)
+            add3 = int(os.path.splitext(add3)[0][4:])
+            address.append([add1, add2, add3])
+        return address
+
     def _make_pkl(self, mode='train'):
 
         trainX_list, trainY_list = self._data_list_load(cfg.TRAIN_DATA_PATH, mode=mode)
@@ -146,27 +159,14 @@ class DataLoader:
         trainX = self._read_image_grey_resized(trainX_list)
         trainY = self._read_label_grey_resized(trainY_list)
 
-
-
         # Validation Acc 계산 시 필요한 abnorm(0) / norm(1) 여부도 저장 -> valX = [abnorm or norm 여부, img data]
-        address = []
-        for valX in valX_list:
-            if 'abnorm' in valX:
-                add1 = 0
-            else:
-                add1 = 1
-
-            add2 = int(valX.split(os.path.sep)[-4])
-            add3 = os.path.basename(valX)
-            add3 = int(os.path.splitext(add3)[0][4:])
-
-            address.append([add1, add2, add3])
-
+        train_add = self._make_address(trainX_list)
+        val_add = self._make_address(valX_list)
 
         valX = self._read_image_grey_resized(valX_list)
         valY = self._read_label_grey_resized(valY_list)
 
-        total_dataset = [trainX, trainY, [address, valX], valY]
+        total_dataset = [[train_add, trainX], trainY, [val_add, valX], valY]
 
         with open(cfg.PKL_DATA_PATH + cfg.PKL_NAME, 'wb') as f:
             cpickle.dump(total_dataset, f, protocol=3)
@@ -189,7 +189,7 @@ class DataLoader:
 
         else:
             pass    ############## mode = 'test' 일 때
-
+import tensorflow as tf
 #######################################################################
 if __name__ == '__main__':
     loader = DataLoader(cfg.IMG_SIZE)
@@ -203,4 +203,13 @@ if __name__ == '__main__':
     # print(a[0].split(os.path.sep)[-4])
     # print(a[0].split(os.path.sep)[-1])
     a,b,c,d = loader.load_data('train')
+    # print(np.shape(c[0]))
+    # print(np.shape(c[1]))
+    # print(np.shape(a[0]))
+    # e = tf.placeholder(tf.int32, [None,3])
+    # with tf.Session() as sess:
+    #     f = sess.run(e, feed_dict={e:c[0]})
+    #     print(f)
+    print(np.shape(a[1]))
+    print(np.shape(b))
     print(c[0])
