@@ -330,31 +330,32 @@ class Train:
         # cv2의 결과는 2차원(H, W) 입니다. 따라서 pred_img에 0차원과 4차원에 차원을 덧대주어서 차원을 맞춰줍니다.
 
         if name == 'pred':
-            img = np.expand_dims(img, axis=3)
-            img = np.expand_dims(img, axis=0)
+            _img = np.expand_dims(img, axis=3)
+            _img = np.expand_dims(_img, axis=0)
 
         elif name == 'label' :
-            img = np.expand_dims(img, axis=0)
-            img = np.expand_dims(img, axis=3)
+            _img = np.expand_dims(img, axis=0)
+            _img = np.expand_dims(_img, axis=3)
 
         else:
-            img = np.expand_dims(img, axis=0)
-        # img = np.expand_dims(img, axis = 0)
+            _img = np.expand_dims(img, axis=0)
+
+        # _img = np.expand_dims(img, axis = 0)
         #
         # if name != 'test':
-        #     img = np.expand_dims(img, axis=3)
+        #     _img = np.expand_dims(img, axis=3)
 
         # 마스크 색을 결정합니다.
         # 예측이미지값을 R에 넣으면 빨간 마스킹 이미지가, B에 넣으면 파란 마스킹 이미지가, G에 넣으면 녹색 마스킹 이미지가 생성됩니다.
         if name == 'pred':
-            rgb_dic = {'green': 0, 'blue': 1, 'red': 2}
+            rgb_dic = {'blue': 0, 'green': 1, 'red': 2}
             rgb_list = [np.zeros([1, cfg.IMG_SIZE, cfg.IMG_SIZE, 1]) for _ in range(3)]
-            rgb_list[rgb_dic[color]] = img
+            rgb_list[rgb_dic[color]] = _img
             B, G, R = rgb_list
 
         # test_image 와 label_image 는 원본이 그대로 필요하므로 R, G, B 모두에 데이터를 넣어줍니다.
         else:
-            B = G = R = img
+            B = G = R = _img
 
         # R, G, B 채널을 concat 해서 하나의 차원에 정렬해줍니다.
         concat_img = np.concatenate((B, G, R), axis=3)
@@ -367,13 +368,13 @@ class Train:
 
         return out_img
 
-    def _make_img(self, pred, x_list, y_list, address, w=40, p=0.0001):
+    def _make_img(self, prediction, x_list, y_list, address, w=40, p=0.0001):
         # 예측된 배치 결과를 loop하면서 개별 이미지로 저장하는 loop문입니다.
         # 각 이미지 종류별 이미지를 저장하는 절대경로입니다. 이미지 파일명은 '밸리데이션 index'_'이미지 번호'.png 로 저장됩니다.
         # ex) path/abnorm_100_FILE00086.png
         # ex) address[img_idx] = [0, 100, 96]
 
-        for img_idx, label in enumerate(pred):
+        for img_idx, label in enumerate(prediction):
             val_fullpath, raw_fullpath, label_fullpath = self._make_img_full_path(address, img_idx)
 
             # 라벨이미지를 가져옵니다.
@@ -397,7 +398,7 @@ class Train:
             # 원본이미지에 예측결과를 마스킹해줍니다.
             cv2.imwrite(label_fullpath, label_image)
             cv2.imwrite(raw_fullpath, pred_image)
-            cv2.imwrite(val_fullpath, result_image * 255)
+            cv2.imwrite(val_fullpath, result_image)
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ import tensorflow as tf
 import utils
 import config as cfg
 
+
 class Model:
     def __init__(self):
         self.drop_rate = tf.placeholder(tf.float32, name='drop_rate')
@@ -72,7 +73,10 @@ class Model:
             down_conv_f = utils.conv2D('final_conv1', inputs, channel_n, [3, 3], [1, 1], padding='SAME')
             down_norm_f = utils.Normalization(down_conv_f, 'batch', self.training, 'final_norm1')
             down_act_f = utils.activation('final_conv1', down_norm_f, 'relu')
-            down_conv_f = utils.conv2D('final_conv2', down_act_f, channel_n, [3, 3], [1, 1], padding='SAME')
+
+            # down_conv_f = utils.conv2D('final_conv2', down_act_f, channel_n, [3, 3], [1, 1], padding='SAME')
+            down_conv_f = utils.conv2D('final_conv2', down_act_f, channel_n, [1, 1], [1, 1], padding='SAME')
+
             down_norm_f= utils.Normalization(down_conv_f, 'batch', self.training, 'final_norm2')
             down_act_f = utils.activation('final_conv2', down_norm_f, 'relu')
 
@@ -95,10 +99,14 @@ class Model:
                 channel_n //= 2
 
                 up_conv[i] = utils.conv2D(str(i) + '_upconv1', up_concat[i], channel_n, [3,3], [1,1], 'SAME')
-                # up_norm[i] = utils.Normalization(up_conv[i], 'batch', self.training, str(i) + '_upnorm1')
-                up_act[i] = utils.activation(str(i) + '_upact1', up_conv[i], 'relu')
-                up_conv[i] = utils.conv2D(str(i) + '_upconv2', up_act[i], channel_n, [3,3], [1,1], 'SAME')
+
+                ####
                 up_norm[i] = utils.Normalization(up_conv[i], 'batch', self.training, str(i) + '_upnorm2')
+                ####
+
+                up_act[i] = utils.activation(str(i) + '_upact1', up_norm[i], 'relu')
+                up_conv[i] = utils.conv2D(str(i) + '_upconv2', up_act[i], channel_n, [3,3], [1,1], 'SAME')
+                up_norm[i] = utils.Normalization(up_conv[i], 'batch', self.training, str(i) + '_upnorm3')
                 up_act[i] = utils.activation(str(i) + '_upact2', up_norm[i], 'relu')
 
                 inputs = up_act[i]

@@ -14,7 +14,7 @@ PKL_NAME = 'train.pkl'
 # DATA_PATH = 'D:\\dataset\\Brain_Aneurysm_new_dataset'
 # TRAIN_DATA_PATH = DATA_PATH + '\\train'
 # VAL_DATA_PATH = DATA_PATH + '\\test'
-# PKL_DATA_PATH = DATA_PATH + '\\pkl'
+# PKL_DATA_PATH = DATA_PATH + '\\pkl'\\
 # LOG_DATA_PATH = 'C:\\Users\\sunki\\PycharmProjects\\deepnoid\\Unet\\aneurysm_unet\\merging\\'
 # PKL_NAME = 'train.pkl'
 
