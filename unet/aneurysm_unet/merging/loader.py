@@ -2,12 +2,13 @@ import re
 import cv2
 import os
 import numpy as np
-import _pickle as cpickle
 import config as cfg
+import file_converter as fc
 
 class DataLoader:
-    def __init__(self, img_size):
-        self.img_size = img_size
+    def __init__(self):
+        self.pkl_converter = fc.pkl_converter()
+        self.json_converter = fc.json_converter()
 
     def _try_int(self, ss):
         try:
@@ -25,14 +26,9 @@ class DataLoader:
 
     # 데이터 경로 로더
     def _data_list_load(self, path, mode):
-
-
-        #################
         x_path = '{0}x'.format(cfg.PATH_SLASH)
         x_pathplus = '{0}x{0}'.format(cfg.PATH_SLASH)
         y_pathplus = '{0}y{0}'.format(cfg.PATH_SLASH)
-        #################
-
 
         if mode == 'train':
             # 데이터셋 경로를 담아 둘 빈 리스트 생성
@@ -99,11 +95,11 @@ class DataLoader:
         data = []
         for file in data_list:
             img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-            img = cv2.resize(img, (self.img_size, self.img_size), interpolation=cv2.INTER_AREA)
+            img = cv2.resize(img, (cfg.IMG_SIZE, cfg.IMG_SIZE), interpolation=cv2.INTER_AREA)
 
             data.append(img)
 
-        return np.array(data).reshape([-1, self.img_size, self.img_size, 1])
+        return np.array(data).reshape([-1, cfg.IMG_SIZE, cfg.IMG_SIZE, 1])
 
     def _read_label_grey_resized(self, data_list):
         if type(data_list) != str:
@@ -114,28 +110,33 @@ class DataLoader:
         data = []
         for file in data_list:
             img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-            img = cv2.resize(img, (self.img_size, self.img_size), interpolation=cv2.INTER_AREA)
+            img = cv2.resize(img, (cfg.IMG_SIZE, cfg.IMG_SIZE), interpolation=cv2.INTER_AREA)
             img1 = cv2.threshold(img, 50, 1, cv2.THRESH_BINARY)[1]
             img2 = cv2.threshold(img, 50, 1, cv2.THRESH_BINARY_INV)[1]
-            img1 = img1.reshape([self.img_size, self.img_size, 1])
-            img2 = img2.reshape([self.img_size, self.img_size, 1])
+            img1 = img1.reshape([cfg.IMG_SIZE, cfg.IMG_SIZE, 1])
+            img2 = img2.reshape([cfg.IMG_SIZE, cfg.IMG_SIZE, 1])
             img = np.concatenate((img1, img2), axis=2)
             # print(img)
             data.append(img)
 
-        return np.array(data).reshape([-1, self.img_size, self.img_size, 2])
+        return np.array(data).reshape([-1, cfg.IMG_SIZE, cfg.IMG_SIZE, 2])
 
 
 
 ########################################################################################################
-    def _check_pkl(self, mode='train'):
-        # pkl 저장 폴더 없는 경우 폴더 생성
-        if not os.path.exists(cfg.PKL_DATA_PATH):
-            os.mkdir(cfg.PKL_DATA_PATH)
-        # pkl 파일 없거나 새로 만들어야 할 때(cfg.REBUILD_PKL = TRUE) pkl 파일 생성
-        if not os.path.isfile(cfg.PKL_DATA_PATH + cfg.PKL_NAME) or cfg.REBUILD_PKL: #
-            self._make_pkl(mode=mode)
+    # def _check_pkl(self):
+    #     self.dataset = 222222222222222222222
+    #     self.pkl_full_path = cfg.PKL_DATA_PATH + cfg.PATH_SLASH + cfg.PKL_NAME
+    #     # pkl 저장 폴더 없는 경우 폴더 생성
+    #     # if not os.path.exists(cfg.PKL_DATA_PATH):
+    #     #     os.mkdir(cfg.PKL_DATA_PATH)
+    #
+    #     tl.files.exists_or_mkdir(cfg.PKL_DATA_PATH)
+    #     # pkl 파일 없거나 새로 만들어야 할 때(cfg.REBUILD_PKL = TRUE) pkl 파일 생성
+    #     if not os.path.isfile(self.pkl_full_path) or cfg.REBUILD_PKL: #
+    #         self._make_pkl(self.dataset)
 
+    # validation 이미지 저장 시 필요한 파일 정보를 추출합니다.
     def _make_address(self, data_list):
         address = []
         for data in data_list:
@@ -149,14 +150,23 @@ class DataLoader:
             address.append([add1, add2, add3])
         return address
 
-    def _make_pkl(self, mode='train'):
+    # def _make_pkl(self, dataset):
+    #     with open(cfg.PKL_DATA_PATH + cfg.PATH_SLASH + cfg.PKL_NAME, 'wb') as f:
+    #         cpickle.dump(dataset, f, protocol=3)
+    #         print('Making ' + cfg.PKL_NAME + ' Completed')
+    #
+    # def _load_pkl(self):
+    #     with open(cfg.PKL_DATA_PATH + cfg.PKL_NAME, 'rb') as f:
+    #         trainX, trainY, valX, valY = cpickle.load(f)
+    #
+    #     return trainX, trainY, valX, valY
 
+    def load_data(self, type='pkl',mode='train'):
         trainX_list, trainY_list = self._data_list_load(cfg.TRAIN_DATA_PATH, mode=mode)
         valX_list, valY_list = self._data_list_load(cfg.VAL_DATA_PATH, mode=mode)
         trainX = self._read_image_grey_resized(trainX_list)
         trainY = self._read_label_grey_resized(trainY_list)
 
-        # Validation Acc 계산 시 필요한 abnorm(0) / norm(1) 여부도 저장 -> valX = [abnorm or norm 여부, img data]
         train_add = self._make_address(trainX_list)
         val_add = self._make_address(valX_list)
 
@@ -165,28 +175,15 @@ class DataLoader:
 
         total_dataset = [[train_add, trainX], trainY, [val_add, valX], valY]
 
-        with open(cfg.PKL_DATA_PATH + cfg.PKL_NAME, 'wb') as f:
-            cpickle.dump(total_dataset, f, protocol=3)
-            print('Making ' + cfg.PKL_NAME + ' Completed')
+        if type == 'pkl':
+            self.pkl_converter.check_pkl(total_dataset)
 
-    def _load_pkl(self, mode='train'):
-        if mode == 'train' :
-            with open(cfg.PKL_DATA_PATH + cfg.PKL_NAME, 'rb') as f:
-                trainX, trainY, valX, valY = cpickle.load(f)
-        else :
-            pass   ############## mode = 'test' 일 때
+            return self.pkl_converter.load_pkl()
 
-        return trainX, trainY, valX, valY
+        elif type == 'json':
+            pass
 
-    def load_data(self, mode='train'):
-        self._check_pkl(mode=mode)
-
-        if mode == 'train' :
-            return self._load_pkl(mode=mode)
-
-        else:
-            pass    ############## mode = 'test' 일 때
 
 
 if __name__ == '__main__':
-    loader = DataLoader(cfg.IMG_SIZE)
+    loader = DataLoader()
