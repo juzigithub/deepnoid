@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../brats/.idea/brats.iml" filepath="$PROJECT_DIR$/../brats/.idea/brats.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/deepnoid.iml" filepath="$PROJECT_DIR$/.idea/deepnoid.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../source/.idea/source.iml" filepath="$PROJECT_DIR$/../source/.idea/source.iml" />
     </modules>
   </component>
 </project>
