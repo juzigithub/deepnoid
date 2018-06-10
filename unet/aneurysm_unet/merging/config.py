@@ -47,6 +47,14 @@ DROPOUT_RATE = 0.2
 # loss
 LOSS_FUNC = 'cross_entropy'    # cross_entropy or weighted_categorical_cross_entropy or dice_loss ...
 
+# activation_func
+
+# optimizer
+
+# initialization(weight, bias)
+
+# pooling
+
 
 ### Unet ###
 
@@ -57,7 +65,8 @@ N_CLASS = 2
 
 ### Result ###
 
-MASKING_COLOR = 'red'          # validation 마스킹 색 (red or green or blue)
+PRED_MASKING_COLOR = 'red'     # validation 테스트 예측 영역 마스킹 색 (red or green or blue)
+LABEL_MASKING_COLOR = 'blue'   # validation 테스트 라벨 영역 마스킹 색 (red or green or blue)
 W = 20                         # 마스킹 비율(값이 낮을 수록 masking 색이 진해집니다.)
 P = 0.0001                     # 각 이미지의 적용비율
 

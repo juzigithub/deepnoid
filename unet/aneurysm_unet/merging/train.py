@@ -46,7 +46,7 @@ class Train:
     # class initialize
     def __init__(self):
         self.p_eval = pe.performance()
-        self.data_loader = loader.DataLoader(img_size=cfg.IMG_SIZE)
+        self.data_loader = loader.DataLoader()
         self.model = model.Model()
 
         # TB
@@ -61,7 +61,7 @@ class Train:
 
         # data_list_loader + img_grey_size 까지 진행 -> pkl 데이터로 저장 -> pkl 데이터 로드
         # 다른 변수와 달리 valX = [abnorm(0) or norm(1) or else(2), img_da1ta] 로 구성
-        self.trainX, self.trainY, self.valX, self.valY = self.data_loader.load_data(mode='train')
+        self.trainX, self.trainY, self.valX, self.valY = self.data_loader.load_data(type='pkl', mode='train')
 
         detime = time.time()
 
@@ -96,11 +96,13 @@ class Train:
         self.val_img_save_path = '.{0}imgs{0}{1}{0}merged'.format(cfg.PATH_SLASH, str(epoch + 1))
         self.raw_val_img_save_path = '.{0}imgs{0}{1}{0}pred'.format(cfg.PATH_SLASH, str(epoch + 1))
         self.label_val_img_save_path = '.{0}imgs{0}{1}{0}label'.format(cfg.PATH_SLASH, str(epoch + 1))
+        self.compare_img_save_path = '.{0}imgs{0}{1}{0}compare'.format(cfg.PATH_SLASH, str(epoch + 1))
 
         # 각 개별 경로가 존재하는지 확인하고 없는 경우 경로를 생성합니다.
         tl.files.exists_or_mkdir(self.val_img_save_path)
         tl.files.exists_or_mkdir(self.raw_val_img_save_path)
         tl.files.exists_or_mkdir(self.label_val_img_save_path)
+        tl.files.exists_or_mkdir(self.compare_img_save_path)
 
     def train(self):
 
@@ -321,10 +323,11 @@ class Train:
         val_fullpath = self.val_img_save_path + full_add
         raw_fullpath = self.raw_val_img_save_path + full_add
         label_fullpath = self.label_val_img_save_path + full_add
+        compare_fullpath = self.compare_img_save_path + full_add
 
-        return val_fullpath, raw_fullpath, label_fullpath
+        return val_fullpath, raw_fullpath, label_fullpath, compare_fullpath
 
-    def _masking_rgb(self, img, color, name):
+    def _expand_dims(self, img, name):
         # 라벨이미지 저장을 위해 3채널 RGB 데이터가 필요하고 배치 차원을 맞춰주기 위해 차원확장을 진행합니다.
         # 이미지의 차원은 현재 [B, H, W, C] 로 배치, 세로, 가로, 채널로 되어있습니다.
         # cv2의 결과는 2차원(H, W) 입니다. 따라서 pred_img에 0차원과 4차원에 차원을 덧대주어서 차원을 맞춰줍니다.
@@ -340,14 +343,14 @@ class Train:
         else:
             _img = np.expand_dims(img, axis=0)
 
-        # _img = np.expand_dims(img, axis = 0)
-        #
-        # if name != 'test':
-        #     _img = np.expand_dims(img, axis=3)
+        return _img
+
+    def _masking_rgb(self, name, img, color=None):
+        _img = self._expand_dims(img, name)
 
         # 마스크 색을 결정합니다.
         # 예측이미지값을 R에 넣으면 빨간 마스킹 이미지가, B에 넣으면 파란 마스킹 이미지가, G에 넣으면 녹색 마스킹 이미지가 생성됩니다.
-        if name == 'pred':
+        if name == 'pred' or (name == 'label' and color != None):
             rgb_dic = {'blue': 0, 'green': 1, 'red': 2}
             rgb_list = [np.zeros([1, cfg.IMG_SIZE, cfg.IMG_SIZE, 1]) for _ in range(3)]
             rgb_list[rgb_dic[color]] = _img
@@ -375,11 +378,11 @@ class Train:
         # ex) address[img_idx] = [0, 100, 96]
 
         for img_idx, label in enumerate(prediction):
-            val_fullpath, raw_fullpath, label_fullpath = self._make_img_full_path(address, img_idx)
+            val_fullpath, raw_fullpath, label_fullpath, compare_fullpath = self._make_img_full_path(address, img_idx)
 
             # 라벨이미지를 가져옵니다.
             test_image = x_list[img_idx]
-            test_image = self._masking_rgb(test_image, cfg.MASKING_COLOR, name='test')
+            test_image = self._masking_rgb('test', test_image)
             test_image = test_image.astype(float)
 
             # 예측 결과를 threshold(기준 값을 경계로 0과 1 바이너리화를 진행합니다.)
@@ -387,18 +390,24 @@ class Train:
             # 옵션을 cv2.THRESH_BINARY로 진행하면 검은색 흰색 이미지가, cv2.THRESH_BINARY_INV로 진행하면 흰색 검은색 이미지가 저장됩니다.
             # 자세한 사항은 cv2 홈페이지를 참조하세요.
             _, pred_image = cv2.threshold(label, 0.5, 1.0, cv2.THRESH_BINARY)
-            pred_image = self._masking_rgb(pred_image, cfg.MASKING_COLOR, name='pred')
+            pred_image = self._masking_rgb('pred', pred_image, cfg.PRED_MASKING_COLOR)
 
             label_image = y_list[img_idx][:, :, 0]
-            label_image = self._masking_rgb(label_image, cfg.MASKING_COLOR, name='label')
+            label_image = self._masking_rgb('label', label_image)
+            label_image2 = self._masking_rgb('label2', label_image, cfg.LABEL_MASKING_COLOR)
+            label_image2 = label_image2.astype(float)
 
             result_image = cv2.addWeighted(pred_image, float(100 - w) * p, test_image, float(w) * p, 0)
             result_image *= 255
+
+            compare_image = cv2.addWeighted(pred_image, float(100 - w) * p, label_image2, float(w) * p, 0)
+            compare_image *= 255
 
             # 원본이미지에 예측결과를 마스킹해줍니다.
             cv2.imwrite(label_fullpath, label_image)
             cv2.imwrite(raw_fullpath, pred_image)
             cv2.imwrite(val_fullpath, result_image)
+            cv2.imwrite(compare_fullpath, compare_image)
 
 
 if __name__ == "__main__":
