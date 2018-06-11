@@ -135,26 +135,36 @@ class DataLoader:
         return address
 
     def load_data(self, type='pkl',mode='train'):
-        trainX_list, trainY_list = self._data_list_load(cfg.TRAIN_DATA_PATH, mode=mode)
-        valX_list, valY_list = self._data_list_load(cfg.VAL_DATA_PATH, mode=mode)
-        trainX = self._read_image_grey_resized(trainX_list)
-        trainY = self._read_label_grey_resized(trainY_list)
-
-        train_add = self._make_address(trainX_list)
-        val_add = self._make_address(valX_list)
-
-        valX = self._read_image_grey_resized(valX_list)
-        valY = self._read_label_grey_resized(valY_list)
-
-        total_dataset = [[train_add, trainX], trainY, [val_add, valX], valY]
 
         if type == 'pkl':
-            self.pkl_converter.check_pkl(total_dataset)
-
-            return self.pkl_converter.load_pkl()
-
+            build = self.pkl_converter._check_pkl()
         elif type == 'json':
             pass
+
+
+        if build :
+            trainX_list, trainY_list = self._data_list_load(cfg.TRAIN_DATA_PATH, mode=mode)
+            valX_list, valY_list = self._data_list_load(cfg.VAL_DATA_PATH, mode=mode)
+            trainX = self._read_image_grey_resized(trainX_list)
+            trainY = self._read_label_grey_resized(trainY_list)
+
+            train_add = self._make_address(trainX_list)
+            val_add = self._make_address(valX_list)
+
+            valX = self._read_image_grey_resized(valX_list)
+            valY = self._read_label_grey_resized(valY_list)
+
+            total_dataset = [[train_add, trainX], trainY, [val_add, valX], valY]
+
+            if type == 'pkl':
+                self.pkl_converter._make_pkl(total_dataset)
+
+            elif type == 'json':
+                pass
+
+        return self.pkl_converter.load_pkl()
+
+
 
 if __name__ == '__main__':
     loader = DataLoader()

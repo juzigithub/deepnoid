@@ -16,12 +16,13 @@ class pkl_converter():
             cpickle.dump(dataset, f, protocol=3)
             print('Making ' + cfg.PKL_NAME + ' Completed')
 
-    def check_pkl(self, dataset):
+    def _check_pkl(self):
         tl.files.exists_or_mkdir(cfg.PKL_DATA_PATH)
 
         # pkl 파일 없거나 새로 만들어야 할 때(cfg.REBUILD_PKL = TRUE) pkl 파일 생성
         if not os.path.isfile(self.pkl_full_path) or cfg.REBUILD_PKL:
-            self._make_pkl(dataset)
+            return True
+        return False
 
     def load_pkl(self):
         with open(self.pkl_full_path, 'rb') as f:

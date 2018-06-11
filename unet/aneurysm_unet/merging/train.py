@@ -79,30 +79,6 @@ class Train:
 
         self.optimizer = tf.train.AdamOptimizer(learning_rate=exponential_decay_learning_rate).minimize(self.model.loss,
                                                                                                         global_step=global_step)
-    def _make_path(self, epoch):
-
-        ### 모델 저장 ###
-
-        # 모델 저장을 위한 절대경로입니다. '파일명'.ckpt로 저장합니다.
-        self.model_save_path = '.{0}model{0}{1}{0}Unet.ckpt'.format(cfg.PATH_SLASH, str(epoch + 1))
-
-        # 모델을 저장할 경로를 확인하고 없으면 만들어줍니다.
-        tl.files.exists_or_mkdir('.{0}model{0}{1}'.format(cfg.PATH_SLASH, str(epoch + 1)))
-
-        ### 밸리데이션 결과 이미지 저장 ###
-
-        # val_img_save_path 는 학습이미지(원본이미지)와 예측이미지를 Overlap 시켜 환부에 마스크 이미지를 씌워주며
-        # raw_val_img_save_path는 예측이미지를, label_val_img_save_path는 라벨이미지를 저장하는 경로입니다.
-        self.val_img_save_path = '.{0}imgs{0}{1}{0}merged'.format(cfg.PATH_SLASH, str(epoch + 1))
-        self.raw_val_img_save_path = '.{0}imgs{0}{1}{0}pred'.format(cfg.PATH_SLASH, str(epoch + 1))
-        self.label_val_img_save_path = '.{0}imgs{0}{1}{0}label'.format(cfg.PATH_SLASH, str(epoch + 1))
-        self.compare_img_save_path = '.{0}imgs{0}{1}{0}compare'.format(cfg.PATH_SLASH, str(epoch + 1))
-
-        # 각 개별 경로가 존재하는지 확인하고 없는 경우 경로를 생성합니다.
-        tl.files.exists_or_mkdir(self.val_img_save_path)
-        tl.files.exists_or_mkdir(self.raw_val_img_save_path)
-        tl.files.exists_or_mkdir(self.label_val_img_save_path)
-        tl.files.exists_or_mkdir(self.compare_img_save_path)
 
     def train(self):
 
@@ -152,37 +128,6 @@ class Train:
                 if save_yn:
                     self._make_path(epoch)
 
-                # 한 에폭마다 학습하는 각 개별 스텝을 진행하는 loop 문 입니다.
-                # shuffles every batch and iterates
-                # for batch in tl.iterate.minibatches(inputs=self.trainX, targets=self.trainY,
-                #                                     batch_size=self.batch_size, shuffle=True):
-                # 경로 내의 학습데이터를 마찬가지로 랜덤 셔플해줍니다. 경로 셔플과 마찬가지의 효과를 줍니다.
-                # trainX, trainY = self.data_loader.data_shuffle(self.trainX, self.trainY)
-
-                # 한 에폭마다 학습하는 각 개별 스텝을 진행하는 loop 문 입니다.
-                # for batch in range(train_step):
-                    # 데이터모듈을 이용하여 매 스탭마다 학습에 사용할 데이터 경로를 불러오며 스텝이 진행되면 다음 배치데이터를 불러옵니다.
-                    # batch_xs_list, batch_ys_list = self.data_loader.next_batch(data_list=trainX, label=trainY,
-                    #                                                            idx=batch,
-                    #                                                            batch_size=cfg.BATCH_SIZE)
-
-                    # 데이터모듈을 이용하여 위에서 불러온 데이터 경로에서 이미지 데이터를 읽어서 배치데이터를 만듭니다.
-                    # batch_xs = self.data_loader.read_image_grey_resized(batch_xs_list)
-                    # batch_ys = self.data_loader.read_label_grey_resized(batch_ys_list)
-
-                    # 모델에 데이터를 넣어 줄 Feed Dict입니다.
-                    # tr_feed_dict = {self.model.X: batch_xs, self.model.Y: batch_ys, self.model.training: True,
-                    #                 self.model.drop_rate: 0.2}
-
-                    # 모델을 위에서 선언한 session을 run 시켜서 학습시키고 결과물로 cost값을 받습니다.
-                    # cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
-                    #
-                    # total_cost += cost
-                    # step += 1
-                    #
-                    # 학습 과정에서의 현재 에폭과 스텝 그리고 배치 Loss 값을 출력합니다.
-                    # print('Epoch:', '[%d' % (epoch + 1), '/ %d]  ' % cfg.EPOCHS, 'Step:', step, '/', train_step,
-                    #       '  Batch loss:', cost)
 
                 # Iterator 위한 feed_dict
                 tr_feed_dict = {self.model.X: self.trainX[1],
@@ -205,25 +150,6 @@ class Train:
 
 
                 for _ in range(val_step):
-                    # # 데이터모듈을 이용하여 매 스탭마다 밸리데이션에 사용할 데이터 경로를 불러오며 스텝이 진행되면 다음 배치데이터를 불러옵니다.
-                    # val_batch_xs_list, val_batch_ys_list = self.data_loader.next_batch(data_list=self.valX,
-                    #                                                                    label=self.valY, idx=batch,
-                    #                                                                    batch_size=cfg.BATCH_SIZE)
-                    #
-                    # # 데이터모듈을 이용하여 위에서 불러온 데이터 경로에서 이미지 데이터를 읽어서 배치데이터를 만듭니다.
-                    # val_batch_xs = self.data_loader.read_image_grey_resized(val_batch_xs_list)
-                    # val_batch_ys = self.data_loader.read_label_grey_resized(val_batch_ys_list)
-                    #
-                    # # 모델에 데이터를 넣어 줄 Feed Dict입니다.
-                    # val_feed_dict = {self.model.X: val_batch_xs, self.model.Y: val_batch_ys,
-                    #                  self.model.training: False, self.model.drop_rate: 0}
-                    #
-                    # # 밸리데이션 결과 IoU(Intersection of Union)을 계산합니다. Image Segmentation에선 IoU를 보통 Accuracy로 사용합니다.
-                    # # model.iou에선 [acc, mean_iou, unfiltered_iou]를 리턴합니다.
-                    # val_results, predicted_result = sess.run([self.model.results, self.model.foreground_predicted],
-                    #                                          feed_dict=val_feed_dict)
-                    # # acc, val_mean_iou, val_unfiltered_iou = val_results
-
 
                     # Iterator 위한 feed_dict
                     val_feed_dict = {self.model.X: self.valX[1],
@@ -270,17 +196,10 @@ class Train:
                     total_val_iou += mean_iou
                     total_val_unfiltered_iou += unfiltered_iou
 
-                    # 학습 시작 에폭과 끝에폭 그리고 saving epoch의 배수마다 이미지와 모델을 저장하게 합니다.
-                    # if epoch == 0 or epoch + 1 == epochs or epoch % epochs == 0  -> save_yn
-                    # val_img_save_path = './imgs/' + str(epoch + 1) + '/merged'
-                    # raw_val_img_save_path = './imgs/' + str(epoch + 1) + '/pred'
-                    # label_val_img_save_path = './imgs/' + str(epoch + 1) + '/label'
 
                     # validation 결과 이미지 저장
                     if save_yn :
                         self._make_img(predicted_result, x_list, y_list, address, cfg.W, cfg.P)
-
-
 
                 # 모델 저장
                 if save_yn:
@@ -317,28 +236,54 @@ class Train:
             print("")
             print("TRAINING COMPLETE")
 
+    def _make_path(self, epoch):
+
+        ### 모델 저장 ###
+
+        # 모델 저장을 위한 절대경로입니다. '파일명'.ckpt로 저장합니다.
+        self.model_save_path = '.{0}model{0}{1}{0}Unet.ckpt'.format(cfg.PATH_SLASH, str(epoch + 1))
+
+        # 모델을 저장할 경로를 확인하고 없으면 만들어줍니다.
+        tl.files.exists_or_mkdir('.{0}model{0}{1}'.format(cfg.PATH_SLASH, str(epoch + 1)))
+
+        ### 밸리데이션 결과 이미지 저장 ###
+
+        # val_img_save_path 는 학습이미지(원본이미지)와 예측이미지를 Overlap 시켜 환부에 마스크 이미지를 씌워주며
+        # raw_val_img_save_path는 예측이미지를, label_val_img_save_path는 라벨이미지를 저장하는 경로입니다.
+        # 학습 시작 에폭과 끝에폭 그리고 saving epoch의 배수마다 이미지와 모델을 저장하게 합니다.
+
+        # val_img_save_path = './imgs/' + str(epoch + 1) + '/merged'
+        # raw_val_img_save_path = './imgs/' + str(epoch + 1) + '/pred'
+        # label_val_img_save_path = './imgs/' + str(epoch + 1) + '/label'
+        # compare_img_save_path = './imgs/' + str(epoch + 1) + '/compare'
+
+        dir_name = ['merged', 'pred', 'label', 'compare']
+        self.path_list = [('.{0}imgs{0}{1}{0}' + name).format(cfg.PATH_SLASH, str(epoch + 1)) for name in dir_name]
+
+        # 각 개별 경로가 존재하는지 확인하고 없는 경우 경로를 생성합니다.
+        [tl.files.exists_or_mkdir(path) for path in self.path_list]
+
     def _make_img_full_path(self, address, img_idx):
         add1, add2, add3 = address[img_idx]
         full_add = '/{0}_{1}_FILE{2}.png'.format('abnorm' if add1 == 0 else 'norm', add2, add3)
-        val_fullpath = self.val_img_save_path + full_add
-        raw_fullpath = self.raw_val_img_save_path + full_add
-        label_fullpath = self.label_val_img_save_path + full_add
-        compare_fullpath = self.compare_img_save_path + full_add
 
-        return val_fullpath, raw_fullpath, label_fullpath, compare_fullpath
+        full_path_list = [path + full_add for path in self.path_list]
+        # val_fullpath = self.val_img_save_path + full_add
+        # raw_fullpath = self.raw_val_img_save_path + full_add
+        # label_fullpath = self.label_val_img_save_path + full_add
+        # compare_fullpath = self.compare_img_save_path + full_add
+
+        return full_path_list
 
     def _expand_dims(self, img, name):
         # 라벨이미지 저장을 위해 3채널 RGB 데이터가 필요하고 배치 차원을 맞춰주기 위해 차원확장을 진행합니다.
         # 이미지의 차원은 현재 [B, H, W, C] 로 배치, 세로, 가로, 채널로 되어있습니다.
         # cv2의 결과는 2차원(H, W) 입니다. 따라서 pred_img에 0차원과 4차원에 차원을 덧대주어서 차원을 맞춰줍니다.
+        #
 
-        if name == 'pred':
+        if 'pred' or 'label' in name:
             _img = np.expand_dims(img, axis=3)
             _img = np.expand_dims(_img, axis=0)
-
-        elif name == 'label' :
-            _img = np.expand_dims(img, axis=0)
-            _img = np.expand_dims(_img, axis=3)
 
         else:
             _img = np.expand_dims(img, axis=0)
@@ -350,7 +295,7 @@ class Train:
 
         # 마스크 색을 결정합니다.
         # 예측이미지값을 R에 넣으면 빨간 마스킹 이미지가, B에 넣으면 파란 마스킹 이미지가, G에 넣으면 녹색 마스킹 이미지가 생성됩니다.
-        if name == 'pred' or (name == 'label' and color != None):
+        if color != None :
             rgb_dic = {'blue': 0, 'green': 1, 'red': 2}
             rgb_list = [np.zeros([1, cfg.IMG_SIZE, cfg.IMG_SIZE, 1]) for _ in range(3)]
             rgb_list[rgb_dic[color]] = _img
@@ -393,21 +338,18 @@ class Train:
             pred_image = self._masking_rgb('pred', pred_image, cfg.PRED_MASKING_COLOR)
 
             label_image = y_list[img_idx][:, :, 0]
-            label_image = self._masking_rgb('label', label_image)
+            label_image1 = self._masking_rgb('label', label_image)
             label_image2 = self._masking_rgb('label2', label_image, cfg.LABEL_MASKING_COLOR)
             label_image2 = label_image2.astype(float)
 
             result_image = cv2.addWeighted(pred_image, float(100 - w) * p, test_image, float(w) * p, 0)
-            result_image *= 255
-
             compare_image = cv2.addWeighted(pred_image, float(100 - w) * p, label_image2, float(w) * p, 0)
-            compare_image *= 255
 
             # 원본이미지에 예측결과를 마스킹해줍니다.
-            cv2.imwrite(label_fullpath, label_image)
+            cv2.imwrite(label_fullpath, label_image1)
             cv2.imwrite(raw_fullpath, pred_image)
-            cv2.imwrite(val_fullpath, result_image)
-            cv2.imwrite(compare_fullpath, compare_image)
+            cv2.imwrite(val_fullpath, result_image * 255)
+            cv2.imwrite(compare_fullpath, compare_image * 255)
 
 
 if __name__ == "__main__":
