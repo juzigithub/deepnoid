@@ -295,7 +295,7 @@ def weighted_categorical_cross_entropy(output, target, weights, epsilon=1e-6):
 #############################################################################################################################
 def result_saver(path, data):
     with open(path, 'at') as f:
-        f.write(data + os.linesep)
+        f.write(data)
 
 
 
