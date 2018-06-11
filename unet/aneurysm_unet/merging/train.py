@@ -161,7 +161,7 @@ class Train:
                     # 학습 과정에서의 현재 에폭과 스텝 그리고 배치 Loss 값을 출력합니다.
                     self.result = ('Epoch:', '[%d' % (epoch + 1), '/ %d]  ' % cfg.EPOCHS, 'Step:', step, '/', train_step,'  Batch loss:', cost)
                     print(self.result)
-                    utils.result_saver(self.model_path + cfg.PATH_SLASH + 'result.txt', self.result + '\n')
+                    utils.result_saver(self.model_path + cfg.PATH_SLASH + 'result.txt', self.result)
 
 
                 for _ in range(val_step):
@@ -237,7 +237,7 @@ class Train:
                                'Valdation Unfiltered IoU:{:.4f}   '.format(Valdation_Unfiltered_IoU),
                                'Training time: {:.2f}  '.format(training_time))
                 print(self.result)
-                utils.result_saver(self.model_path + cfg.PATH_SLASH + 'result.txt', self.result + '\n')
+                utils.result_saver(self.model_path + cfg.PATH_SLASH + 'result.txt', self.result)
 
 
                 result_dict = {self.p_eval.mean_iou: Valdation_IoU,
