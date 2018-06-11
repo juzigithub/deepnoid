@@ -1,4 +1,5 @@
 import tensorflow as tf
+import os
 import cv2
 import numpy as np
 
@@ -292,7 +293,9 @@ def weighted_categorical_cross_entropy(output, target, weights, epsilon=1e-6):
 #############################################################################################################################
 #                                                    Save Functions                                                         #
 #############################################################################################################################
-
 def result_saver(path, data):
     with open(path, 'at') as f:
-        f.write(data + '\n')
+        f.write(data + os.linesep)
+
+
+

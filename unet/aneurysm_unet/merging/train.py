@@ -161,7 +161,7 @@ class Train:
                     # 학습 과정에서의 현재 에폭과 스텝 그리고 배치 Loss 값을 출력합니다.
                     self.result = ('Epoch:', '[%d' % (epoch + 1), '/ %d]  ' % cfg.EPOCHS, 'Step:', step, '/', train_step,'  Batch loss:', cost)
                     print(self.result)
-                    utils.result_saver(self.model_path + cfg.PATH_SLASH + 'result.txt', self.result)
+                    utils.result_saver(self.model_path + cfg.PATH_SLASH + 'result.txt', self.result + '\n')
 
 
                 for _ in range(val_step):
@@ -237,7 +237,7 @@ class Train:
                                'Valdation Unfiltered IoU:{:.4f}   '.format(Valdation_Unfiltered_IoU),
                                'Training time: {:.2f}  '.format(training_time))
                 print(self.result)
-                utils.result_saver(self.model_path + cfg.PATH_SLASH + 'result.txt', self.result)
+                utils.result_saver(self.model_path + cfg.PATH_SLASH + 'result.txt', self.result + '\n')
 
 
                 result_dict = {self.p_eval.mean_iou: Valdation_IoU,
@@ -264,7 +264,7 @@ class Train:
 
 
         # 모델을 저장할 경로를 확인하고 없으면 만들어줍니다.
-        tl.files.exists_or_mkdir('.{0}model{0}{1}'.format(cfg.PATH_SLASH, str(epoch + 1)))
+        tl.files.exists_or_mkdir(self.model_path + '{0}{1}'.format(cfg.PATH_SLASH, str(epoch + 1)))
 
         ### 밸리데이션 결과 이미지 저장 ###
 
