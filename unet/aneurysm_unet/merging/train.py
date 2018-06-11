@@ -38,6 +38,7 @@ import performance_eval as pe
 import config as cfg
 import model
 import loader
+import utils
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "6" ####################################### 1 -> 6
 
@@ -49,14 +50,26 @@ class Train:
         self.data_loader = loader.DataLoader()
         self.model = model.Model()
 
+        # make paths
+        *self.train_start_time, _, _, _, _ = time.localtime()
+        self.model_path = '.{0}model{0}{1}_{2}_{3}_{4}'.format(cfg.PATH_SLASH,*self.train_start_time)
+        self.img_path = '.{0}imgs{0}{1}_{2}_{3}_{4}'.format(cfg.PATH_SLASH,*self.train_start_time)
+        self.log_path = '.{0}logs{0}{1}_{2}_{3}_{4}'.format(cfg.PATH_SLASH,*self.train_start_time)
+
+        with open('.{}config.py'.format(cfg.PATH_SLASH), 'rt') as f:
+            tl.files.exists_or_mkdir(self.model_path)
+            self.result = f.read()
+            utils.result_saver(self.model_path + cfg.PATH_SLASH + 'result.txt', self.result)
+
         # TB
         self.merged_summary = tf.summary.merge_all()
-        self.writer = tf.summary.FileWriter('./logs')
+        self.writer = tf.summary.FileWriter(self.log_path)
 
         print('')
         print('>>> Data Loading Started')
         print('')
 
+        # utils.result_saver(self.train_start_time)
         dstime = time.time()
 
         # data_list_loader + img_grey_size 까지 진행 -> pkl 데이터로 저장 -> pkl 데이터 로드
@@ -68,6 +81,7 @@ class Train:
         print('')
         print('>>> Data Loading Complete. Consumption Time :', detime - dstime)
         print('')
+
 
     def optimizer(self, global_step):
         exponential_decay_learning_rate = tf.train.exponential_decay(learning_rate=cfg.INIT_LEARNING_RATE,
@@ -145,8 +159,9 @@ class Train:
                     step += 1
 
                     # 학습 과정에서의 현재 에폭과 스텝 그리고 배치 Loss 값을 출력합니다.
-                    print('Epoch:', '[%d' % (epoch + 1), '/ %d]  ' % cfg.EPOCHS, 'Step:', step, '/', train_step,
-                          '  Batch loss:', cost)
+                    self.result = ('Epoch:', '[%d' % (epoch + 1), '/ %d]  ' % cfg.EPOCHS, 'Step:', step, '/', train_step,'  Batch loss:', cost)
+                    print(self.result)
+                    utils.result_saver(self.model_path + cfg.PATH_SLASH + 'result.txt', self.result)
 
 
                 for _ in range(val_step):
@@ -215,11 +230,15 @@ class Train:
                 Valdation_IoU = total_val_iou / val_step
                 Valdation_Unfiltered_IoU = total_val_unfiltered_iou / val_step
 
-                print('Epoch:', '[%d' % (epoch + 1), '/ %d]  ' % cfg.EPOCHS,
-                      'Loss =', '{:.4f}  '.format(Loss),
-                      'Valdation IoU:{:.4f}   '.format(Valdation_IoU),
-                      'Valdation Unfiltered IoU:{:.4f}   '.format(Valdation_Unfiltered_IoU),
-                      'Training time: {:.2f}  '.format(training_time))
+
+                self.result = ('Epoch:', '[%d' % (epoch + 1), '/ %d]  ' % cfg.EPOCHS, 'Loss =',
+                               '{:.4f}  '.format(Loss),
+                               'Valdation IoU:{:.4f}   '.format(Valdation_IoU),
+                               'Valdation Unfiltered IoU:{:.4f}   '.format(Valdation_Unfiltered_IoU),
+                               'Training time: {:.2f}  '.format(training_time))
+                print(self.result)
+                utils.result_saver(self.model_path + cfg.PATH_SLASH + 'result.txt', self.result)
+
 
                 result_dict = {self.p_eval.mean_iou: Valdation_IoU,
                                self.p_eval.tot_iou: Valdation_Unfiltered_IoU,
@@ -241,7 +260,8 @@ class Train:
         ### 모델 저장 ###
 
         # 모델 저장을 위한 절대경로입니다. '파일명'.ckpt로 저장합니다.
-        self.model_save_path = '.{0}model{0}{1}{0}Unet.ckpt'.format(cfg.PATH_SLASH, str(epoch + 1))
+        self.model_save_path = self.model_path + '{0}{1}{0}Unet.ckpt'.format(cfg.PATH_SLASH, str(epoch + 1))
+
 
         # 모델을 저장할 경로를 확인하고 없으면 만들어줍니다.
         tl.files.exists_or_mkdir('.{0}model{0}{1}'.format(cfg.PATH_SLASH, str(epoch + 1)))
@@ -258,7 +278,7 @@ class Train:
         # compare_img_save_path = './imgs/' + str(epoch + 1) + '/compare'
 
         dir_name = ['merged', 'pred', 'label', 'compare']
-        self.path_list = [('.{0}imgs{0}{1}{0}' + name).format(cfg.PATH_SLASH, str(epoch + 1)) for name in dir_name]
+        self.path_list = [(self.img_path + '{0}{1}{0}' + name).format(cfg.PATH_SLASH, str(epoch + 1)) for name in dir_name]
 
         # 각 개별 경로가 존재하는지 확인하고 없는 경우 경로를 생성합니다.
         [tl.files.exists_or_mkdir(path) for path in self.path_list]
