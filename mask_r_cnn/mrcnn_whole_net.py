@@ -455,9 +455,9 @@ class MaskRCNN():
             - One of these predefined values:
               heaads: The RPN, classifier and mask heads of the network
               all: All the layers
-              3+: Train Resnet stage 3 and up
-              4+: Train Resnet stage 4 and up
-              5+: Train Resnet stage 5 and up
+              3+: Train Resnet_v1 stage 3 and up
+              4+: Train Resnet_v1 stage 4 and up
+              5+: Train Resnet_v1 stage 5 and up
         augmentation: Optional. An imgaug (https://github.com/aleju/imgaug)
             augmentation. For example, passing imgaug.augmenters.Fliplr(0.5)
             flips images right/left 50% of the time. You can pass complex
@@ -475,7 +475,7 @@ class MaskRCNN():
         layer_regex = {
             # all layers but the backbone
             "heads": r"(mrcnn\_.*)|(rpn\_.*)|(fpn\_.*)",
-            # From a specific Resnet stage and up
+            # From a specific Resnet_v1 stage and up
             "3+": r"(res3.*)|(bn3.*)|(res4.*)|(bn4.*)|(res5.*)|(bn5.*)|(mrcnn\_.*)|(rpn\_.*)|(fpn\_.*)",
             "4+": r"(res4.*)|(bn4.*)|(res5.*)|(bn5.*)|(mrcnn\_.*)|(rpn\_.*)|(fpn\_.*)",
             "5+": r"(res5.*)|(bn5.*)|(mrcnn\_.*)|(rpn\_.*)|(fpn\_.*)",
