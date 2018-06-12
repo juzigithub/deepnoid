@@ -40,7 +40,7 @@ import model
 import loader
 import utils
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "6" ####################################### 1 -> 6
+os.environ["CUDA_VISIBLE_DEVICES"] = "6"
 
 
 class Train:
@@ -239,7 +239,7 @@ class Train:
                 #               'Valdation Unfiltered IoU:{:.4f}   '.format(Valdation_Unfiltered_IoU),\
                 #               'Training time: {:.2f}  '.format(training_time)
                 #
-                self.result = 'Epoch: {0} / {1}, Loss: {:.4f}, Validation IoU: {:.4f}, ' \
+                self.result = 'Epoch: {} / {}, Loss: {:.4f}, Validation IoU: {:.4f}, ' \
                               'Validation Unfiltered IoU: {:.4f}, Training time: {:.2f}'.format((epoch + 1),
                                                                                                 cfg.EPOCHS,
                                                                                                 Loss,
