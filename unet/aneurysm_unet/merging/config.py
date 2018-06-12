@@ -45,7 +45,7 @@ DECAY_STAIRCASE = True
 DROPOUT_RATE = 0.2
 
 # loss
-LOSS_FUNC = 'cross_entropy'    # cross_entropy or weighted_categorical_cross_entropy or dice_loss ...
+LOSS_FUNC = 'cross_entropy'    # dice, focal, cross_entropy, dice_sum, huber,weighted_cross_entropy
 
 # activation_func
 
