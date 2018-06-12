@@ -34,7 +34,8 @@ class Model:
 
 #####################################################
         # self.loss = utils.cross_entropy(output=self.foreground_predicted, target=self.foreground_truth)
-        self.loss = utils.dice_loss(output=self.foreground_predicted, target=self.foreground_truth)
+        # self.loss = utils.dice_loss(output=self.foreground_predicted, target=self.foreground_truth)
+        self.loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.foreground_predicted, target=self.foreground_truth)
 #####################################################
 
         self.results = list(utils.iou_coe(output=self.foreground_predicted, target=self.foreground_truth))
