@@ -11,6 +11,7 @@ import numpy as np
 initializer = tf.contrib.layers.variance_scaling_initializer()
 regularizer = None # tf.contrib.layers.l2_regularizer(0.00001)
 
+# ACTIVATION_FUNC = 'relu'       # relu, elu, prelu, leaky_relu
 
 def conv2D(name, inputs, filters, kernel_size, strides, padding='valid'):
     conv2D = tf.layers.conv2d(inputs=inputs, filters=filters, kernel_size=kernel_size, strides=strides,
@@ -220,8 +221,8 @@ def iou_coe(output, target, smooth=1e-5):
 #############################################################################################################################
 
 
-def huber_loss(labels, predictions, delta=1.0):
-    residual = tf.abs(predictions - labels)
+def huber_loss(output, target, delta=1.0):
+    residual = tf.abs(output - target)
     condition = tf.less(residual, delta)
     small_res = 0.5 * tf.square(residual)
     large_res = delta * residual - 0.5 * tf.square(delta)
@@ -288,56 +289,50 @@ def weighted_categorical_cross_entropy(output, target, weights, epsilon=1e-6):
     cross_entropies = -tf.reduce_mean(target * tf.log(output), axis=tuple(range(ndim-1)))
     return tf.reduce_sum(w * cross_entropies)
 
-def select_loss(mode,output,target):
+def select_loss(mode, output, target, smooth=1e-6, weight=1, epsilon=1e-6, delta=1.0):
     if mode == 'dice':
-        inse = tf.reduce_mean(output * target, axis=(1, 2, 3))
-        l = tf.reduce_mean(output * output, axis=(1, 2, 3))
-        r = tf.reduce_mean(target * target, axis=(1, 2, 3))
-        dice = (2. * inse + 1e-6) / (l + r + 1e-6)
-        dice = tf.reduce_mean(dice)
-        return 1 - dice
+        return dice_loss(output, target, smooth=smooth)
     elif mode == 'focal':
-        ndim = len(output.get_shape())
-        output /= tf.reduce_sum(output, axis=(ndim - 1), keep_dims=True)
-        output = tf.clip_by_value(output, 1e-6, 1 - 1e-6)
-        focal = -tf.reduce_mean(tf.square(tf.ones_like(output) - output) * target * tf.log(output),
-                                axis=tuple(range(ndim - 1)))
-        return tf.reduce_sum(focal)
+        return focal_loss(output, target, epsilon=epsilon)
     elif mode == 'cross_entropy':
-        return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=target, logits=output))
+        return cross_entropy(output, target)
     elif mode == 'dice_sum':
-        inse = tf.reduce_sum(output * target, axis=(1, 2, 3))
-        l = tf.reduce_sum(output * output, axis=(1, 2, 3))
-        r = tf.reduce_sum(target * target, axis=(1, 2, 3))
-        dice = (2. * inse + 1e-6) / (l + r + 1e-6)
-        dice = tf.reduce_mean(dice)
-        return 1 - dice
+        return dice_loss_sum(output, target, smooth=smooth)
     elif mode == 'huber':
-        residual = tf.abs(output - target)
-        condition = tf.less(residual, 1.0)
-        small_res = 0.5 * tf.square(residual)
-        large_res = 1.0 * residual - 0.5 * tf.square(1.0)
-        return tf.where(condition, small_res, large_res)
+        return huber_loss(output, target, delta=delta)
     elif mode == 'weighted_cross_entropy':
-        ndim = len(output.get_shape())
-        ncategory = output.get_shape[-1]
-        # scale predictions so class probabilities of each pixel sum to 1
-        output /= tf.reduce_sum(output, axis=(ndim - 1), keep_dims=True)
-        output = tf.clip_by_value(output, 1e-6, 1 - 1e-6)
-        w = tf.constant(1) * (ncategory / sum(1))
-        # first, average over all axis except classes
-        cross_entropies = -tf.reduce_mean(target * tf.log(output), axis=tuple(range(ndim - 1)))
-        return tf.reduce_sum(w * cross_entropies)
+        return weighted_categorical_cross_entropy(output, target, weights=weight)
     else:
         print("Not supported loss function. Select among dice, focal, cross_entropy, dice_sum, huber,weighted_cross_entropy")
+
+#############################################################################################################################
+#                                                      Optimizer                                                            #
+#############################################################################################################################
+
+
+def select_optimizer(mode, learning_rate, loss, global_step):
+    if mode == 'adam':
+        return tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss=loss, global_step=global_step)
+    elif mode == 'rmsprop':
+        return tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(loss=loss, global_step=global_step)
+    elif mode == 'sgd':
+        return tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(loss=loss, global_step=global_step)
+    else:
+        print("Not supported optimizer. Select among adam, rmsprop, sgd")
+
+
 
 
 #############################################################################################################################
 #                                                    Save Functions                                                         #
 #############################################################################################################################
+
+
 def result_saver(path, data):
     with open(path, 'at') as f:
         f.write(data)
         f.write('\n')
+
+
 
 
