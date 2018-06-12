@@ -1,3 +1,6 @@
+### Model info ###
+# Unet 기본 모델
+
 ### Path info ###
 
 # lINUX #
@@ -28,7 +31,7 @@ VALIDATION_RATIO = 15
 
 # epoch, batch
 EPOCHS = 200
-SAVING_EPOCH = 2
+SAVING_EPOCH = 5
 BATCH_SIZE = 28
 BUFFER_SIZE = 3000             # Iterator에 올려놓을 데이터 사이즈(메모리에 올려 놓을 전체 데이터 개수보다 커야 합니다.)
 ACTIVATION_FUNC = 'relu'       # 가능한 활성함수 : relu, lrelu, elu, prelu, selu
