@@ -69,7 +69,6 @@ class Train:
         print('>>> Data Loading Started')
         print('')
 
-        # utils.result_saver(self.train_start_time)
         dstime = time.time()
 
         # data_list_loader + img_grey_size 까지 진행 -> pkl 데이터로 저장 -> pkl 데이터 로드
@@ -91,8 +90,7 @@ class Train:
                                                                      staircase=cfg.DECAY_STAIRCASE,
                                                                      name='learning_rate')
 
-        self.optimizer = tf.train.AdamOptimizer(learning_rate=exponential_decay_learning_rate).minimize(self.model.loss,
-                                                                                                        global_step=global_step)
+        self.optimizer = utils.select_optimizer(cfg.OPTIMIZER, exponential_decay_learning_rate, self.model.loss, global_step)
 
     def train(self):
 
@@ -203,7 +201,7 @@ class Train:
 
                     # val_batch_acc = after_filtered_length / before_filtered_length
 
-                    if after_filtered_length == 0: ####### len(iou_list) -> after_filtered_length
+                    if after_filtered_length == 0:
                         mean_iou = 0
 
                     else:
@@ -212,7 +210,6 @@ class Train:
                     # 배치별 IoU값과 정확도를 전체 IoU값과 정확도에 더합니다. 에폭이 종료되면 평균 IoU와 평균 정확도로 환산합니다.
                     total_val_iou += mean_iou
                     total_val_unfiltered_iou += unfiltered_iou
-
 
                     # validation 결과 이미지 저장
                     if save_yn :
@@ -232,13 +229,6 @@ class Train:
                 Valdation_IoU = total_val_iou / val_step
                 Valdation_Unfiltered_IoU = total_val_unfiltered_iou / val_step
 
-                #
-                # self.result = 'Epoch:', '[%d' % (epoch + 1), '/ %d]  ' % cfg.EPOCHS, 'Loss =', \
-                #               '{:.4f}  '.format(Loss),\
-                #               'Valdation IoU:{:.4f}   '.format(Valdation_IoU),\
-                #               'Valdation Unfiltered IoU:{:.4f}   '.format(Valdation_Unfiltered_IoU),\
-                #               'Training time: {:.2f}  '.format(training_time)
-                #
                 self.result = 'Epoch: {} / {}, Loss: {:.4f}, Validation IoU: {:.4f}, ' \
                               'Validation Unfiltered IoU: {:.4f}, Training time: {:.2f}'.format((epoch + 1),
                                                                                                 cfg.EPOCHS,
@@ -272,7 +262,6 @@ class Train:
         # 모델 저장을 위한 절대경로입니다. '파일명'.ckpt로 저장합니다.
         self.model_save_path = self.model_path + '{0}{1}{0}Unet.ckpt'.format(cfg.PATH_SLASH, str(epoch + 1))
 
-
         # 모델을 저장할 경로를 확인하고 없으면 만들어줍니다.
         tl.files.exists_or_mkdir(self.model_path + '{0}{1}'.format(cfg.PATH_SLASH, str(epoch + 1)))
 
@@ -281,11 +270,6 @@ class Train:
         # val_img_save_path 는 학습이미지(원본이미지)와 예측이미지를 Overlap 시켜 환부에 마스크 이미지를 씌워주며
         # raw_val_img_save_path는 예측이미지를, label_val_img_save_path는 라벨이미지를 저장하는 경로입니다.
         # 학습 시작 에폭과 끝에폭 그리고 saving epoch의 배수마다 이미지와 모델을 저장하게 합니다.
-
-        # val_img_save_path = './imgs/' + str(epoch + 1) + '/merged'
-        # raw_val_img_save_path = './imgs/' + str(epoch + 1) + '/pred'
-        # label_val_img_save_path = './imgs/' + str(epoch + 1) + '/label'
-        # compare_img_save_path = './imgs/' + str(epoch + 1) + '/compare'
 
         dir_name = ['merged', 'pred', 'label', 'compare']
         self.path_list = [(self.img_path + '{0}{1}{0}' + name).format(cfg.PATH_SLASH, str(epoch + 1)) for name in dir_name]
@@ -298,10 +282,6 @@ class Train:
         full_add = '/{0}_{1}_FILE{2}.png'.format('abnorm' if add1 == 0 else 'norm', add2, add3)
 
         full_path_list = [path + full_add for path in self.path_list]
-        # val_fullpath = self.val_img_save_path + full_add
-        # raw_fullpath = self.raw_val_img_save_path + full_add
-        # label_fullpath = self.label_val_img_save_path + full_add
-        # compare_fullpath = self.compare_img_save_path + full_add
 
         return full_path_list
 
@@ -383,8 +363,5 @@ class Train:
 
 
 if __name__ == "__main__":
-    # data_path = '/home/hshin255/data/BRATS_ORI/training/HGG'
-    # data_path = "C:\\Users\\hshin\\Desktop\\sample_files\\BRATS_ORI\\training\\HGG"
-
     trainer = Train()
     trainer.train()

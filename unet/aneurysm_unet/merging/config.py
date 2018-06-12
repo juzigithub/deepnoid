@@ -6,7 +6,6 @@ DATA_PATH = '/home/mspark/project/data/Brain_Aneurysm_new_dataset'
 TRAIN_DATA_PATH = DATA_PATH + '/train'
 VAL_DATA_PATH = DATA_PATH + '/test'
 PKL_DATA_PATH = DATA_PATH + '/pkl'
-LOG_DATA_PATH = '/home/mspark/project/aneurysm/unet/results/'
 PKL_NAME = 'train.pkl'
 
 # WINDOW #
@@ -15,7 +14,6 @@ PKL_NAME = 'train.pkl'
 # TRAIN_DATA_PATH = DATA_PATH + '\\train'
 # VAL_DATA_PATH = DATA_PATH + '\\test'
 # PKL_DATA_PATH = DATA_PATH + '\\pkl'
-# LOG_DATA_PATH = 'C:\\Users\\sunki\\PycharmProjects\\deepnoid\\Unet\\aneurysm_unet\\merging\\'
 # PKL_NAME = 'train.pkl'
 
 ### file setting ###
@@ -26,7 +24,6 @@ PATH_SLASH = '/' if MODE == 'linux' else '\\'
 IMG_SIZE = 256
 VALIDATION_RATIO = 15
 
-
 ### Common ###
 
 # epoch, batch
@@ -34,27 +31,14 @@ EPOCHS = 200
 SAVING_EPOCH = 2
 BATCH_SIZE = 28
 BUFFER_SIZE = 3000             # Iterator에 올려놓을 데이터 사이즈(메모리에 올려 놓을 전체 데이터 개수보다 커야 합니다.)
-
-# learning_rate
-INIT_LEARNING_RATE = 0.005
-DECAY_RATE = 0.9
+ACTIVATION_FUNC = 'relu'       # 가능한 활성함수 : relu, lrelu, elu, prelu, selu
+LOSS_FUNC = 'cross_entropy'    # 가능한 비용함수 : dice, focal, cross_entropy, dice_sum, huber,weighted_cross_entropy
+OPTIMIZER = 'adam'             # 가능한 옵티마이저 : adam, rmsprop, sgd
+INIT_LEARNING_RATE = 0.005     # 시작 시 학습률
+DECAY_RATE = 0.9               # 학습률 디케이 비율
 DECAY_STEP = 2500
 DECAY_STAIRCASE = True
-
-# dropout
 DROPOUT_RATE = 0.2
-
-# loss
-LOSS_FUNC = 'cross_entropy'    # dice, focal, cross_entropy, dice_sum, huber,weighted_cross_entropy
-
-# activation_func
-
-# optimizer
-
-# initialization(weight, bias)
-
-# pooling
-
 
 ### Unet ###
 

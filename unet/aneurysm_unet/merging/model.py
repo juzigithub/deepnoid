@@ -32,11 +32,7 @@ class Model:
         # 라벨이미지 역시 foreground와 background로 분리합니다
         self.foreground_truth, self.background_truth = tf.split(self.labels, [1, 1], 3) ########### self.Y -> self.labels 로
 
-#####################################################
-        # self.loss = utils.cross_entropy(output=self.foreground_predicted, target=self.foreground_truth)
-        # self.loss = utils.dice_loss(output=self.foreground_predicted, target=self.foreground_truth)
         self.loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.foreground_predicted, target=self.foreground_truth)
-#####################################################
 
         self.results = list(utils.iou_coe(output=self.foreground_predicted, target=self.foreground_truth))
 
@@ -65,10 +61,10 @@ class Model:
 
                 down_conv[i] = utils.conv2D(str(i) + '_conv1', inputs, channel_n, [3,3], [1,1], padding = 'SAME')
                 down_norm[i] = utils.Normalization(down_conv[i], 'batch',self.training, str(i) + '_norm1')
-                down_act[i] = utils.activation(str(i) + '_act1', down_norm[i], 'relu')
+                down_act[i] = utils.activation(str(i) + '_act1', down_norm[i], cfg.ACTIVATION_FUNC)
                 down_conv[i] = utils.conv2D(str(i) + '_conv2', down_act[i], channel_n, [3,3], [1,1], 'SAME')
                 down_norm[i] = utils.Normalization(down_conv[i], 'batch',self.training, str(i) + '_norm2')
-                down_act[i] = utils.activation(str(i) + '_act2', down_norm[i], 'relu')
+                down_act[i] = utils.activation(str(i) + '_act2', down_norm[i], cfg.ACTIVATION_FUNC)
                 down_pool[i] = utils.maxpool(str(i) + '_pool1', down_act[i], [2,2], [2,2], 'SAME')
 
                 inputs = down_pool[i]
@@ -78,13 +74,10 @@ class Model:
 
             down_conv_f = utils.conv2D('final_conv1', inputs, channel_n, [3, 3], [1, 1], padding='SAME')
             down_norm_f = utils.Normalization(down_conv_f, 'batch', self.training, 'final_norm1')
-            down_act_f = utils.activation('final_conv1', down_norm_f, 'relu')
-##################################################
-            # down_conv_f = utils.conv2D('final_conv2', down_act_f, channel_n, [3, 3], [1, 1], padding='SAME')
+            down_act_f = utils.activation('final_conv1', down_norm_f, cfg.ACTIVATION_FUNC)
             down_conv_f = utils.conv2D('final_conv2', down_act_f, channel_n, [1, 1], [1, 1], padding='SAME')
-##################################################
             down_norm_f= utils.Normalization(down_conv_f, 'batch', self.training, 'final_norm2')
-            down_act_f = utils.activation('final_conv2', down_norm_f, 'relu')
+            down_act_f = utils.activation('final_conv2', down_norm_f, cfg.ACTIVATION_FUNC)
 
         with tf.variable_scope('up'):
 
@@ -99,7 +92,7 @@ class Model:
                 up_deconv[i] = tf.reshape(up_deconv[i], shape=[-1, pool_size, pool_size, channel_n // 2])
 
                 up_norm[i] = utils.Normalization(up_deconv[i], 'batch', self.training, str(i) + '_upnorm1')
-                up_act[i] = utils.activation(str(i) + '_upact1', up_norm[i], 'relu')
+                up_act[i] = utils.activation(str(i) + '_upact1', up_norm[i], cfg.ACTIVATION_FUNC)
                 up_concat[i] = utils.concat(str(i) + '_upconcat1', [up_act[i], down_act[i]], 3)
 
                 channel_n //= 2
@@ -110,10 +103,10 @@ class Model:
                 up_norm[i] = utils.Normalization(up_conv[i], 'batch', self.training, str(i) + '_upnorm2')
                 #######################################
 
-                up_act[i] = utils.activation(str(i) + '_upact1', up_norm[i], 'relu')
+                up_act[i] = utils.activation(str(i) + '_upact1', up_norm[i], cfg.ACTIVATION_FUNC)
                 up_conv[i] = utils.conv2D(str(i) + '_upconv2', up_act[i], channel_n, [3,3], [1,1], 'SAME')
                 up_norm[i] = utils.Normalization(up_conv[i], 'batch', self.training, str(i) + '_upnorm3')
-                up_act[i] = utils.activation(str(i) + '_upact2', up_norm[i], 'relu')
+                up_act[i] = utils.activation(str(i) + '_upact2', up_norm[i], cfg.ACTIVATION_FUNC)
 
                 inputs = up_act[i]
 
