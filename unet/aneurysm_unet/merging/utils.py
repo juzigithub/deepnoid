@@ -288,6 +288,48 @@ def weighted_categorical_cross_entropy(output, target, weights, epsilon=1e-6):
     cross_entropies = -tf.reduce_mean(target * tf.log(output), axis=tuple(range(ndim-1)))
     return tf.reduce_sum(w * cross_entropies)
 
+def select_loss(mode,output,target):
+    if mode == 'dice':
+        inse = tf.reduce_mean(output * target, axis=(1, 2, 3))
+        l = tf.reduce_mean(output * output, axis=(1, 2, 3))
+        r = tf.reduce_mean(target * target, axis=(1, 2, 3))
+        dice = (2. * inse + 1e-6) / (l + r + 1e-6)
+        dice = tf.reduce_mean(dice)
+        return 1 - dice
+    elif mode == 'focal':
+        ndim = len(output.get_shape())
+        output /= tf.reduce_sum(output, axis=(ndim - 1), keep_dims=True)
+        output = tf.clip_by_value(output, 1e-6, 1 - 1e-6)
+        focal = -tf.reduce_mean(tf.square(tf.ones_like(output) - output) * target * tf.log(output),
+                                axis=tuple(range(ndim - 1)))
+        return tf.reduce_sum(focal)
+    elif mode == 'cross_entropy':
+        return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=target, logits=output))
+    elif mode == 'dice_sum':
+        inse = tf.reduce_sum(output * target, axis=(1, 2, 3))
+        l = tf.reduce_sum(output * output, axis=(1, 2, 3))
+        r = tf.reduce_sum(target * target, axis=(1, 2, 3))
+        dice = (2. * inse + 1e-6) / (l + r + 1e-6)
+        dice = tf.reduce_mean(dice)
+        return 1 - dice
+    elif mode == 'huber':
+        residual = tf.abs(output - target)
+        condition = tf.less(residual, 1.0)
+        small_res = 0.5 * tf.square(residual)
+        large_res = 1.0 * residual - 0.5 * tf.square(1.0)
+        return tf.where(condition, small_res, large_res)
+    elif mode == 'weighted_cross_entropy':
+        ndim = len(output.get_shape())
+        ncategory = output.get_shape[-1]
+        # scale predictions so class probabilities of each pixel sum to 1
+        output /= tf.reduce_sum(output, axis=(ndim - 1), keep_dims=True)
+        output = tf.clip_by_value(output, 1e-6, 1 - 1e-6)
+        w = tf.constant(1) * (ncategory / sum(1))
+        # first, average over all axis except classes
+        cross_entropies = -tf.reduce_mean(target * tf.log(output), axis=tuple(range(ndim - 1)))
+        return tf.reduce_sum(w * cross_entropies)
+    else:
+        print("Not supported loss function. Select among dice, focal, cross_entropy, dice_sum, huber,weighted_cross_entropy")
 
 
 #############################################################################################################################
@@ -296,6 +338,6 @@ def weighted_categorical_cross_entropy(output, target, weights, epsilon=1e-6):
 def result_saver(path, data):
     with open(path, 'at') as f:
         f.write(data)
-
+        f.write('\n')
 
 
