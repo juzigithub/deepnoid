@@ -45,37 +45,40 @@ class Model:
 ###############################
         self.down_conv = [0] * cfg.DEPTH
         self.down_pool = [0] * cfg.DEPTH
-        self.channel_n = [0] * cfg.DEPTH
         self.up_conv = [0] * cfg.DEPTH
         self.up_pool = [0] * cfg.DEPTH
 ###############################
-        # def dense_block_v1(name, inputs, group_n, drop_rate, training, n_layer):
 
         with tf.variable_scope('down'):
 
             inputs = self.features     # iterator 변수 self.features 를 이용해 inputs 생성
+            channel_n = cfg.INIT_N_FILTER
             pool_size = cfg.IMG_SIZE
-            channel_n_list = [cfg.INIT_N_FILTER * pow(2,(i)) for i in range(cfg.DEPTH)]
 
             # 처음 실행하면 모델 구조 나오도록 ?!
+            # for i in range(cfg.DEPTH):
+            #     pool_size //= 2
+            #     inputs = utils.unet_down_block(inputs, self.down_conv, self.down_pool, channel_n, pool_size, cfg.GROUP_N, self.training, i)
+            #     channel_n *= 2
+
+
             for i in range(cfg.DEPTH):
                 pool_size //= 2
-                self.down_conv[i] = utils.dense_block_v1('dense' + str(i), inputs, cfg.GROUP_N, self.drop_rate, self.training, 2)
-                self.down_conv[i] = utils.transition_layer('transition' + str(i), self.down_conv[i], cfg.GROUP_N, self.training, channel_n_list, i)
+                self.down_conv[i] = utils.depthwise_separable_convlayer('dsconv' + str(i), inputs, channel_n, cfg.WIDTH_MULTIPLIER, cfg.GROUP_N, self.training, i)
                 print('down_conv', self.down_conv[i])
-
-                self.down_pool[i] = utils.select_downsampling(str(i) + '_downsampling', self.down_conv[i], self.down_pool[i], channel_n_list[i], pool_size, cfg.DOWNSAMPLING_TYPE)
+                channel_n *= 2
+                self.down_pool[i] = utils.select_downsampling(str(i) + '_downsampling', self.down_conv[i], self.down_pool[i], channel_n, pool_size, cfg.DOWNSAMPLING_TYPE)
                 inputs = tf.identity(self.down_pool[i])
                 print('down_pool', inputs)
 
-            inputs = utils.unet_same_block(inputs, channel_n_list[-1], cfg.GROUP_N, self.training)
-            print('same_block', inputs)
+            inputs = utils.unet_same_block(inputs, channel_n, cfg.GROUP_N, self.training)
 
         with tf.variable_scope('up'):
 
             for i in reversed(range(cfg.DEPTH)):
+                channel_n //= 2
                 pool_size *= 2
-                inputs = utils.unet_up_block(inputs, self.down_conv, self.up_conv, self.up_pool, channel_n_list[i] // 2, pool_size, cfg.GROUP_N, self.training, i)
+                inputs = utils.unet_up_block(inputs, self.down_conv, self.up_conv, self.up_pool, channel_n, pool_size, cfg.GROUP_N, self.training, i)
 
             up_conv_f = utils.conv2D('final_upconv', inputs, cfg.N_CLASS, [1,1], [1,1], 'SAME')
 

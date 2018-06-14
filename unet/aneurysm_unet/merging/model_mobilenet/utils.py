@@ -510,10 +510,10 @@ def henet():
     pass
 
 def depthwise_separable_convlayer(name, inputs, channel_n, width_mul, group_n, training, idx):
-
     # depthwise
-    in_channel = inputs.get_shape().as_list()[-1]
-    l = tf.nn.depthwise_conv2d(inputs, [3, 3, in_channel, width_mul], strides = [1, 3, 3, 1], padding = 'SAME', name = name + str(idx) + '_depthwise')
+    depthwise_filter = tf.get_variable(name='depthwise_filter', shape=[1, 1, inputs.get_shape()[-1], width_mul],
+                                       dtype=tf.float32, initializer=tf.contrib.layers.variance_scaling_initializer())
+    l = tf.nn.depthwise_conv2d(inputs, depthwise_filter, strides = [1, 3, 3, 1], padding = 'SAME', name = name + str(idx) + '_depthwise')
     l = Normalization(l, cfg.NORMALIZATION_TYPE, training, name + str(idx) + '_depthwise_norm', G=group_n)
     l = activation(name + str(idx) + '_depthwise_act1', l, cfg.ACTIVATION_FUNC)
 

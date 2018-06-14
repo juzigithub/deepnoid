@@ -513,7 +513,7 @@ def depthwise_separable_convlayer(name, inputs, channel_n, width_mul, group_n, t
 
     # depthwise
     in_channel = inputs.get_shape().as_list()[-1]
-    l = tf.nn.depthwise_conv2d(inputs, [3, 3, in_channel, width_mul], strides = 1, padding = 'SAME', name = name + str(idx) + '_depthwise')
+    l = tf.nn.depthwise_conv2d(inputs, [3, 3, in_channel, width_mul], strides = [1, 3, 3, 1], padding = 'SAME', name = name + str(idx) + '_depthwise')
     l = Normalization(l, cfg.NORMALIZATION_TYPE, training, name + str(idx) + '_depthwise_norm', G=group_n)
     l = activation(name + str(idx) + '_depthwise_act1', l, cfg.ACTIVATION_FUNC)
 
