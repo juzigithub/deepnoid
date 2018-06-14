@@ -476,24 +476,6 @@ def dense_layer(name, inputs, group_n, drop_rate, training, idx):
 
     return l
 
-#
-# def transition_layer(name, l):
-#     num_filter = l.get_shape().as_list()[-1]
-#
-#     l = slim.batch_norm(l, activation_fn=None, scope=name + '_batchnorm')
-#     l = slim.conv2d(l,
-#                     num_outputs=cfg.THETA * num_filter,
-#                     kernel_size=1,
-#                     stride=1,
-#                     scope=name + '_conv'
-#                     )
-#     l = tf.nn.avg_pool(l,
-#                        ksize=[1, 2, 2, 1],
-#                        strides=[1, 2, 2, 1],
-#                        padding='SAME',
-#                        name=name + '_Avgpool'
-#                        )
-#     return l
 def transition_layer(name, inputs, group_n, training, specific_n_channels=False, idx=0):
     if specific_n_channels:
         l = Normalization(inputs, cfg.NORMALIZATION_TYPE, training, name + str(idx) + '_bottleneck_norm1', G=group_n)
@@ -526,4 +508,19 @@ def shufflenet():
 
 def henet():
     pass
+
+def depthwise_separable_convlayer(name, inputs, channel_n, width_mul, group_n, training, idx):
+
+    # depthwise
+    in_channel = inputs.get_shape().as_list()[-1]
+    l = tf.nn.depthwise_conv2d(inputs, [3, 3, in_channel, width_mul], strides = [1, 3, 3, 1], padding = 'SAME', name = name + str(idx) + '_depthwise')
+    l = Normalization(l, cfg.NORMALIZATION_TYPE, training, name + str(idx) + '_depthwise_norm', G=group_n)
+    l = activation(name + str(idx) + '_depthwise_act1', l, cfg.ACTIVATION_FUNC)
+
+    # pointwise
+    l = conv2D(name + str(idx) + '_pointwise', l, channel_n, [1, 1], [1, 1], padding='SAME')
+    l = Normalization(l, cfg.NORMALIZATION_TYPE, training, name + str(idx) + '_pointwise_norm1', G=group_n)
+    l = activation(name + str(idx) + '_pointwise_act1', l, cfg.ACTIVATION_FUNC)
+
+    return l
 
