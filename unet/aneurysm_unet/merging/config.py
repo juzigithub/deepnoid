@@ -1,5 +1,5 @@
 ### Model info ###
-# Unet 기본 모델
+# Unet 기본 모델, background loss 반영
 
 ### Path info ###
 
@@ -35,12 +35,19 @@ SAVING_EPOCH = 5
 BATCH_SIZE = 28
 BUFFER_SIZE = 3000             # Iterator에 올려놓을 데이터 사이즈(메모리에 올려 놓을 전체 데이터 개수보다 커야 합니다.)
 ACTIVATION_FUNC = 'relu'       # 가능한 활성함수 : relu, lrelu, elu, prelu, selu
-LOSS_FUNC = 'cross_entropy'    # 가능한 비용함수 : dice, focal, cross_entropy, dice_sum, huber,weighted_cross_entropy
+LOSS_FUNC = 'dice'             # 가능한 비용함수 : dice, focal, cross_entropy, dice_sum, huber,weighted_cross_entropy
 OPTIMIZER = 'adam'             # 가능한 옵티마이저 : adam, rmsprop, sgd
 INIT_LEARNING_RATE = 0.005     # 시작 시 학습률
 DECAY_RATE = 0.9               # 학습률 디케이 비율
 DECAY_STEP = 2500
 DECAY_STAIRCASE = True
+#####################
+NORMALIZATION_TYPE = 'batch'   # batch, group
+DOWNSAMPLING_TYPE = 'neighbor' # neighbor, maxpool, avgpool
+UPSAMPLING_TYPE = 'transpose'  # resize, transpose, add, concat
+GROUP_N = 8                    # group_conv, group_norm 의 group 개수
+#####################
+
 DROPOUT_RATE = 0.2
 
 ### Unet ###

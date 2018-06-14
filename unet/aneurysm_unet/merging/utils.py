@@ -1,4 +1,5 @@
 import tensorflow as tf
+import config as cfg
 import os
 import cv2
 import numpy as np
@@ -335,4 +336,107 @@ def result_saver(path, data):
 
 
 
+##################################
+#
+##################################
 
+
+def select_downsampling(name, down_conv, down_pool, channel_n, pool_size, mode):
+    if mode == 'neighbor':
+        shape = [-1, pool_size, pool_size, channel_n]
+        down_pool = re_conv2D(name + '_neighbor', down_conv, shape)
+
+    elif mode == 'maxpool':
+        down_pool = maxpool(name + '_maxpool', down_conv, [2,2], [2,2], 'SAME')
+
+    elif mode == 'avgpool':
+        down_pool = averagepool(name + '_avgpool', down_conv, [2,2], [2,2], 'SAME')
+
+    return down_pool
+
+
+def select_upsampling(name, up_conv, up_pool, channel_n, pool_size, mode):
+    shape = [-1, pool_size, pool_size, channel_n]
+
+    if mode == 'resize':
+      up_pool = re_conv2D(name + '_reconv', up_conv, shape)
+
+    elif mode == 'transpose':
+        up_pool = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n * 2], shape, [1,2,2,1], 'SAME')
+        up_pool = tf.reshape(up_pool, shape)
+
+    elif mode == 'add':
+        up_pool1 = re_conv2D(name + '_reconv', up_conv, shape)
+        up_pool2 = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n * 2], shape, [1,2,2,1], 'SAME')
+        up_pool2 = tf.reshape(up_pool2, shape)
+        up_pool = up_pool1 + up_pool2
+
+    elif mode == 'concat':
+        up_pool1 = re_conv2D(name + '_reconv', up_conv, shape)
+        up_pool2 = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n * 2], shape, [1, 2, 2, 1], 'SAME')
+        up_pool2 = tf.reshape(up_pool2, shape)
+        up_pool = concat('upsampling_concat', [up_pool1, up_pool2], axis=3)
+        up_pool = conv2D('bottleneck', up_pool, channel_n, [1,1], [1,1], padding='SAME')
+
+    return up_pool
+
+
+def unet_down_block(inputs, conv_list, pool_list, channel_n, pool_size, group_n, training, idx):
+    conv_list[idx] = conv2D(str(idx) + '_downconv1', inputs, channel_n, [3, 3], [1, 1], padding='SAME')
+    conv_list[idx] = Normalization(conv_list[idx], cfg.NORMALIZATION_TYPE, training, str(idx) + '_downnorm1',
+                                         G=group_n)
+    conv_list[idx] = activation(str(idx) + '_downact1', conv_list[idx], cfg.ACTIVATION_FUNC)
+    conv_list[idx] = conv2D(str(idx) + '_downconv2', conv_list[idx], channel_n, [3, 3], [1, 1], padding='SAME')
+    conv_list[idx] = Normalization(conv_list[idx], cfg.NORMALIZATION_TYPE, training, str(idx) + '_downnorm2',
+                                         G=group_n)
+    conv_list[idx] = activation(str(idx) + '_downact2', conv_list[idx], cfg.ACTIVATION_FUNC)
+    print('down' + str(idx + 1) + 'conv', conv_list[idx])
+    pool_list[idx] = select_downsampling(str(idx) + '_downsampling',
+                                               conv_list[idx],
+                                               pool_list[idx],
+                                               channel_n,
+                                               pool_size,
+                                               cfg.DOWNSAMPLING_TYPE)
+    print('down' + str(idx + 1) + 'pool', pool_list[idx])
+
+    if cfg.DOWNSAPLING_TYPE == 'neighbor':
+        conv_list[idx] = Normalization(conv_list[idx], cfg.NORMALIZATION_TYPE, training,
+                                             str(idx) + '_norm3', G=group_n)
+        conv_list[idx] = activation(str(idx) + '_act3', conv_list[idx], cfg.ACTIVATION_FUNC)
+
+    return pool_list[idx]
+
+
+def unet_same_block(inputs, channel_n, group_n, training):
+    conv_list = conv2D('same_conv1', inputs, channel_n, [3, 3], [1, 1], padding='SAME')
+    conv_list = Normalization(conv_list, cfg.NORMALIZATION_TYPE, training, 'same_norm1', G=group_n)
+    conv_list = activation('same_act1', conv_list, cfg.ACTIVATION_FUNC)
+    conv_list = conv2D('same_conv2', conv_list, channel_n, [1, 1], [1, 1], padding='SAME')
+    conv_list = Normalization(conv_list, cfg.NORMALIZATION_TYPE, training, 'same_norm2', G=group_n)
+    conv_list = activation('same_act2', conv_list, cfg.ACTIVATION_FUNC)
+
+    return conv_list
+
+
+def unet_up_block(inputs, downconv_list, upconv_list, pool_list, channel_n, pool_size, group_n, training, idx):
+    pool_list[idx] = select_upsampling(str(idx) + '_upsampling', inputs, pool_list[idx], channel_n, pool_size,
+                                             cfg.UPSAMPLING_TYPE)
+    pool_list[idx] = Normalization(pool_list[idx], cfg.NORMALIZATION_TYPE, training, str(idx) + '_norm1',
+                                         G=group_n)
+    pool_list[idx] = activation(str(idx) + '_upsampling_act', pool_list[idx], cfg.ACTIVATION_FUNC)
+    print('up' + str(idx + 1) + 'pool', pool_list[idx])
+
+    pool_list[idx] = concat(str(idx) + '_upconcat', [pool_list[idx], downconv_list[idx]], axis=3)
+    print('up' + str(idx + 1) + 'concat', pool_list[idx])
+
+    upconv_list[idx] = conv2D(str(idx) + '_upconv1', inputs, channel_n, [3, 3], [1, 1], padding='SAME')
+    upconv_list[idx] = Normalization(upconv_list[idx], cfg.NORMALIZATION_TYPE, training, str(idx) + '_upnorm1',
+                                           G=group_n)
+    upconv_list[idx] = activation(str(idx) + '_upact1', upconv_list[idx], cfg.ACTIVATION_FUNC)
+    upconv_list[idx] = conv2D(str(idx) + '_upconv2', upconv_list[idx], channel_n, [3, 3], [1, 1], padding='SAME')
+    upconv_list[idx] = Normalization(upconv_list[idx], cfg.NORMALIZATION_TYPE, training, str(idx) + '_upnorm2',
+                                           G=group_n)
+    upconv_list[idx] = activation(str(idx) + '_upact2', upconv_list[idx], cfg.ACTIVATION_FUNC)
+    print('down' + str(idx + 1) + 'conv', upconv_list[idx])
+
+    return upconv_list[idx]
