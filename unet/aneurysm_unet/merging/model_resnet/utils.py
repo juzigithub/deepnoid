@@ -375,8 +375,8 @@ def select_upsampling(name, up_conv, up_pool, channel_n, pool_size, mode):
         up_pool1 = re_conv2D(name + '_reconv', up_conv, shape)
         up_pool2 = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n * 2], shape, [1, 2, 2, 1], 'SAME')
         up_pool2 = tf.reshape(up_pool2, shape)
-        up_pool = concat('upsampling_concat', [up_pool1, up_pool2], axis=3)
-        up_pool = conv2D('bottleneck', up_pool, channel_n, [1,1], [1,1], padding='SAME')
+        up_pool = concat(name + '_upsampling_concat', [up_pool1, up_pool2], axis=3)
+        up_pool = conv2D(name + '_bottleneck', up_pool, channel_n, [1,1], [1,1], padding='SAME')
 
     return up_pool
 
