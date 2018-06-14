@@ -56,10 +56,19 @@ class Model:
             pool_size = cfg.IMG_SIZE
 
             # 처음 실행하면 모델 구조 나오도록 ?!
+            # for i in range(cfg.DEPTH):
+            #     pool_size //= 2
+            #     inputs = utils.unet_down_block(inputs, self.down_conv, self.down_pool, channel_n, pool_size, cfg.GROUP_N, self.training, i)
+            #     channel_n *= 2
+
             for i in range(cfg.DEPTH):
                 pool_size //= 2
-                inputs = utils.unet_down_block(inputs, self.down_conv, self.down_pool, channel_n, pool_size, cfg.GROUP_N, self.training, i)
+                self.down_conv[i] = utils.residual_block_v1(inputs, channel_n, cfg.GROUP_N, self.training, i)
+                print('down_conv', self.down_conv[i])
                 channel_n *= 2
+                self.down_pool[i] = utils.select_downsampling(str(i) + '_downsampling', self.down_conv[i], self.down_pool[i], channel_n, pool_size, cfg.DOWNSAMPLING_TYPE)
+                inputs = tf.identity(self.down_pool[i])
+                print('down_pool', inputs)
 
 
             inputs = utils.unet_same_block(inputs, channel_n, cfg.GROUP_N, self.training)
