@@ -20,7 +20,7 @@ def conv2D(name, inputs, filters, kernel_size, strides, padding='valid'):
     return conv2D
 
 
-def s_conv2D(name, inputs, filters, kernel_size, strides,padding='valid'):
+def s_conv2D(name, inputs, filters, kernel_size, strides, padding='valid'):
     s_conv2D = tf.layers.separable_conv2d(inputs=inputs, filters=filters, kernel_size=kernel_size, strides=strides, padding=padding, use_bias=True,
                                           depthwise_initializer=initializer, depthwise_regularizer=regularizer, pointwise_initializer=initializer,
                                           pointwise_regularizer=regularizer, name=name)
@@ -460,4 +460,36 @@ def residual_block_v1(inputs, channel_n, group_n, training, idx, shortcut=True):
 
     return hl
 
+def dense_layer(name, inputs, group_n, drop_rate, training, idx):
+    # bottleneck
+    l = Normalization(inputs, cfg.NORMALIZATION_TYPE, training, name + str(idx) + '_bottleneck_norm1', G=group_n)
+    l = activation(name + str(idx) + '_bottleneck_act1', l, cfg.ACTIVATION_FUNC)
+    l = conv2D(name + str(idx) + '_bottleneck1', l, 4 * cfg.GROWTH_RATE, [1, 1], [1, 1], padding='SAME')
+    l = dropout(l, drop_rate, training, name + str(idx) + '_dropout1')
+
+    # conv
+    l = Normalization(l, cfg.NORMALIZATION_TYPE, training, name + str(idx) + '_bottleneck_norm2', G=group_n)
+    l = activation(name + str(idx) + '_bottleneck_act2', l, cfg.ACTIVATION_FUNC)
+    l = conv2D(name + str(idx) + '_bottleneck2', l, cfg.GROWTH_RATE, [3, 3], [1, 1], padding='SAME')
+    l = dropout(l, drop_rate, training, name + str(idx) + '_dropout2')
+
+    return l
+
+def dense_block_v1(name, inputs, group_n, drop_rate, training, n_layer):
+    hl = tf.identity(inputs)
+
+    for idx in range(n_layer):
+        l = dense_layer(name, hl, group_n, drop_rate, training, idx)
+        hl = tf.concat([hl, l], axis=3)
+
+    return hl
+
+def mobilenet():
+    pass
+
+def shufflenet():
+    pass
+
+def henet():
+    pass
 

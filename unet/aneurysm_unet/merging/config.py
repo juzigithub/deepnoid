@@ -58,6 +58,12 @@ INIT_N_FILTER = 32             # 첫 레이어의 필터수
 RGB_CHANNEL = 1                # rgb(3) or greyscale(1)
 N_CLASS = 2
 
+### Densenet ###
+GROWTH_RATE = 12
+
+
+
+
 ### Result ###
 
 PRED_MASKING_COLOR = 'red'     # validation 테스트 예측 영역 마스킹 색 (red or green or blue)
