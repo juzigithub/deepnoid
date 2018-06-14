@@ -460,18 +460,52 @@ def residual_block_v1(inputs, channel_n, group_n, training, idx, shortcut=True):
 
     return hl
 
+
 def dense_layer(name, inputs, group_n, drop_rate, training, idx):
     # bottleneck
     l = Normalization(inputs, cfg.NORMALIZATION_TYPE, training, name + str(idx) + '_bottleneck_norm1', G=group_n)
     l = activation(name + str(idx) + '_bottleneck_act1', l, cfg.ACTIVATION_FUNC)
     l = conv2D(name + str(idx) + '_bottleneck1', l, 4 * cfg.GROWTH_RATE, [1, 1], [1, 1], padding='SAME')
-    l = dropout(l, drop_rate, training, name + str(idx) + '_dropout1')
+    l = dropout(name + str(idx) + '_dropout1', l, drop_rate, training)
 
     # conv
     l = Normalization(l, cfg.NORMALIZATION_TYPE, training, name + str(idx) + '_bottleneck_norm2', G=group_n)
     l = activation(name + str(idx) + '_bottleneck_act2', l, cfg.ACTIVATION_FUNC)
     l = conv2D(name + str(idx) + '_bottleneck2', l, cfg.GROWTH_RATE, [3, 3], [1, 1], padding='SAME')
-    l = dropout(l, drop_rate, training, name + str(idx) + '_dropout2')
+    l = dropout(name + str(idx) + '_dropout2', l, drop_rate, training)
+
+    return l
+
+#
+# def transition_layer(name, l):
+#     num_filter = l.get_shape().as_list()[-1]
+#
+#     l = slim.batch_norm(l, activation_fn=None, scope=name + '_batchnorm')
+#     l = slim.conv2d(l,
+#                     num_outputs=cfg.THETA * num_filter,
+#                     kernel_size=1,
+#                     stride=1,
+#                     scope=name + '_conv'
+#                     )
+#     l = tf.nn.avg_pool(l,
+#                        ksize=[1, 2, 2, 1],
+#                        strides=[1, 2, 2, 1],
+#                        padding='SAME',
+#                        name=name + '_Avgpool'
+#                        )
+#     return l
+def transition_layer(name, inputs, group_n, training, specific_n_channels=False, idx=0):
+    if specific_n_channels:
+        l = Normalization(inputs, cfg.NORMALIZATION_TYPE, training, name + str(idx) + '_bottleneck_norm1', G=group_n)
+        l = activation(name + str(idx) + '_bottleneck_act1', l, cfg.ACTIVATION_FUNC)
+        l = conv2D(name + str(idx) + '_bottleneck1', l, specific_n_channels[idx], [1, 1], [1, 1], padding='SAME')
+
+    else:
+        n_channels = inputs.get_shape().as_list()[-1]
+
+        l = Normalization(inputs, cfg.NORMALIZATION_TYPE, training, name + str(idx) + '_bottleneck_norm1', G=group_n)
+        l = activation(name + str(idx) + '_bottleneck_act1', l, cfg.ACTIVATION_FUNC)
+        l = conv2D(name + str(idx) + '_bottleneck1', l, n_channels * cfg.THETA, [1, 1], [1, 1], padding='SAME')
 
     return l
 

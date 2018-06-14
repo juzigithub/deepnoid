@@ -22,7 +22,7 @@ PKL_NAME = 'train.pkl'
 ### file setting ###
 
 DATA_FILE_TYPE = 'pkl'         # 데이터 로드 및 세이브 형식 결정 (pkl or json) json 은 차후 구현
-REBUILD_PKL = True             # pkl 파일 새로 만들지 결정 (pkl setting 바꿀 때 True)
+REBUILD_PKL = False            # pkl 파일 새로 만들지 결정 (pkl setting 바꿀 때 True)
 PATH_SLASH = '/' if MODE == 'linux' else '\\'
 IMG_SIZE = 256
 VALIDATION_RATIO = 15
@@ -60,8 +60,10 @@ N_CLASS = 2
 
 ### Densenet ###
 GROWTH_RATE = 12
+THETA = 0.5
 
-
+### Mobilenet ###
+WIDTH_MULTIPLIER = 1.0         # out_channel = in_channel * width_multiplier
 
 
 ### Result ###
