@@ -460,18 +460,19 @@ def residual_block_v1(inputs, channel_n, group_n, training, idx, shortcut=True):
 
     return hl
 
+
 def dense_layer(name, inputs, group_n, drop_rate, training, idx):
     # bottleneck
     l = Normalization(inputs, cfg.NORMALIZATION_TYPE, training, name + str(idx) + '_bottleneck_norm1', G=group_n)
     l = activation(name + str(idx) + '_bottleneck_act1', l, cfg.ACTIVATION_FUNC)
     l = conv2D(name + str(idx) + '_bottleneck1', l, 4 * cfg.GROWTH_RATE, [1, 1], [1, 1], padding='SAME')
-    l = dropout(l, drop_rate, training, name + str(idx) + '_dropout1')
+    l = dropout(name + str(idx) + '_dropout1', l, drop_rate, training)
 
     # conv
     l = Normalization(l, cfg.NORMALIZATION_TYPE, training, name + str(idx) + '_bottleneck_norm2', G=group_n)
     l = activation(name + str(idx) + '_bottleneck_act2', l, cfg.ACTIVATION_FUNC)
     l = conv2D(name + str(idx) + '_bottleneck2', l, cfg.GROWTH_RATE, [3, 3], [1, 1], padding='SAME')
-    l = dropout(l, drop_rate, training, name + str(idx) + '_dropout2')
+    l = dropout(name + str(idx) + '_dropout2', l, drop_rate, training)
 
     return l
 
