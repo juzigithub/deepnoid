@@ -46,7 +46,7 @@ DECAY_STAIRCASE = True
 NORMALIZATION_TYPE = 'batch'   # batch, group
 DOWNSAMPLING_TYPE = 'neighbor' # neighbor, maxpool, avgpool
 UPSAMPLING_TYPE = 'transpose'  # resize, transpose, add, concat
-GROUP_N = 8                    # group_conv, group_norm 의 group 개수
+GROUP_N = 4                    # group_conv, group_norm 의 group 개수
 #####################
 
 DROPOUT_RATE = 0.2
@@ -65,6 +65,8 @@ THETA = 0.5
 ### Mobilenet ###
 WIDTH_MULTIPLIER = 1.0         # out_channel = in_channel * width_multiplier
 
+### Shufflenet ###
+UNIT_N = 2                     # shuffle unit 의 개수
 
 ### Result ###
 
