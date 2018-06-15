@@ -68,15 +68,16 @@ class Model:
                                                               inputs,
                                                               channel_n,
                                                               cfg.GROUP_N,
-                                                              stride=1,
-                                                              training=self.training,
-                                                              idx=i)
+                                                              stride = 1,
+                                                              training = self.training,
+                                                              idx = i)
                 print('down_conv', self.down_conv[i])
                 channel_n *= 2
                 self.down_pool[i] = utils.select_downsampling(str(i) + '_downsampling',
                                                               self.down_conv[i],
                                                               self.down_pool[i],
-                                                              channel_n, pool_size,
+                                                              channel_n,
+                                                              pool_size,
                                                               cfg.DOWNSAMPLING_TYPE)
                 inputs = tf.identity(self.down_pool[i])
                 print('down_pool', inputs)
