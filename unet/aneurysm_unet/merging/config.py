@@ -1,5 +1,5 @@
 ### Model info ###
-# Unet 기본 모델, background loss 반영
+#
 
 ### Path info ###
 
@@ -42,34 +42,36 @@ INIT_LEARNING_RATE = 0.005     # 시작 시 학습률
 DECAY_RATE = 0.9               # 학습률 디케이 비율
 DECAY_STEP = 2500
 DECAY_STAIRCASE = True
-#####################
 NORMALIZATION_TYPE = 'batch'   # batch, group
 DOWNSAMPLING_TYPE = 'neighbor' # neighbor, maxpool, avgpool
 UPSAMPLING_TYPE = 'transpose'  # resize, transpose, add, concat
-GROUP_N = 4                    # group_conv, group_norm 의 group 개수
-#####################
-
+GROUP_N = 8                    # group_conv, group_norm 의 group 개수
 DROPOUT_RATE = 0.2
 
-### Unet ###
-
+### Unet ###                       https://arxiv.org/abs/1505.04597
 DEPTH = 4                      # Unet 층 깊이 (down * depth + up * depth)
-INIT_N_FILTER = 32             # 첫 레이어의 필터수
+INIT_N_FILTER = 24             # 첫 레이어의 필터수
 RGB_CHANNEL = 1                # rgb(3) or greyscale(1)
 N_CLASS = 2
 
-### Densenet ###
+### Densenet ###                   https://arxiv.org/abs/1608.06993
 GROWTH_RATE = 12
 THETA = 0.5
 
-### Mobilenet ###
+### Mobilenet ###                  https://arxiv.org/abs/1704.04861
 WIDTH_MULTIPLIER = 1.0         # out_channel = in_channel * width_multiplier
 
-### Shufflenet ###
+### Shufflenet ###                 https://arxiv.org/abs/1707.01083
 UNIT_N = 2                     # shuffle unit 의 개수
 FIRST_DOWNSAMPLING = False     # 첫번째 레이어 다운샘플링 여부
-### Result ###
 
+### HENet ###                      https://arxiv.org/abs/1803.02742
+FIRST_DOWNSAMPLING = False     # 첫번째 레이어 다운샘플링 여부
+GROUP_IN = GROUP_N             # 첫번째 Group_conv 시 group 개수 (NORMALIZATION 의 GROUP_N 과 일치 권장)
+GROUP_OUT = 6                  # 마지막 Group_conv 시 group 개수 (권장 : (group_m, group_n) = (6, 4), (8, 6), (12, 8))
+REPEAT = 2                     # s1_block 반복 횟수
+
+### Result ###
 PRED_MASKING_COLOR = 'red'     # validation 테스트 예측 영역 마스킹 색 (red or green or blue)
 LABEL_MASKING_COLOR = 'blue'   # validation 테스트 라벨 영역 마스킹 색 (red or green or blue)
 W = 40                         # 마스킹 비율(값이 낮을 수록 masking 색이 진해집니다.)

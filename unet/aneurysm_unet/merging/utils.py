@@ -528,7 +528,7 @@ def channel_shuffle(name, inputs, group_n):
 
         return l
 
-def group_conv2D(name, inputs, channel_n, group_n, stride, training, idx, activation_fn=True):
+def group_conv2D(name, inputs, channel_n, kernel_size, group_n, stride, training, idx, activation_fn=True, padding='SAME'):
     in_channel_per_group = inputs.get_shape().as_list()[-1] // group_n
     out_channel_per_group = channel_n // group_n
     grouped_channel_list = []
@@ -537,9 +537,9 @@ def group_conv2D(name, inputs, channel_n, group_n, stride, training, idx, activa
         _l = conv2D(name + str(i),
                     inputs[:, :, :, i * in_channel_per_group: i * in_channel_per_group + in_channel_per_group],
                     filters = out_channel_per_group,
-                    kernel_size = [1, 1],
+                    kernel_size = [kernel_size, kernel_size],
                     strides = [stride, stride],
-                    padding = 'SAME')
+                    padding = padding)
         grouped_channel_list.append(_l)
 
     _l = tf.concat(grouped_channel_list, axis=-1, name='concat_channel')
@@ -567,6 +567,7 @@ def shufflenet_unit(name, inputs, channel_n, group_n, stride, training, idx):
     _group_layer = group_conv2D(name + '_group_conv1',
                                 inputs,
                                 channel_n,
+                                1,
                                 group_n,
                                 1,
                                 training,
@@ -585,6 +586,7 @@ def shufflenet_unit(name, inputs, channel_n, group_n, stride, training, idx):
     final_group_layer = group_conv2D(name + '_group_conv2',
                                      _depthwise_conv_layer,
                                      channel_n,
+                                     1,
                                      group_n,
                                      1,
                                      training,
@@ -607,5 +609,111 @@ def shufflenet_stage(name, inputs, channel_n, group_n, training, repeat):
 
     for i in range(repeat):
         l = shufflenet_unit(name + str(i), inputs, channel_n, group_n, stride=1, training=training, idx=i+1)
+
+    return l
+
+def he_hlayer(name, inputs, channel_n, group_m, group_n, training, idx):
+    l = group_conv2D(name + str(idx) + '_1st_Gconv',
+                     inputs = inputs,
+                     channel_n = channel_n,
+                     kernel_size = 1,
+                     group_n = group_m,
+                     stride = 1,
+                     training = training,
+                     idx = 0,
+                     activation_fn = False)
+    l = channel_shuffle(name + str(idx) + '_channelshuffle',
+                        l,
+                        group_m)
+    l = group_conv2D(name + str(idx) + '_2nd_Gconv',
+                     inputs = l,
+                     channel_n = channel_n,
+                     kernel_size = 3,
+                     group_n = group_n,
+                     stride = 1,
+                     training = training,
+                     idx = 1,
+                     activation_fn = True)
+
+def he_s1block(name, inputs, channel_n, group_m, group_n, training, repeat):
+    X = tf.identity(inputs)
+    l = inputs
+    for i in range(repeat):
+        HL = he_hlayer(name = name + '_hlayer{}'.format(i + 1),
+                       inputs = l,
+                       channel_n = channel_n,
+                       group_m = group_m,
+                       group_n = group_n,
+                       training = training,
+                       idx = i)
+        X = tf.add(X + HL, axis=3)
+        l = tf.concat([HL, X], axis=3)
+
+    return l
+
+def he_s2block(name, inputs, channel_n, group_m, group_n, training):
+    l = group_conv2D(name + '_1st_s2_Gconv',
+                     inputs = inputs,
+                     channel_n = channel_n // 2,
+                     kernel_size = 3,
+                     group_n = group_m,
+                     stride = 2,
+                     training = training,
+                     idx = 0,
+                     activation_fn = False)
+    l = channel_shuffle(name + '_s2_channelshuffle',
+                        l,
+                        group_m)
+    l = group_conv2D(name + '_2nd_s2_Gconv',
+                     inputs = l,
+                     channel_n = channel_n,
+                     kernel_size = 1,
+                     group_n = group_n,
+                     stride = 1,
+                     training = training,
+                     idx = 1,
+                     activation_fn = True)
+
+def he_stage(name, inputs, channel_in, channel_out, group_m, group_n, training, repeat, last_stage=False):
+    if last_stage:
+        _, h, _, _ = inputs.get_shape().as_list()
+
+        l = group_conv2D(name + 'last_stage1',
+                         inputs = inputs,
+                         channel_n = channel_in,
+                         kernel_size = h,
+                         group_n = group_m,
+                         stride = 1,
+                         training = training,
+                         idx = 0,
+                         activation_fn = False,
+                         padding = 'VALID')
+        l = channel_shuffle(name + '_last_channelshuffle',
+                            l,
+                            group_m)
+        l = group_conv2D(name + 'last_stage2',
+                         inputs=l,
+                         channel_n=channel_out,
+                         kernel_size=1,
+                         group_n=group_n,
+                         stride=1,
+                         training=training,
+                         idx=1,
+                         activation_fn=True)
+    else:
+        l = he_s1block(name = name + 's1_block',
+                       inputs = inputs,
+                       channel_n = channel_in,
+                       group_m = group_m,
+                       group_n = group_n,
+                       training = training,
+                       repeat = repeat)
+
+        l = he_s2block(name = name + 's2_block',
+                       inputs = l,
+                       channel_n = channel_out,
+                       group_m = group_m,
+                       group_n = group_n,
+                       training = training)
 
     return l
