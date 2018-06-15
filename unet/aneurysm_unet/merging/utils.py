@@ -634,6 +634,7 @@ def he_hlayer(name, inputs, channel_n, group_m, group_n, training, idx):
                      training = training,
                      idx = 1,
                      activation_fn = True)
+    return l
 
 def he_s1block(name, inputs, channel_n, group_m, group_n, training, repeat):
     X = tf.identity(inputs)
@@ -646,18 +647,18 @@ def he_s1block(name, inputs, channel_n, group_m, group_n, training, repeat):
                        group_n = group_n,
                        training = training,
                        idx = i)
-        X = tf.add(X + HL, axis=3)
+        X = X + HL
         l = tf.concat([HL, X], axis=3)
 
     return l
 
-def he_s2block(name, inputs, channel_n, group_m, group_n, training):
+def he_s2block(name, inputs, channel_n, group_m, group_n, training, resize = True):
     l = group_conv2D(name + '_1st_s2_Gconv',
                      inputs = inputs,
                      channel_n = channel_n // 2,
                      kernel_size = 3,
                      group_n = group_m,
-                     stride = 2,
+                     stride = 2 if resize else 1,
                      training = training,
                      idx = 0,
                      activation_fn = False)
@@ -673,8 +674,9 @@ def he_s2block(name, inputs, channel_n, group_m, group_n, training):
                      training = training,
                      idx = 1,
                      activation_fn = True)
+    return l
 
-def he_stage(name, inputs, channel_in, channel_out, group_m, group_n, training, repeat, last_stage=False):
+def he_stage(name, inputs, channel_in, channel_out, group_m, group_n, training, repeat, resize=True, last_stage=False):
     if last_stage:
         _, h, _, _ = inputs.get_shape().as_list()
 
@@ -714,6 +716,7 @@ def he_stage(name, inputs, channel_in, channel_out, group_m, group_n, training, 
                        channel_n = channel_out,
                        group_m = group_m,
                        group_n = group_n,
-                       training = training)
+                       training = training,
+                       resize = resize)
 
     return l
