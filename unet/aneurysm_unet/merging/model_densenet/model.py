@@ -23,7 +23,7 @@ class Model:
         self.iter = self.dataset.make_initializable_iterator()
         self.features, self.labels, self.address = self.iter.get_next()  #### self.X, self.Y 들어갈 자리에 self.features, self.labels 입력
 
-        self.logit = self.u_net()
+        self.logit = self.densenet()
 
         self.pred = tf.nn.softmax(logits=self.logit)
         # 활성화 시킨 probability map을 split 하여 foreground와 background로 분리합니다.
@@ -39,7 +39,7 @@ class Model:
         self.results = list(utils.iou_coe(output=self.foreground_predicted, target=self.foreground_truth))
 
 
-    def u_net(self):
+    def densenet(self):
         # start down sampling by depth n.
 
 ###############################

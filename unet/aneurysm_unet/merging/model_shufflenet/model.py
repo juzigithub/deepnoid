@@ -23,7 +23,7 @@ class Model:
         self.iter = self.dataset.make_initializable_iterator()
         self.features, self.labels, self.address = self.iter.get_next()  #### self.X, self.Y 들어갈 자리에 self.features, self.labels 입력
 
-        self.logit = self.u_net()
+        self.logit = self.shufflenet()
 
         self.pred = tf.nn.softmax(logits=self.logit)
         # 활성화 시킨 probability map을 split 하여 foreground와 background로 분리합니다.
@@ -39,7 +39,7 @@ class Model:
         self.results = list(utils.iou_coe(output=self.foreground_predicted, target=self.foreground_truth))
 
 
-    def u_net(self):
+    def shufflenet(self):
         # start down sampling by depth n.
 
 ###############################
@@ -55,21 +55,13 @@ class Model:
             channel_n = cfg.INIT_N_FILTER
             pool_size = cfg.IMG_SIZE
 
-            # 처음 실행하면 모델 구조 나오도록 ?!
-            # for i in range(cfg.DEPTH):
-            #     pool_size //= 2
-            #     inputs = utils.unet_down_block(inputs, self.down_conv, self.down_pool, channel_n, pool_size, cfg.GROUP_N, self.training, i)
-            #     channel_n *= 2
-
+            inputs = utils.conv2D('first_downconv', inputs, channel_n, [3, 3], [1, 1], padding='SAME')
+            if cfg.FIRST_DOWNSAMPLING:
+                pool_size //= 2
+                inputs = utils.select_downsampling('first_downsampling', inputs, [], channel_n, pool_size, cfg.DOWNSAMPLING_TYPE)
 
             for i in range(cfg.DEPTH):
-                # pool_size //= 2
-                # self.down_conv[i] = utils.depthwise_separable_convlayer('dsconv' + str(i), inputs, channel_n, cfg.WIDTH_MULTIPLIER, cfg.GROUP_N, self.training, i)
-                # print('down_conv', self.down_conv[i])
-                # channel_n *= 2
-                # self.down_pool[i] = utils.select_downsampling(str(i) + '_downsampling', self.down_conv[i], self.down_pool[i], channel_n, pool_size, cfg.DOWNSAMPLING_TYPE)
-                # inputs = tf.identity(self.down_pool[i])
-                # print('down_pool', inputs)
+
                 pool_size //= 2
                 for j in range(cfg.UNIT_N):
                     self.down_conv[i] = utils.shufflenet_unit('unit_{}_{}'.format(str(i), str(j)),

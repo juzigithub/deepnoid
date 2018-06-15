@@ -530,11 +530,7 @@ def channel_shuffle(name, inputs, group_n):
 
 def group_conv2D(name, inputs, channel_n, group_n, stride, training, idx, activation_fn=True):
     in_channel_per_group = inputs.get_shape().as_list()[-1] // group_n
-    print('get', inputs.get_shape().as_list()[-1])
-    print('in',in_channel_per_group)
     out_channel_per_group = channel_n // group_n
-    print('out',out_channel_per_group)
-
     grouped_channel_list = []
 
     for i in range(group_n):
@@ -566,7 +562,7 @@ def shufflenet_unit(name, inputs, channel_n, group_n, stride, training, idx):
         residual_layer = tf.identity(inputs)
 
     # Group part
-    depthwise_filter = tf.get_variable(name='depthwise_filter' + str(idx), shape=[3,3,inputs.get_shape()[-1], 1],
+    depthwise_filter = tf.get_variable(name=name + 'depthwise_filter' + str(idx), shape=[3,3,inputs.get_shape()[-1], 1],
                                        dtype=tf.float32, initializer=tf.contrib.layers.variance_scaling_initializer())
     _group_layer = group_conv2D(name + '_group_conv1',
                                 inputs,

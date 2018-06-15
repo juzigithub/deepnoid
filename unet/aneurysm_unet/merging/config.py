@@ -67,7 +67,7 @@ WIDTH_MULTIPLIER = 1.0         # out_channel = in_channel * width_multiplier
 
 ### Shufflenet ###
 UNIT_N = 2                     # shuffle unit 의 개수
-
+FIRST_DOWNSAMPLING = False     # 첫번째 레이어 다운샘플링 여부
 ### Result ###
 
 PRED_MASKING_COLOR = 'red'     # validation 테스트 예측 영역 마스킹 색 (red or green or blue)
