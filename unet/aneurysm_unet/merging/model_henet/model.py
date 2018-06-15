@@ -62,13 +62,16 @@ class Model:
 
                 pool_size //= 2
 
-                self.down_conv[i] = utils.he_s1block('block_' + str(i),
-                                                     inputs,
-                                                     channel_n,
-                                                     cfg.GROUP_IN,
-                                                     cfg.GROUP_OUT,
-                                                     training = self.training,
-                                                     repeat = 2)
+                self.down_conv[i] = utils.he_stage('stage' + str(i),
+                                                   inputs,
+                                                   channel_n,
+                                                   channel_n,
+                                                   cfg.GROUP_IN,
+                                                   cfg.GROUP_OUT,
+                                                   self.training,
+                                                   repeat = cfg.REPEAT,
+                                                   resize = False)
+
                 print('down_conv', self.down_conv[i])
                 channel_n *= 2
                 self.down_pool[i] = utils.select_downsampling(str(i) + '_downsampling',
@@ -77,6 +80,9 @@ class Model:
                                                               channel_n,
                                                               pool_size,
                                                               cfg.DOWNSAMPLING_TYPE)
+
+                # def he_s2block(name, inputs, channel_n, group_m, group_n, training):
+
                 inputs = tf.identity(self.down_pool[i])
                 print('down_pool', inputs)
 
