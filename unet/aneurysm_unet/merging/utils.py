@@ -136,6 +136,7 @@ def activation(name, inputs, type):
 
 def Normalization(x, norm_type, is_train, name, G=2, esp=1e-5, channel_mode='NHWC'):
     with tf.variable_scope('{}_norm'.format(norm_type)):
+
         if norm_type == 'None':
             output = x
             return output
@@ -150,12 +151,13 @@ def Normalization(x, norm_type, is_train, name, G=2, esp=1e-5, channel_mode='NHW
         elif norm_type == 'group':
             with tf.name_scope('GN_'+name):
                 if channel_mode == 'NHWC':
+
                     # tranpose: [bs, h, w, c] to [bs, c, h, w] following the paper
                     x = tf.transpose(x, [0, 3, 1, 2])
                     N, C, H, W = x.get_shape().as_list()
                     G = min(G, C)
-
-                    x = tf.reshape(x, [N, G, C // G, H, W])
+                    # N -> -1
+                    x = tf.reshape(x, [-1, G, C // G, H, W])
                     mean, var = tf.nn.moments(x, [2, 3, 4], keep_dims=True)
                     x = (x - mean) / tf.sqrt(var + esp)
                     # per channel gamma and beta
@@ -165,8 +167,8 @@ def Normalization(x, norm_type, is_train, name, G=2, esp=1e-5, channel_mode='NHW
                                            initializer=tf.constant_initializer(0.0))
                     gamma = tf.reshape(gamma, [1, C, 1, 1])
                     beta = tf.reshape(beta, [1, C, 1, 1])
-
-                    output = tf.reshape(x, [N, C, H, W]) * gamma + beta
+                    # N -> -1
+                    output = tf.reshape(x, [-1, C, H, W]) * gamma + beta
                     # tranpose: [bs, c, h, w, c] to [bs, h, w, c] following the paper
                     output = tf.transpose(output, [0, 2, 3, 1])
                     return output
@@ -174,8 +176,8 @@ def Normalization(x, norm_type, is_train, name, G=2, esp=1e-5, channel_mode='NHW
                 elif channel_mode == 'NCHW':
                     N, C, H, W = x.get_shape().as_list()
                     G = min(G, C)
-
-                    x = tf.reshape(x, [N, G, C // G, H, W])
+                    # N -> -1
+                    x = tf.reshape(x, [-1, G, C // G, H, W])
                     mean, var = tf.nn.moments(x, [2, 3, 4], keep_dims=True)
                     x = (x - mean) / tf.sqrt(var + esp)
                     # per channel gamma and beta
@@ -185,8 +187,8 @@ def Normalization(x, norm_type, is_train, name, G=2, esp=1e-5, channel_mode='NHW
                                            initializer=tf.constant_initializer(0.0))
                     gamma = tf.reshape(gamma, [1, C, 1, 1])
                     beta = tf.reshape(beta, [1, C, 1, 1])
-
-                    output = tf.reshape(x, [N, C, H, W]) * gamma + beta
+                    # N -> -1
+                    output = tf.reshape(x, [-1, C, H, W]) * gamma + beta
                     return output
 
         else:
@@ -500,18 +502,9 @@ def dense_block_v1(name, inputs, group_n, drop_rate, training, n_layer):
 
     return hl
 
-def mobilenet():
-    pass
-
-def shufflenet():
-    pass
-
-def henet():
-    pass
-
 def depthwise_separable_convlayer(name, inputs, channel_n, width_mul, group_n, training, idx):
     # depthwise
-    depthwise_filter = tf.get_variable(name='depthwise_filter' + str(idx), shape=[1, 1, inputs.get_shape()[-1], width_mul],
+    depthwise_filter = tf.get_variable(name='depthwise_filter' + str(idx), shape=[3, 3, inputs.get_shape()[-1], width_mul],
                                        dtype=tf.float32, initializer=tf.contrib.layers.variance_scaling_initializer())
     l = tf.nn.depthwise_conv2d(inputs, depthwise_filter, strides = [1, 1, 1, 1], padding = 'SAME', name = name + str(idx) + '_depthwise')
     l = Normalization(l, cfg.NORMALIZATION_TYPE, training, name + str(idx) + '_depthwise_norm', G=group_n)
@@ -524,3 +517,99 @@ def depthwise_separable_convlayer(name, inputs, channel_n, width_mul, group_n, t
 
     return l
 
+
+def channel_shuffle(name, inputs, group_n):
+    with tf.variable_scope(name):
+        # _, h, w, c = l.shape
+        _, h, w, c = inputs.get_shape().as_list()
+        _l = tf.reshape(inputs, [-1, h, w, group_n, c // group_n])
+        _l = tf.transpose(_l, [0, 1, 2, 4, 3])
+        l = tf.reshape(_l, [-1, h, w, c])
+
+        return l
+
+def group_conv2D(name, inputs, channel_n, group_n, stride, training, idx, activation_fn=True):
+    in_channel_per_group = inputs.get_shape().as_list()[-1] // group_n
+    print('get', inputs.get_shape().as_list()[-1])
+    print('in',in_channel_per_group)
+    out_channel_per_group = channel_n // group_n
+    print('out',out_channel_per_group)
+
+    grouped_channel_list = []
+
+    for i in range(group_n):
+        _l = conv2D(name + str(i),
+                    inputs[:, :, :, i * in_channel_per_group: i * in_channel_per_group + in_channel_per_group],
+                    filters = out_channel_per_group,
+                    kernel_size = [1, 1],
+                    strides = [stride, stride],
+                    padding = 'SAME')
+        grouped_channel_list.append(_l)
+
+    _l = tf.concat(grouped_channel_list, axis=-1, name='concat_channel')
+    _l = Normalization(_l, cfg.NORMALIZATION_TYPE, training, name + str(idx) + 'norm', G=group_n)
+
+    if activation_fn:
+        _l = activation(name + str(idx) + 'act', _l, cfg.ACTIVATION_FUNC)
+
+    return _l
+
+def shufflenet_unit(name, inputs, channel_n, group_n, stride, training, idx):
+    if stride != 1:
+        *_, c = inputs.get_shape().as_list()
+        channel_n = channel_n - c # Residual 채널 수 c개 + Group 채널 수 = 최종 채널수(num_filter) 가 되어야 하므로
+
+    # Residual part
+    if stride != 1:
+        residual_layer = averagepool('residual' + str(idx), inputs, [2,2], [2,2], 'SAME')
+    else:
+        residual_layer = tf.identity(inputs)
+
+    # Group part
+    depthwise_filter = tf.get_variable(name='depthwise_filter' + str(idx), shape=[3,3,inputs.get_shape()[-1], 1],
+                                       dtype=tf.float32, initializer=tf.contrib.layers.variance_scaling_initializer())
+    _group_layer = group_conv2D(name + '_group_conv1',
+                                inputs,
+                                channel_n,
+                                group_n,
+                                1,
+                                training,
+                                idx)
+    _shuffled_group_layer = channel_shuffle(name + '_channel_shuffle', _group_layer, group_n)
+    _depthwise_conv_layer = tf.nn.depthwise_conv2d(_shuffled_group_layer,
+                                                   depthwise_filter,
+                                                   strides = [1,stride,stride,1],
+                                                   padding='SAME',
+                                                   name=name + str(idx) + '_depthwise')
+    _depthwise_conv_layer = Normalization(_depthwise_conv_layer,
+                                          cfg.NORMALIZATION_TYPE,
+                                          training,
+                                          name + str(idx) + 'depthwise_norm',
+                                          G = group_n)
+    final_group_layer = group_conv2D(name + '_group_conv2',
+                                     _depthwise_conv_layer,
+                                     channel_n,
+                                     group_n,
+                                     1,
+                                     training,
+                                     idx,
+                                     activation_fn=False)
+
+    # Concat part
+    if stride != 1:
+        layer = tf.concat([residual_layer, final_group_layer], axis=3)
+
+    else:
+        layer = residual_layer + final_group_layer
+
+    final_layer = activation(name + str(idx) + '_shuffleunit_act', layer, cfg.ACTIVATION_FUNC)
+
+    return final_layer
+
+def shufflenet_stage(name, inputs, channel_n, group_n, training, repeat):
+    l = shufflenet_unit(name, inputs, channel_n, group_n, stride=2, training=training, idx=0)
+
+    for i in range(repeat):
+        l = shufflenet_unit(name + str(i), inputs, channel_n, group_n, stride=1, training=training, idx=i+1)
+
+    return l
