@@ -4,10 +4,10 @@ model construct
 by 신형은 주임
 '''
 import tensorflow as tf
-# import utils
-# import config as cfg
-import Unet.aneurysm_unet.merging.utils as utils
-import Unet.aneurysm_unet.merging.config as cfg
+import utils
+import config as cfg
+# import Unet.aneurysm_unet.merging.utils as utils
+# import Unet.aneurysm_unet.merging.config as cfg
 
 class Model:
     def __init__(self):
