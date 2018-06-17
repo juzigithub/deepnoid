@@ -6,6 +6,8 @@ by 신형은 주임
 import tensorflow as tf
 import utils
 import config as cfg
+# import Unet.aneurysm_unet.merging.utils as utils
+# import Unet.aneurysm_unet.merging.config as cfg
 
 
 class Model:
@@ -31,25 +33,19 @@ class Model:
 
         # 라벨이미지 역시 foreground와 background로 분리합니다
         self.foreground_truth, self.background_truth = tf.split(self.labels, [1, 1], 3)
-##################################################
         self.loss_1 = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.foreground_predicted, target=self.foreground_truth)
         self.loss_2 = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.background_predicted, target=self.background_truth)
         self.loss = cfg.LAMBDA * self.loss_1 + (1 - cfg.LAMBDA) * self.loss_2
-##################################################
         self.results = list(utils.iou_coe(output=self.foreground_predicted, target=self.foreground_truth))
 
 
     def densenet(self):
         # start down sampling by depth n.
-
-###############################
         self.down_conv = [0] * cfg.DEPTH
         self.down_pool = [0] * cfg.DEPTH
         self.channel_n = [0] * cfg.DEPTH
         self.up_conv = [0] * cfg.DEPTH
         self.up_pool = [0] * cfg.DEPTH
-###############################
-        # def dense_block_v1(name, inputs, group_n, drop_rate, training, n_layer):
 
         with tf.variable_scope('down'):
 
@@ -57,18 +53,52 @@ class Model:
             pool_size = cfg.IMG_SIZE
             channel_n_list = [cfg.INIT_N_FILTER * pow(2,(i)) for i in range(cfg.DEPTH)]
 
+            if cfg.FIRST_DOWNSAMPLING:
+                pool_size //= 2
+                inputs = utils.select_downsampling('first_downsampling', inputs, [], channel_n_list[0], pool_size, cfg.DOWNSAMPLING_TYPE)
+
             # 처음 실행하면 모델 구조 나오도록 ?!
             for i in range(cfg.DEPTH):
                 pool_size //= 2
-                self.down_conv[i] = utils.dense_block_v1('dense' + str(i), inputs, cfg.GROUP_N, self.drop_rate, self.training, 2)
-                self.down_conv[i] = utils.transition_layer('transition' + str(i), self.down_conv[i], cfg.GROUP_N, self.training, channel_n_list, i)
+
+                self.down_conv[i] = utils.dense_block_v1(name = 'dense' + str(i),
+                                                         inputs = inputs,
+                                                         group_n = cfg.GROUP_N,
+                                                         drop_rate = self.drop_rate,
+                                                         act_fn = cfg.ACTIVATION_FUNC,
+                                                         norm_type = cfg.NORMALIZATION_TYPE,
+                                                         growth = cfg.GROWTH_RATE,
+                                                         training = self.training,
+                                                         n_layer = 2)
+
+                self.down_conv[i] = utils.transition_layer(name = 'transition' + str(i),
+                                                           inputs = self.down_conv[i],
+                                                           group_n = cfg.GROUP_N,
+                                                           act_fn = cfg.ACTIVATION_FUNC,
+                                                           norm_type = cfg.NORMALIZATION_TYPE,
+                                                           theta = cfg.THETA,
+                                                           training = self.training,
+                                                           specific_n_channels = channel_n_list,
+                                                           idx = i)
                 print('down_conv', self.down_conv[i])
 
-                self.down_pool[i] = utils.select_downsampling(str(i) + '_downsampling', self.down_conv[i], self.down_pool[i], channel_n_list[i], pool_size, cfg.DOWNSAMPLING_TYPE)
+                # def select_downsampling(name, down_conv, down_pool, channel_n, pool_size, mode):
+
+                self.down_pool[i] = utils.select_downsampling(name = str(i) + '_downsampling',
+                                                              down_conv = self.down_conv[i],
+                                                              down_pool = self.down_pool[i],
+                                                              channel_n = channel_n_list[i],
+                                                              pool_size = pool_size,
+                                                              mode = cfg.DOWNSAMPLING_TYPE)
                 inputs = tf.identity(self.down_pool[i])
                 print('down_pool', inputs)
 
-            inputs = utils.unet_same_block(inputs, channel_n_list[-1], cfg.GROUP_N, self.training)
+            inputs = utils.unet_same_block(inputs = inputs,
+                                           channel_n = channel_n_list[-1],
+                                           group_n = cfg.GROUP_N,
+                                           act_fn = cfg.ACTIVATION_FUNC,
+                                           norm_type = cfg.NORMALIZATION_TYPE,
+                                           training = self.training)
             print('same_block', inputs)
 
         with tf.variable_scope('up'):
@@ -76,6 +106,10 @@ class Model:
             for i in reversed(range(cfg.DEPTH)):
                 pool_size *= 2
                 inputs = utils.unet_up_block(inputs, self.down_conv, self.up_conv, self.up_pool, channel_n_list[i] // 2, pool_size, cfg.GROUP_N, self.training, i)
+
+            if cfg.FIRST_DOWNSAMPLING:
+                pool_size *= 2
+                inputs= utils.select_upsampling('last_upsampling', inputs, [], channel_n_list[0] // 4, pool_size, cfg.UPSAMPLING_TYPE)
 
             up_conv_f = utils.conv2D('final_upconv', inputs, cfg.N_CLASS, [1,1], [1,1], 'SAME')
 

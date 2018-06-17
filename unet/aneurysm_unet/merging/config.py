@@ -29,7 +29,7 @@ VALIDATION_RATIO = 15
 
 ### Common ###
 
-# epoch, batch
+FIRST_DOWNSAMPLING = False     # 첫번째 레이어 다운샘플링 여부
 EPOCHS = 200
 SAVING_EPOCH = 5
 BATCH_SIZE = 28
@@ -63,10 +63,8 @@ WIDTH_MULTIPLIER = 1.0         # out_channel = in_channel * width_multiplier
 
 ### Shufflenet ###                 https://arxiv.org/abs/1707.01083
 UNIT_N = 2                     # shuffle unit 의 개수
-FIRST_DOWNSAMPLING = False     # 첫번째 레이어 다운샘플링 여부
 
 ### HENet ###                      https://arxiv.org/abs/1803.02742
-FIRST_DOWNSAMPLING = False     # 첫번째 레이어 다운샘플링 여부
 GROUP_IN = GROUP_N             # 첫번째 Group_conv 시 group 개수 (NORMALIZATION 의 GROUP_N 과 일치 권장)
 GROUP_OUT = 6                  # 마지막 Group_conv 시 group 개수 (권장 : (group_m, group_n) = (6, 4), (8, 6), (12, 8))
 REPEAT = 2                     # s1_block 반복 횟수
