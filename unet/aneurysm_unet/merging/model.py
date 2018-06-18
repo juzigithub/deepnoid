@@ -31,23 +31,18 @@ class Model:
 
         # 라벨이미지 역시 foreground와 background로 분리합니다
         self.foreground_truth, self.background_truth = tf.split(self.labels, [1, 1], 3)
-##################################################
         self.loss_1 = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.foreground_predicted, target=self.foreground_truth)
         self.loss_2 = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.background_predicted, target=self.background_truth)
         self.loss = cfg.LAMBDA * self.loss_1 + (1 - cfg.LAMBDA) * self.loss_2
-##################################################
         self.results = list(utils.iou_coe(output=self.foreground_predicted, target=self.foreground_truth))
 
 
     def u_net(self):
         # start down sampling by depth n.
-
-###############################
         self.down_conv = [0] * cfg.DEPTH
         self.down_pool = [0] * cfg.DEPTH
         self.up_conv = [0] * cfg.DEPTH
         self.up_pool = [0] * cfg.DEPTH
-###############################
 
         with tf.variable_scope('down'):
 

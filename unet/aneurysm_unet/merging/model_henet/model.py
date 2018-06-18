@@ -98,7 +98,7 @@ class Model:
             for i in reversed(range(cfg.DEPTH)):
                 channel_n //= 2
                 pool_size *= 2
-                # inputs = utils.unet_up_block(inputs, self.down_conv, self.up_conv, self.up_pool, channel_n, pool_size, cfg.GROUP_N, self.training, i)
+
                 inputs = utils.select_upsampling(name = str(i) + '_upsampling',
                                                  up_conv = inputs,
                                                  up_pool = self.up_pool[i],
@@ -115,7 +115,7 @@ class Model:
                                              group_n = cfg.GROUP_N,
                                              act_fn = cfg.ACTIVATION_FUNC,
                                              norm_type = cfg.NORMALIZATION_TYPE,
-                                             training = cfg.NORMALIZATION_TYPE,
+                                             training = self.training,
                                              idx = i)
                 print('up_conv', inputs)
 

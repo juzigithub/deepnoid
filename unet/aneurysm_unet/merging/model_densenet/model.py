@@ -78,7 +78,7 @@ class Model:
                                                            norm_type = cfg.NORMALIZATION_TYPE,
                                                            theta = cfg.THETA,
                                                            training = self.training,
-                                                           specific_n_channels = channel_n_list,
+                                                           specific_n_channels = channel_n_list[i],
                                                            idx = i)
                 print('down_conv', self.down_conv[i])
 
@@ -102,10 +102,27 @@ class Model:
             print('same_block', inputs)
 
         with tf.variable_scope('up'):
-
             for i in reversed(range(cfg.DEPTH)):
                 pool_size *= 2
-                inputs = utils.unet_up_block(inputs, self.down_conv, self.up_conv, self.up_pool, channel_n_list[i] // 2, pool_size, cfg.GROUP_N, self.training, i)
+
+                inputs = utils.select_upsampling(name = str(i) + '_upsampling',
+                                                 up_conv = inputs,
+                                                 up_pool = self.up_pool[i],
+                                                 channel_n = channel_n_list[i] // 2,
+                                                 pool_size = pool_size,
+                                                 mode = cfg.UPSAMPLING_TYPE)
+                print('up_pool', inputs)
+                inputs = utils.unet_up_block(inputs = inputs,
+                                             downconv_list = self.down_conv,
+                                             upconv_list = self.up_conv,
+                                             pool_list = self.up_pool,
+                                             channel_n = channel_n_list[i] // 2,
+                                             group_n = cfg.GROUP_N,
+                                             act_fn = cfg.ACTIVATION_FUNC,
+                                             norm_type = cfg.NORMALIZATION_TYPE,
+                                             training = self.training,
+                                             idx = i)
+                print('up_conv', inputs)
 
             if cfg.FIRST_DOWNSAMPLING:
                 pool_size *= 2

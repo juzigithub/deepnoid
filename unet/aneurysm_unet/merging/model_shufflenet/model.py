@@ -57,10 +57,6 @@ class Model:
                 pool_size //= 2
                 inputs = utils.select_downsampling('first_downsampling', inputs, [], channel_n, pool_size, cfg.DOWNSAMPLING_TYPE)
 
-            if cfg.FIRST_DOWNSAMPLING:
-                pool_size //= 2
-                inputs = utils.select_downsampling('first_downsampling', inputs, [], channel_n, pool_size, cfg.DOWNSAMPLING_TYPE)
-
             for i in range(cfg.DEPTH):
 
                 pool_size //= 2
