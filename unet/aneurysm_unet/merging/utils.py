@@ -319,24 +319,9 @@ def select_optimizer(mode, learning_rate, loss, global_step):
         print("Not supported optimizer. Select among adam, rmsprop, sgd")
 
 
-
-
 #############################################################################################################################
-#                                                    Save Functions                                                         #
+#                                                  Sampling Functions                                                       #
 #############################################################################################################################
-
-
-def result_saver(path, data):
-    with open(path, 'at') as f:
-        f.write(data)
-        f.write('\n')
-
-
-
-##################################
-#
-##################################
-
 
 def select_downsampling(name, down_conv, down_pool, channel_n, pool_size, mode):
     if mode == 'neighbor':
@@ -377,7 +362,21 @@ def select_upsampling(name, up_conv, up_pool, channel_n, pool_size, mode):
 
     return up_pool
 
+#############################################################################################################################
+#                                                    Save Functions                                                         #
+#############################################################################################################################
 
+def result_saver(path, data):
+    with open(path, 'at') as f:
+        f.write(data)
+        f.write('\n')
+
+
+#############################################################################################################################
+#                                                      CNN Models                                                           #
+#############################################################################################################################
+
+# Unet  (https://arxiv.org/abs/1505.04597)
 def unet_down_block(inputs, conv_list, pool_list, channel_n, pool_size, group_n, act_fn, norm_type, down_type, training, idx):
     conv_list[idx] = conv2D(str(idx) + '_downconv1', inputs, channel_n, [3, 3], [1, 1], padding='SAME')
     conv_list[idx] = Normalization(conv_list[idx], norm_type, training, str(idx) + '_downnorm1', G=group_n)
@@ -430,6 +429,7 @@ def unet_up_block(inputs, downconv_list, upconv_list, pool_list, channel_n, grou
 
     return upconv_list[idx]
 
+# resnet  (https://arxiv.org/abs/1512.03385)
 def residual_block_v1(inputs, channel_n, group_n, act_fn, norm_type, training, idx, shortcut=True):
     # bottleneck1
     hl = conv2D(str(idx) + '_bottleneck1', inputs, int(channel_n/4), [1, 1], [1, 1], padding='SAME')
@@ -450,7 +450,7 @@ def residual_block_v1(inputs, channel_n, group_n, act_fn, norm_type, training, i
 
     return hl
 
-
+# densenet  (https://arxiv.org/abs/1608.06993)
 def dense_layer(name, inputs, group_n, drop_rate, act_fn, norm_type, growth, training, idx):
     # bottleneck
     l = Normalization(inputs, norm_type, training, name + str(idx) + '_bottleneck_norm1', G=group_n)
@@ -485,24 +485,26 @@ def dense_block_v1(name, inputs, group_n, drop_rate, act_fn, norm_type, growth, 
     hl = tf.identity(inputs)
 
     for idx in range(n_layer):
-        l = dense_layer(name = name, 
-                        inputs = hl, 
-                        group_n = group_n, 
-                        drop_rate = drop_rate, 
-                        act_fn = act_fn, 
-                        norm_type = norm_type, 
-                        growth = growth, 
-                        training = training, 
+        l = dense_layer(name = name,
+                        inputs = hl,
+                        group_n = group_n,
+                        drop_rate = drop_rate,
+                        act_fn = act_fn,
+                        norm_type = norm_type,
+                        growth = growth,
+                        training = training,
                         idx = idx)
         hl = tf.concat([hl, l], axis=3)
 
     return hl
 
+# depthwise separable conv  (Mobilenet - https://arxiv.org/abs/1704.04861)
+
 def depthwise_separable_convlayer(name, inputs, channel_n, width_mul, group_n, act_fn, norm_type, training, idx):
     # depthwise
-    depthwise_filter = tf.get_variable(name='depthwise_filter' + str(idx), 
+    depthwise_filter = tf.get_variable(name='depthwise_filter' + str(idx),
                                        shape=[3, 3, inputs.get_shape()[-1], width_mul],
-                                       dtype=tf.float32, 
+                                       dtype=tf.float32,
                                        initializer=tf.contrib.layers.variance_scaling_initializer())
     l = tf.nn.depthwise_conv2d(inputs, depthwise_filter, [1, 1, 1, 1], 'SAME', name + str(idx) + '_depthwise')
     l = Normalization(l, norm_type, training, name + str(idx) + '_depthwise_norm', G=group_n)
@@ -515,6 +517,7 @@ def depthwise_separable_convlayer(name, inputs, channel_n, width_mul, group_n, a
 
     return l
 
+# shufflenet  (https://arxiv.org/abs/1707.01083)
 
 def channel_shuffle(name, inputs, group_n):
     with tf.variable_scope(name):
@@ -638,6 +641,8 @@ def shufflenet_stage(name, inputs, channel_n, group_n, act_fn, norm_type, traini
 
     return l
 
+
+# HENet  (https://arxiv.org/abs/1803.02742)
 def he_hlayer(name, inputs, channel_n, group_m, group_n, act_fn, norm_type, training, idx):
     l = group_conv2D(name = name + str(idx) + '_1st_Gconv',
                      inputs = inputs,
@@ -765,7 +770,7 @@ def he_stage(name, inputs, channel_in, channel_out, group_m, group_n, act_fn, no
                        group_m = group_m,
                        group_n = group_n,
                        act_fn = act_fn,
-                       norm_type = norm_type,                       
+                       norm_type = norm_type,
                        training = training,
                        resize = resize)
 
