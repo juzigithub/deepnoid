@@ -10,7 +10,7 @@ initializer = tf.contrib.layers.variance_scaling_initializer()
 regularizer = None # tf.contrib.layers.l2_regularizer(0.00001)
 
 
-def conv2D(name, inputs, filters, kernel_size, strides, dilation_rate=(1,1), padding='valid'):
+def conv2D(name, inputs, filters, kernel_size, strides, padding='valid', dilation_rate=(1,1)):
     conv2D = tf.layers.conv2d(inputs=inputs, filters=filters, kernel_size=kernel_size, strides=strides,
                               padding=padding, use_bias=True, dilation_rate=dilation_rate,
                               kernel_initializer=initializer, kernel_regularizer=regularizer, name=name)
@@ -43,17 +43,18 @@ def re_conv2D(name, inputs, output_shape):
     conv_layer = conv2D(name=name+'_conv', inputs=resize_layer, filters=output_shape[3], kernel_size=[3, 3], strides=[1, 1], padding='same')
     return conv_layer
 
-
-def GlobalAveragePooling2D(input, n_class, name):
+def GlobalAveragePooling2D(input, n_class, name, keep_dims=False):
     """
     replace Fully Connected Layer.
     https://www.facebook.com/groups/smartbean/permalink/1708560322490187/
     https://github.com/AndersonJo/global-average-pooling/blob/master/global-average-pooling.ipynb
     """
+    kernel_size = input.get_shape().as_list()[1]
     gap_filter = tf.get_variable(name='gap_filter', shape=[1, 1, input.get_shape()[-1], n_class], dtype=tf.float32, initializer=tf.contrib.layers.variance_scaling_initializer())
     layer = tf.nn.conv2d(input, filter=gap_filter, strides=[1, 1, 1, 1], padding='SAME', name=name)
-    layer = tf.nn.avg_pool(layer, ksize=[1, 4, 4, 1], strides=[1, 1, 1, 1], padding='VALID')
-    layer = tf.reduce_mean(layer, axis=[1, 2])
+    layer = tf.nn.avg_pool(layer, ksize=[1, kernel_size, kernel_size, 1], strides=[1, 1, 1, 1], padding='VALID')
+    if not keep_dims:
+        layer = tf.reduce_mean(layer, axis=[1, 2])
     return layer
 
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 Data Load
 Model Load
@@ -7,26 +8,6 @@ Result Report
 train << model, loader
 by 신형은 주임
 '''
-'''
-import config as cfg
-
-class Train:
-    # class initialize
-    def __init__(self):
-        self.A = cfg.A
-        self.B = cfg.B
-        self.batch_size = cfg.BATCH_SIZE
-
-    def train(self):
-        pass
-
-
-if __name__ == '__main__':
-    trainer = Train()
-    trainer.train()
-'''
-
-
 
 import tensorlayer as tl
 import tensorflow as tf
