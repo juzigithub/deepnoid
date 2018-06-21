@@ -1,7 +1,4 @@
 import tensorflow as tf
-import os
-import cv2
-import numpy as np
 
 
 #############################################################################################################################
@@ -19,7 +16,7 @@ def conv2D(name, inputs, filters, kernel_size, strides, padding='valid'):
     return conv2D
 
 
-def s_conv2D(name, inputs, filters, kernel_size, strides,padding='valid'):
+def s_conv2D(name, inputs, filters, kernel_size, strides, padding='valid'):
     s_conv2D = tf.layers.separable_conv2d(inputs=inputs, filters=filters, kernel_size=kernel_size, strides=strides, padding=padding, use_bias=True,
                                           depthwise_initializer=initializer, depthwise_regularizer=regularizer, pointwise_initializer=initializer,
                                           pointwise_regularizer=regularizer, name=name)
@@ -135,6 +132,7 @@ def activation(name, inputs, type):
 
 def Normalization(x, norm_type, is_train, name, G=2, esp=1e-5, channel_mode='NHWC'):
     with tf.variable_scope('{}_norm'.format(norm_type)):
+
         if norm_type == 'None':
             output = x
             return output
@@ -149,12 +147,13 @@ def Normalization(x, norm_type, is_train, name, G=2, esp=1e-5, channel_mode='NHW
         elif norm_type == 'group':
             with tf.name_scope('GN_'+name):
                 if channel_mode == 'NHWC':
+
                     # tranpose: [bs, h, w, c] to [bs, c, h, w] following the paper
                     x = tf.transpose(x, [0, 3, 1, 2])
                     N, C, H, W = x.get_shape().as_list()
                     G = min(G, C)
-
-                    x = tf.reshape(x, [N, G, C // G, H, W])
+                    # N -> -1
+                    x = tf.reshape(x, [-1, G, C // G, H, W])
                     mean, var = tf.nn.moments(x, [2, 3, 4], keep_dims=True)
                     x = (x - mean) / tf.sqrt(var + esp)
                     # per channel gamma and beta
@@ -164,8 +163,8 @@ def Normalization(x, norm_type, is_train, name, G=2, esp=1e-5, channel_mode='NHW
                                            initializer=tf.constant_initializer(0.0))
                     gamma = tf.reshape(gamma, [1, C, 1, 1])
                     beta = tf.reshape(beta, [1, C, 1, 1])
-
-                    output = tf.reshape(x, [N, C, H, W]) * gamma + beta
+                    # N -> -1
+                    output = tf.reshape(x, [-1, C, H, W]) * gamma + beta
                     # tranpose: [bs, c, h, w, c] to [bs, h, w, c] following the paper
                     output = tf.transpose(output, [0, 2, 3, 1])
                     return output
@@ -173,8 +172,8 @@ def Normalization(x, norm_type, is_train, name, G=2, esp=1e-5, channel_mode='NHW
                 elif channel_mode == 'NCHW':
                     N, C, H, W = x.get_shape().as_list()
                     G = min(G, C)
-
-                    x = tf.reshape(x, [N, G, C // G, H, W])
+                    # N -> -1
+                    x = tf.reshape(x, [-1, G, C // G, H, W])
                     mean, var = tf.nn.moments(x, [2, 3, 4], keep_dims=True)
                     x = (x - mean) / tf.sqrt(var + esp)
                     # per channel gamma and beta
@@ -184,8 +183,8 @@ def Normalization(x, norm_type, is_train, name, G=2, esp=1e-5, channel_mode='NHW
                                            initializer=tf.constant_initializer(0.0))
                     gamma = tf.reshape(gamma, [1, C, 1, 1])
                     beta = tf.reshape(beta, [1, C, 1, 1])
-
-                    output = tf.reshape(x, [N, C, H, W]) * gamma + beta
+                    # N -> -1
+                    output = tf.reshape(x, [-1, C, H, W]) * gamma + beta
                     return output
 
         else:
@@ -335,4 +334,420 @@ def result_saver(path, data):
 
 
 
+##################################
+#
+##################################
 
+
+def select_downsampling(name, down_conv, down_pool, channel_n, pool_size, mode):
+    if mode == 'neighbor':
+        shape = [-1, pool_size, pool_size, channel_n]
+        down_pool = re_conv2D(name + '_neighbor', down_conv, shape)
+
+    elif mode == 'maxpool':
+        down_pool = maxpool(name + '_maxpool', down_conv, [2,2], [2,2], 'SAME')
+
+    elif mode == 'avgpool':
+        down_pool = averagepool(name + '_avgpool', down_conv, [2,2], [2,2], 'SAME')
+
+    return down_pool
+
+
+def select_upsampling(name, up_conv, up_pool, channel_n, pool_size, mode):
+    shape = [-1, pool_size, pool_size, channel_n]
+
+    if mode == 'resize':
+      up_pool = re_conv2D(name + '_reconv', up_conv, shape)
+
+    elif mode == 'transpose':
+        up_pool = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n * 2], shape, [1,2,2,1], 'SAME')
+        up_pool = tf.reshape(up_pool, shape)
+
+    elif mode == 'add':
+        up_pool1 = re_conv2D(name + '_reconv', up_conv, shape)
+        up_pool2 = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n * 2], shape, [1,2,2,1], 'SAME')
+        up_pool2 = tf.reshape(up_pool2, shape)
+        up_pool = up_pool1 + up_pool2
+
+    elif mode == 'concat':
+        up_pool1 = re_conv2D(name + '_reconv', up_conv, shape)
+        up_pool2 = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n * 2], shape, [1, 2, 2, 1], 'SAME')
+        up_pool2 = tf.reshape(up_pool2, shape)
+        up_pool = concat(name + '_upsampling_concat', [up_pool1, up_pool2], axis=3)
+        up_pool = conv2D(name + '_bottleneck', up_pool, channel_n, [1,1], [1,1], padding='SAME')
+
+    return up_pool
+
+
+def unet_down_block(inputs, conv_list, pool_list, channel_n, pool_size, group_n, act_fn, norm_type, down_type, training, idx):
+    conv_list[idx] = conv2D(str(idx) + '_downconv1', inputs, channel_n, [3, 3], [1, 1], padding='SAME')
+    conv_list[idx] = Normalization(conv_list[idx], norm_type, training, str(idx) + '_downnorm1', G=group_n)
+    conv_list[idx] = activation(str(idx) + '_downact1', conv_list[idx], act_fn)
+
+    conv_list[idx] = conv2D(str(idx) + '_downconv2', conv_list[idx], channel_n, [3, 3], [1, 1], padding='SAME')
+    conv_list[idx] = Normalization(conv_list[idx], norm_type, training, str(idx) + '_downnorm2', G=group_n)
+    conv_list[idx] = activation(str(idx) + '_downact2', conv_list[idx], act_fn)
+    print('down' + str(idx + 1) + 'conv', conv_list[idx])
+    pool_list[idx] = select_downsampling(str(idx) + '_downsampling',
+                                         conv_list[idx],
+                                         pool_list[idx],
+                                         channel_n,
+                                         pool_size,
+                                         down_type)
+    print('down' + str(idx + 1) + 'pool', pool_list[idx])
+
+    if down_type == 'neighbor':
+        conv_list[idx] = Normalization(conv_list[idx], norm_type, training,
+                                             str(idx) + '_norm3', G=group_n)
+        conv_list[idx] = activation(str(idx) + '_act3', conv_list[idx], act_fn)
+
+    return pool_list[idx]
+
+
+def unet_same_block(inputs, channel_n, group_n, act_fn, norm_type, training):
+    conv_list = conv2D('same_conv1', inputs, channel_n, [3, 3], [1, 1], padding='SAME')
+    conv_list = Normalization(conv_list, norm_type, training, 'same_norm1', G=group_n)
+    conv_list = activation('same_act1', conv_list, act_fn)
+    conv_list = conv2D('same_conv2', conv_list, channel_n, [1, 1], [1, 1], padding='SAME')
+    conv_list = Normalization(conv_list, norm_type, training, 'same_norm2', G=group_n)
+    conv_list = activation('same_act2', conv_list, act_fn)
+
+    return conv_list
+
+
+def unet_up_block(inputs, downconv_list, upconv_list, pool_list, channel_n, pool_size, group_n, act_fn, norm_type, up_type, training, idx):
+    pool_list[idx] = select_upsampling(str(idx) + '_upsampling', inputs, pool_list[idx], channel_n, pool_size, up_type)
+    pool_list[idx] = Normalization(pool_list[idx], norm_type, training, str(idx) + '_norm1', G=group_n)
+    pool_list[idx] = activation(str(idx) + '_upsampling_act', pool_list[idx], act_fn)
+    print('up' + str(idx + 1) + 'pool', pool_list[idx])
+
+    pool_list[idx] = concat(str(idx) + '_upconcat', [pool_list[idx], downconv_list[idx]], axis=3)
+    print('up' + str(idx + 1) + 'concat', pool_list[idx])
+
+    upconv_list[idx] = conv2D(str(idx) + '_upconv1', pool_list[idx], channel_n, [3, 3], [1, 1], padding='SAME')
+    upconv_list[idx] = Normalization(upconv_list[idx], norm_type, training, str(idx) + '_upnorm1', G=group_n)
+    upconv_list[idx] = activation(str(idx) + '_upact1', upconv_list[idx], act_fn)
+    upconv_list[idx] = conv2D(str(idx) + '_upconv2', upconv_list[idx], channel_n, [3, 3], [1, 1], padding='SAME')
+    upconv_list[idx] = Normalization(upconv_list[idx], norm_type, training, str(idx) + '_upnorm2', G=group_n)
+    upconv_list[idx] = activation(str(idx) + '_upact2', upconv_list[idx], act_fn)
+    print('up' + str(idx + 1) + 'conv', upconv_list[idx])
+
+    return upconv_list[idx]
+
+def residual_block_v1(inputs, channel_n, group_n, act_fn, norm_type, training, idx, shortcut=True):
+    # bottleneck1
+    hl = conv2D(str(idx) + '_bottleneck1', inputs, int(channel_n/4), [1, 1], [1, 1], padding='SAME')
+    hl = Normalization(hl, norm_type, training, str(idx) + '_bottleneck_norm1', G=group_n)
+    hl = activation(str(idx) + '_bottleneck_act1', hl, act_fn)
+
+    # conv
+    hl = conv2D(str(idx) + '_conv', hl, int(channel_n / 4), [3, 3], [1, 1], padding='SAME')
+    hl = Normalization(hl, norm_type, training, str(idx) + '_conv_norm', G=group_n)
+    hl = activation(str(idx) + '_conv_act', hl, act_fn)
+
+    # bottleneck2
+    hl = conv2D(str(idx) + '_bottleneck2', inputs, channel_n, [1, 1], [1, 1], padding='SAME')
+    hl = Normalization(hl, norm_type, training, str(idx) + '_bottleneck_norm2', G=group_n)
+    hl = activation(str(idx) + '_bottleneck_act2', hl, act_fn)
+
+    hl = inputs + hl if shortcut else hl
+
+    return hl
+
+
+def dense_layer(name, inputs, group_n, drop_rate, act_fn, norm_type, growth, training, idx):
+    # bottleneck
+    l = Normalization(inputs, norm_type, training, name + str(idx) + '_bottleneck_norm1', G=group_n)
+    l = activation(name + str(idx) + '_bottleneck_act1', l, act_fn)
+    l = conv2D(name + str(idx) + '_bottleneck1', l, 4 * growth, [1, 1], [1, 1], padding='SAME')
+    l = dropout(name + str(idx) + '_dropout1', l, drop_rate, training)
+
+    # conv
+    l = Normalization(l, norm_type, training, name + str(idx) + '_bottleneck_norm2', G=group_n)
+    l = activation(name + str(idx) + '_bottleneck_act2', l, act_fn)
+    l = conv2D(name + str(idx) + '_bottleneck2', l, growth, [3, 3], [1, 1], padding='SAME')
+    l = dropout(name + str(idx) + '_dropout2', l, drop_rate, training)
+
+    return l
+
+################################################################################### specific_n_channel
+def transition_layer(name, inputs, group_n, act_fn, norm_type, theta, training, specific_n_channels=False, idx=0):
+    if specific_n_channels:
+        l = Normalization(inputs, norm_type, training, name + str(idx) + '_bottleneck_norm1', G=group_n)
+        l = activation(name + str(idx) + '_bottleneck_act1', l, act_fn)
+        l = conv2D(name + str(idx) + '_bottleneck1', l, specific_n_channels[idx], [1, 1], [1, 1], padding='SAME')
+
+    else:
+        n_channels = inputs.get_shape().as_list()[-1]
+
+        l = Normalization(inputs, norm_type, training, name + str(idx) + '_bottleneck_norm1', G=group_n)
+        l = activation(name + str(idx) + '_bottleneck_act1', l, act_fn)
+        l = conv2D(name + str(idx) + '_bottleneck1', l, n_channels * theta, [1, 1], [1, 1], padding='SAME')
+
+    return l
+
+def dense_block_v1(name, inputs, group_n, drop_rate, act_fn, norm_type, growth, training, n_layer):
+    hl = tf.identity(inputs)
+
+    for idx in range(n_layer):
+        l = dense_layer(name = name,
+                        inputs = hl,
+                        group_n = group_n,
+                        drop_rate = drop_rate,
+                        act_fn = act_fn,
+                        norm_type = norm_type,
+                        growth = growth,
+                        training = training,
+                        idx = idx)
+        hl = tf.concat([hl, l], axis=3)
+
+    return hl
+
+def depthwise_separable_convlayer(name, inputs, channel_n, width_mul, group_n, act_fn, norm_type, training, idx):
+    # depthwise
+    depthwise_filter = tf.get_variable(name='depthwise_filter' + str(idx),
+                                       shape=[3, 3, inputs.get_shape()[-1], width_mul],
+                                       dtype=tf.float32,
+                                       initializer=tf.contrib.layers.variance_scaling_initializer())
+    l = tf.nn.depthwise_conv2d(inputs,
+                               depthwise_filter,
+                               strides = [1, 1, 1, 1],
+                               padding = 'SAME',
+                               name = name + str(idx) + '_depthwise')
+    l = Normalization(l, norm_type, training, name + str(idx) + '_depthwise_norm', G=group_n)
+    l = activation(name + str(idx) + '_depthwise_act1', l, act_fn)
+
+    # pointwise
+    l = conv2D(name + str(idx) + '_pointwise', l, channel_n, [1, 1], [1, 1], padding='SAME')
+    l = Normalization(l, norm_type, training, name + str(idx) + '_pointwise_norm1', G=group_n)
+    l = activation(name + str(idx) + '_pointwise_act1', l, act_fn)
+
+    return l
+
+
+def channel_shuffle(name, inputs, group_n):
+    with tf.variable_scope(name):
+        # _, h, w, c = l.shape
+        _, h, w, c = inputs.get_shape().as_list()
+        _l = tf.reshape(inputs, [-1, h, w, group_n, c // group_n])
+        _l = tf.transpose(_l, [0, 1, 2, 4, 3])
+        l = tf.reshape(_l, [-1, h, w, c])
+
+        return l
+
+def group_conv2D(name, inputs, channel_n, kernel_size, group_n, stride, act_fn, norm_type, training, idx, use_act_fn=True, padding='SAME'):
+    in_channel_per_group = inputs.get_shape().as_list()[-1] // group_n
+    out_channel_per_group = channel_n // group_n
+    grouped_channel_list = []
+
+    for i in range(group_n):
+        _l = conv2D(name + str(i),
+                    inputs[:, :, :, i * in_channel_per_group: i * in_channel_per_group + in_channel_per_group],
+                    filters = out_channel_per_group,
+                    kernel_size = [kernel_size, kernel_size],
+                    strides = [stride, stride],
+                    padding = padding)
+        grouped_channel_list.append(_l)
+
+    _l = tf.concat(grouped_channel_list, axis=-1, name='concat_channel')
+    _l = Normalization(_l, norm_type, training, name + str(idx) + 'norm', G=group_n)
+
+    if use_act_fn:
+        _l = activation(name + str(idx) + 'act', _l, act_fn)
+
+    return _l
+
+def shufflenet_unit(name, inputs, channel_n, group_n, stride, act_fn, norm_type, training, idx):
+    if stride != 1:
+        *_, c = inputs.get_shape().as_list()
+        channel_n = channel_n - c # Residual 채널 수 c개 + Group 채널 수 = 최종 채널수(num_filter) 가 되어야 하므로
+
+    # Residual part
+    if stride != 1:
+        residual_layer = averagepool('residual' + str(idx), inputs, [2,2], [2,2], 'SAME')
+    else:
+        residual_layer = tf.identity(inputs)
+
+    # Group part
+    depthwise_filter = tf.get_variable(name=name + 'depthwise_filter' + str(idx),
+                                       shape=[3,3,inputs.get_shape()[-1], 1],
+                                       dtype=tf.float32,
+                                       initializer=tf.contrib.layers.variance_scaling_initializer())
+    _group_layer = group_conv2D(name = name + '_group_conv1',
+                                inputs = inputs,
+                                channel_n = channel_n,
+                                kernel_size = 1,
+                                group_n = group_n,
+                                stride = 1,
+                                act_fn = act_fn,
+                                norm_type = norm_type,
+                                training = training,
+                                idx = idx)
+    _shuffled_group_layer = channel_shuffle(name + '_channel_shuffle', _group_layer, group_n)
+    _depthwise_conv_layer = tf.nn.depthwise_conv2d(_shuffled_group_layer,
+                                                   depthwise_filter,
+                                                   strides = [1,stride,stride,1],
+                                                   padding='SAME',
+                                                   name=name + str(idx) + '_depthwise')
+    _depthwise_conv_layer = Normalization(_depthwise_conv_layer,
+                                          norm_type,
+                                          training,
+                                          name + str(idx) + 'depthwise_norm',
+                                          G = group_n)
+    final_group_layer = group_conv2D(name = name + '_group_conv2',
+                                     inputs = _depthwise_conv_layer,
+                                     channel_n = channel_n,
+                                     kernel_size = 1,
+                                     group_n = group_n,
+                                     stride = 1,
+                                     act_fn = act_fn,
+                                     norm_type = norm_type,
+                                     training = training,
+                                     idx = idx,
+                                     use_act_fn=False)
+
+    # Concat part
+    if stride != 1:
+        layer = tf.concat([residual_layer, final_group_layer], axis=3)
+
+    else:
+        layer = residual_layer + final_group_layer
+
+    final_layer = activation(name + str(idx) + '_shuffleunit_act', layer, act_fn)
+
+    return final_layer
+
+def shufflenet_stage(name, inputs, channel_n, group_n, act_fn, norm_type, training, repeat):
+    l = shufflenet_unit(name, inputs, channel_n, group_n, 2, act_fn, norm_type, training=training, idx=0)
+
+    for i in range(repeat):
+        l = shufflenet_unit(name + str(i), inputs, channel_n, group_n, 1, act_fn, norm_type, training=training, idx=i+1)
+
+    return l
+
+def he_hlayer(name, inputs, channel_n, group_m, group_n, act_fn, norm_type, training, idx):
+    l = group_conv2D(name + str(idx) + '_1st_Gconv',
+                     inputs = inputs,
+                     channel_n = channel_n,
+                     kernel_size = 1,
+                     group_n = group_m,
+                     stride = 1,
+                     act_fn = act_fn,
+                     norm_type = norm_type,
+                     training = training,
+                     idx = 0,
+                     use_act_fn = False)
+    l = channel_shuffle(name + str(idx) + '_channelshuffle',
+                        l,
+                        group_m)
+    l = group_conv2D(name + str(idx) + '_2nd_Gconv',
+                     inputs = l,
+                     channel_n = channel_n,
+                     kernel_size = 3,
+                     group_n = group_n,
+                     stride = 1,
+                     act_fn = act_fn,
+                     norm_type = norm_type,
+                     training = training,
+                     idx = 1,
+                     use_act_fn = True)
+    return l
+
+def he_s1block(name, inputs, channel_n, group_m, group_n, act_fn, norm_type, training, repeat):
+    X = tf.identity(inputs)
+    l = inputs
+    for i in range(repeat):
+        HL = he_hlayer(name = name + '_hlayer{}'.format(i + 1),
+                       inputs = l,
+                       channel_n = channel_n,
+                       group_m = group_m,
+                       group_n = group_n,
+                       act_fn = act_fn,
+                       norm_type = norm_type,
+                       training = training,
+                       idx = i)
+        X = X + HL
+        l = tf.concat([HL, X], axis=3)
+
+    return l
+
+def he_s2block(name, inputs, channel_n, group_m, group_n, act_fn, norm_type, training, resize = True):
+    l = group_conv2D(name + '_1st_s2_Gconv',
+                     inputs = inputs,
+                     channel_n = channel_n // 2,
+                     kernel_size = 3,
+                     group_n = group_m,
+                     stride = 2 if resize else 1,
+                     act_fn = act_fn,
+                     norm_type = norm_type,
+                     training = training,
+                     idx = 0,
+                     use_act_fn = False)
+    l = channel_shuffle(name + '_s2_channelshuffle',
+                        l,
+                        group_m)
+    l = group_conv2D(name + '_2nd_s2_Gconv',
+                     inputs = l,
+                     channel_n = channel_n,
+                     kernel_size = 1,
+                     group_n = group_n,
+                     stride = 1,
+                     act_fn = act_fn,
+                     norm_type = norm_type,
+                     training = training,
+                     idx = 1,
+                     use_act_fn = True)
+    return l
+
+def he_stage(name, inputs, channel_in, channel_out, group_m, group_n, act_fn, norm_type, training, repeat, resize=True, last_stage=False):
+    if last_stage:
+        _, h, _, _ = inputs.get_shape().as_list()
+
+        l = group_conv2D(name + 'last_stage1',
+                         inputs = inputs,
+                         channel_n = channel_in,
+                         kernel_size = h,
+                         group_n = group_m,
+                         stride = 1,
+                         act_fn = act_fn,
+                         norm_type = norm_type,
+                         training = training,
+                         idx = 0,
+                         use_act_fn = False,
+                         padding = 'VALID')
+        l = channel_shuffle(name + '_last_channelshuffle',
+                            l,
+                            group_m)
+        l = group_conv2D(name + 'last_stage2',
+                         inputs = l,
+                         channel_n = channel_out,
+                         kernel_size = 1,
+                         group_n = group_n,
+                         stride = 1,
+                         act_fn = act_fn,
+                         norm_type = norm_type,
+                         training = training,
+                         idx = 1,
+                         use_act_fn = True)
+    else:
+        l = he_s1block(name = name + 's1_block',
+                       inputs = inputs,
+                       channel_n = channel_in,
+                       group_m = group_m,
+                       group_n = group_n,
+                       act_fn = act_fn,
+                       norm_type = norm_type,
+                       training = training,
+                       repeat = repeat)
+
+        l = he_s2block(name = name + 's2_block',
+                       inputs = l,
+                       channel_n = channel_out,
+                       group_m = group_m,
+                       group_n = group_n,
+                       act_fn = act_fn,
+                       norm_type = norm_type,
+                       training = training,
+                       resize = resize)
+
+    return l

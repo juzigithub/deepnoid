@@ -509,7 +509,7 @@ def depthwise_separable_convlayer(name, inputs, channel_n, width_mul, group_n, a
                                        shape=[3, 3, inputs.get_shape()[-1], width_mul],
                                        dtype=tf.float32,
                                        initializer=tf.contrib.layers.variance_scaling_initializer())
-    l = tf.nn.depthwise_conv2d(inputs, depthwise_filter, [1, 1, 1, 1], 'SAME', name + str(idx) + '_depthwise', rate=rate)
+    l = tf.nn.depthwise_conv2d(inputs, depthwise_filter, [1, 1, 1, 1], 'SAME', rate=rate, name = name + str(idx) + '_depthwise')
     l = Normalization(l, norm_type, training, name + str(idx) + '_depthwise_norm', G=group_n)
     l = activation(name + str(idx) + '_depthwise_act1', l, act_fn)
 
