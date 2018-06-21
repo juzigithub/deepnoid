@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import tensorflow as tf
 
 
@@ -9,9 +10,10 @@ initializer = tf.contrib.layers.variance_scaling_initializer()
 regularizer = None # tf.contrib.layers.l2_regularizer(0.00001)
 
 
-def conv2D(name, inputs, filters, kernel_size, strides, padding='valid'):
+def conv2D(name, inputs, filters, kernel_size, strides, dilation_rate=(1,1), padding='valid'):
     conv2D = tf.layers.conv2d(inputs=inputs, filters=filters, kernel_size=kernel_size, strides=strides,
-                              padding=padding, use_bias=True, kernel_initializer=initializer, kernel_regularizer=regularizer, name=name)
+                              padding=padding, use_bias=True, dilation_rate=dilation_rate,
+                              kernel_initializer=initializer, kernel_regularizer=regularizer, name=name)
     return conv2D
 
 
@@ -500,13 +502,13 @@ def dense_block_v1(name, inputs, group_n, drop_rate, act_fn, norm_type, growth, 
 
 # depthwise separable conv  (Mobilenet - https://arxiv.org/abs/1704.04861)
 
-def depthwise_separable_convlayer(name, inputs, channel_n, width_mul, group_n, act_fn, norm_type, training, idx):
+def depthwise_separable_convlayer(name, inputs, channel_n, width_mul, group_n, act_fn, norm_type, training, idx, rate=None):
     # depthwise
     depthwise_filter = tf.get_variable(name='depthwise_filter' + str(idx),
                                        shape=[3, 3, inputs.get_shape()[-1], width_mul],
                                        dtype=tf.float32,
                                        initializer=tf.contrib.layers.variance_scaling_initializer())
-    l = tf.nn.depthwise_conv2d(inputs, depthwise_filter, [1, 1, 1, 1], 'SAME', name + str(idx) + '_depthwise')
+    l = tf.nn.depthwise_conv2d(inputs, depthwise_filter, [1, 1, 1, 1], 'SAME', name + str(idx) + '_depthwise', rate=rate)
     l = Normalization(l, norm_type, training, name + str(idx) + '_depthwise_norm', G=group_n)
     l = activation(name + str(idx) + '_depthwise_act1', l, act_fn)
 
@@ -775,3 +777,45 @@ def he_stage(name, inputs, channel_in, channel_out, group_m, group_n, act_fn, no
                        resize = resize)
 
     return l
+################################################################################################
+
+def atrous_spatial_pyramid_pooling(name, inputs, channel_n, output_stride, act_fn, training):
+    if output_stride not in [8, 16]:
+        raise ValueError('output_stride must be in 8 or 16')
+    multi_grid = [1,2,3]
+    atrous_rates = [grid * (6 if output_stride == 16 else 12) for grid in multi_grid]
+
+    ### a) 1x1 Conv * 1  +  3x3 Conv * 3
+    conv_1x1 = conv2D(name + '_a_1x1', inputs, channel_n, [1,1], [1,1], padding='SAME')
+    conv_1x1 = Normalization(conv_1x1, 'batch', training, name + '_a_1x1_norm')
+    conv_1x1 = activation(name + '_a_1x1_act', conv_1x1, act_fn)
+
+    conv_3x3_0 = conv2D(name + '_a_3x3_0', inputs, channel_n, [3,3], [1,1], dilation_rate=atrous_rates[0], padding='SAME')
+    conv_3x3_0 = Normalization(conv_3x3_0, 'batch', training, name + '_a_3x3_0_norm')
+    conv_3x3_0 = activation(name + 'a_3x3_0_act', conv_3x3_0, act_fn)
+
+    conv_3x3_1 = conv2D(name + '_a_3x3_1', inputs, channel_n, [3, 3], [1, 1], dilation_rate=atrous_rates[1], padding='SAME')
+    conv_3x3_1 = Normalization(conv_3x3_1, 'batch', training, name + '_a_3x3_1_norm')
+    conv_3x3_1 = activation(name + 'a_3x3_1_act', conv_3x3_1, act_fn)
+
+    conv_3x3_2 = conv2D(name + '_a_3x3_2', inputs, channel_n, [3, 3], [1, 1], dilation_rate=atrous_rates[2], padding='SAME')
+    conv_3x3_2 = Normalization(conv_3x3_2, 'batch', training, name + '_a_3x3_2_norm')
+    conv_3x3_2 = activation(name + 'a_3x3_2_act', conv_3x3_2, act_fn)
+
+    ### (b) the image-level features
+    # global average pooling
+    img_lv_features = GlobalAveragePooling2D(inputs, tf.shape(inputs)[-1], name + '_GAP')
+    # 1x1 conv
+    img_lv_features = conv2D(name + '_img_lv_features', img_lv_features, channel_n, [1,1], [1,1], padding='SAME')
+    img_lv_features = Normalization(img_lv_features, 'batch', training, name + '_img_lv_features_norm')
+    img_lv_features = activation(name + '_img_lv_features_act', img_lv_features, act_fn)
+    # upsampling
+    img_lv_features = tf.image.resize_bilinear(img_lv_features, tf.shape(inputs)[1:3], name=name + '_upsample')
+    # concat
+    aspp_layer = tf.concat([conv_1x1, conv_3x3_0, conv_3x3_1, conv_3x3_2, img_lv_features], axis=3, name=name+'_concat')
+    # 1x1 conv
+    aspp_layer = conv2D(name + '_aspp_layer', aspp_layer, channel_n, [1,1], [1,1], padding='SAME')
+    aspp_layer = Normalization(aspp_layer, 'batch', training, name + '_aspp_layer_norm')
+    aspp_layer = activation(name + '_aspp_layer_act', aspp_layer, act_fn)
+
+    return aspp_layer
