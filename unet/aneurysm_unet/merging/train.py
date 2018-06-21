@@ -273,7 +273,7 @@ class Train:
         # cv2의 결과는 2차원(H, W) 입니다. 따라서 pred_img에 0차원과 4차원에 차원을 덧대주어서 차원을 맞춰줍니다.
         #
 
-        if 'pred' or 'label' in name:
+        if 'pred' in name or 'label' in name:
             _img = np.expand_dims(img, axis=3)
             _img = np.expand_dims(_img, axis=0)
 
