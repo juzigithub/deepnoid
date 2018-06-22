@@ -417,9 +417,9 @@ def unet_same_block(inputs, channel_n, group_n, act_fn, norm_type, training):
 
 
 def unet_up_block(inputs, downconv_list, upconv_list, pool_list, channel_n, group_n, act_fn, norm_type, training, idx):
-    pool_list[idx] = Normalization(inputs, norm_type, training, str(idx) + '_norm1', G=group_n)
-    pool_list[idx] = activation(str(idx) + '_upsampling_act', pool_list[idx], act_fn)
-
+    # pool_list[idx] = Normalization(inputs, norm_type, training, str(idx) + '_norm1', G=group_n)
+    # pool_list[idx] = activation(str(idx) + '_upsampling_act', pool_list[idx], act_fn)
+    pool_list[idx] = tf.identity(inputs) ###############
     pool_list[idx] = concat(str(idx) + '_upconcat', [pool_list[idx], downconv_list[idx]], axis=3)
 
     upconv_list[idx] = conv2D(str(idx) + '_upconv1', pool_list[idx], channel_n, [3, 3], [1, 1], padding='SAME')
@@ -508,7 +508,7 @@ def depthwise_separable_convlayer(name, inputs, channel_n, width_mul, group_n, a
     depthwise_filter = tf.get_variable(name='depthwise_filter' + str(idx),
                                        shape=[3, 3, inputs.get_shape()[-1], width_mul],
                                        dtype=tf.float32,
-                                       initializer=tf.contrib.layers.variance_scaling_initializer())
+                                       initializer=initializer)
     l = tf.nn.depthwise_conv2d(inputs, depthwise_filter, [1, 1, 1, 1], 'SAME', rate=rate, name = name + str(idx) + '_depthwise')
     l = Normalization(l, norm_type, training, name + str(idx) + '_depthwise_norm', G=group_n)
     l = activation(name + str(idx) + '_depthwise_act1', l, act_fn)
@@ -805,7 +805,7 @@ def atrous_spatial_pyramid_pooling(name, inputs, channel_n, output_stride, act_f
 
     ### (b) the image-level features
     # global average pooling
-    img_lv_features = GlobalAveragePooling2D(inputs, tf.shape(inputs)[-1], name + '_GAP')
+    img_lv_features = GlobalAveragePooling2D(inputs, tf.shape(inputs)[-1], name + '_GAP', keep_dims=True)
     # 1x1 conv
     img_lv_features = conv2D(name + '_img_lv_features', img_lv_features, channel_n, [1,1], [1,1], padding='SAME')
     img_lv_features = Normalization(img_lv_features, 'batch', training, name + '_img_lv_features_norm')
@@ -820,3 +820,37 @@ def atrous_spatial_pyramid_pooling(name, inputs, channel_n, output_stride, act_f
     aspp_layer = activation(name + '_aspp_layer_act', aspp_layer, act_fn)
 
     return aspp_layer
+
+def xception_depthwise_separable_convlayer(name, inputs, channel_n, last_stride, act_fn, training, shortcut_conv=False, atrous=False):
+    rate = [[1, 1], [2, 2], [4, 4]] if atrous else [None, None, None]
+    # shortcut layer
+    shortcut = tf.identity(inputs)
+    if shortcut_conv:
+        shortcut = conv2D(name + '_shortcut', shortcut, channel_n, [1,1], [last_stride, last_stride], padding='SAME')
+        shortcut = Normalization(shortcut, 'batch', training, name + '_shortcut_norm')
+        shortcut = activation(name + '_shortcut_act', shortcut, act_fn)
+
+    depthwise_filter = tf.get_variable(name = name + 'depthwise_filter',
+                                       shape = [3, 3, inputs.get_shape()[-1]],
+                                       dtype = tf.float32,
+                                       initializer = initializer)
+    # conv layer 1
+    l = tf.nn.depthwise_conv2d(inputs, depthwise_filter, [1,1,1,1], 'SAME', rate = rate[0], name = name + '_sep1')
+    l = Normalization(l, 'batch', training, name + '_sep_norm1')
+    l = activation(name + '_sep_act1', l, act_fn)
+
+    # conv layer 2
+    l = tf.nn.depthwise_conv2d(l, depthwise_filter, [1, 1, 1, 1], 'SAME', rate = rate[1], name = name + '_sep2')
+    l = Normalization(l, 'batch', training, name + '_sep_norm2')
+    l = activation(name + '_sep_act2', l, act_fn)
+
+    # conv layer 3
+    l = tf.nn.depthwise_conv2d(l, depthwise_filter, [1, last_stride, last_stride, 1], 'SAME', rate = rate[2], name = name + '_sep3')
+    l = Normalization(l, 'batch', training, name + '_sep_norm3')
+    l = activation(name + '_sep_act3', l, act_fn)
+
+    # add layer
+    l = l + shortcut
+
+    return l
+
