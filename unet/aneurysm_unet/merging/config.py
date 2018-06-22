@@ -69,6 +69,9 @@ GROUP_IN = GROUP_N              # number of groups in first group_conv
 GROUP_OUT = 6                   # number of groups in last group_conv
 REPEAT = 2                      # repeat * s1_block
 
+### Deeplab ###
+MIDDLE_REPEAT = 8
+
 ### Result ###
 PRED_MASKING_COLOR = 'red'      # red or green or blue
 LABEL_MASKING_COLOR = 'blue'    # red or green or blue
