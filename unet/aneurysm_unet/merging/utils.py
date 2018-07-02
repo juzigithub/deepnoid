@@ -50,7 +50,7 @@ def GlobalAveragePooling2D(input, n_class, name, keep_dims=False):
     https://github.com/AndersonJo/global-average-pooling/blob/master/global-average-pooling.ipynb
     """
     kernel_size = input.get_shape().as_list()[1]
-    gap_filter = tf.get_variable(name='gap_filter', shape=[1, 1, input.get_shape()[-1], n_class], dtype=tf.float32, initializer=tf.contrib.layers.variance_scaling_initializer())
+    gap_filter = tf.get_variable(name='gap_filter', shape=[1, 1, input.get_shape()[-1], n_class], dtype=tf.float32, initializer=initializer)
     layer = tf.nn.conv2d(input, filter=gap_filter, strides=[1, 1, 1, 1], padding='SAME', name=name)
     layer = tf.nn.avg_pool(layer, ksize=[1, kernel_size, kernel_size, 1], strides=[1, 1, 1, 1], padding='VALID')
     if not keep_dims:
@@ -417,9 +417,8 @@ def unet_same_block(inputs, channel_n, group_n, act_fn, norm_type, training):
 
 
 def unet_up_block(inputs, downconv_list, upconv_list, pool_list, channel_n, group_n, act_fn, norm_type, training, idx):
-    # pool_list[idx] = Normalization(inputs, norm_type, training, str(idx) + '_norm1', G=group_n)
-    # pool_list[idx] = activation(str(idx) + '_upsampling_act', pool_list[idx], act_fn)
-    pool_list[idx] = tf.identity(inputs) ###############
+    pool_list[idx] = Normalization(inputs, norm_type, training, str(idx) + '_norm1', G=group_n)
+    pool_list[idx] = activation(str(idx) + '_upsampling_act', pool_list[idx], act_fn)
     pool_list[idx] = concat(str(idx) + '_upconcat', [pool_list[idx], downconv_list[idx]], axis=3)
 
     upconv_list[idx] = conv2D(str(idx) + '_upconv1', pool_list[idx], channel_n, [3, 3], [1, 1], padding='SAME')
@@ -805,7 +804,7 @@ def atrous_spatial_pyramid_pooling(name, inputs, channel_n, output_stride, act_f
 
     ### (b) the image-level features
     # global average pooling
-    img_lv_features = GlobalAveragePooling2D(inputs, tf.shape(inputs)[-1], name + '_GAP', keep_dims=True)
+    img_lv_features = GlobalAveragePooling2D(inputs, channel_n, name + '_GAP', keep_dims=True)
     # 1x1 conv
     img_lv_features = conv2D(name + '_img_lv_features', img_lv_features, channel_n, [1,1], [1,1], padding='SAME')
     img_lv_features = Normalization(img_lv_features, 'batch', training, name + '_img_lv_features_norm')
@@ -830,22 +829,30 @@ def xception_depthwise_separable_convlayer(name, inputs, channel_n, last_stride,
         shortcut = Normalization(shortcut, 'batch', training, name + '_shortcut_norm')
         shortcut = activation(name + '_shortcut_act', shortcut, act_fn)
 
-    depthwise_filter = tf.get_variable(name = name + 'depthwise_filter',
-                                       shape = [3, 3, inputs.get_shape()[-1]],
-                                       dtype = tf.float32,
-                                       initializer = initializer)
+    in_channel = inputs.get_shape().as_list()[-1]
+    width_mul = int(channel_n / in_channel)
+
+    depthwise_filter1 = tf.get_variable(name = name + '_depthwise_filter1',
+                                        shape = [3, 3, in_channel, width_mul],
+                                        dtype = tf.float32,
+                                        initializer = initializer)
+
+    depthwise_filter2 = tf.get_variable(name = name + '_depthwise_filter2',
+                                        shape = [3, 3, channel_n, 1],
+                                        dtype = tf.float32,
+                                        initializer = initializer)
     # conv layer 1
-    l = tf.nn.depthwise_conv2d(inputs, depthwise_filter, [1,1,1,1], 'SAME', rate = rate[0], name = name + '_sep1')
+    l = tf.nn.depthwise_conv2d(inputs, depthwise_filter1, [1,1,1,1], 'SAME', rate = rate[0], name = name + '_sep1')
     l = Normalization(l, 'batch', training, name + '_sep_norm1')
     l = activation(name + '_sep_act1', l, act_fn)
 
     # conv layer 2
-    l = tf.nn.depthwise_conv2d(l, depthwise_filter, [1, 1, 1, 1], 'SAME', rate = rate[1], name = name + '_sep2')
+    l = tf.nn.depthwise_conv2d(l, depthwise_filter2, [1, 1, 1, 1], 'SAME', rate = rate[1], name = name + '_sep2')
     l = Normalization(l, 'batch', training, name + '_sep_norm2')
     l = activation(name + '_sep_act2', l, act_fn)
 
     # conv layer 3
-    l = tf.nn.depthwise_conv2d(l, depthwise_filter, [1, last_stride, last_stride, 1], 'SAME', rate = rate[2], name = name + '_sep3')
+    l = tf.nn.depthwise_conv2d(l, depthwise_filter2, [1, last_stride, last_stride, 1], 'SAME', rate = rate[2], name = name + '_sep3')
     l = Normalization(l, 'batch', training, name + '_sep_norm3')
     l = activation(name + '_sep_act3', l, act_fn)
 

@@ -4,10 +4,10 @@ model construct
 by 신형은 주임
 '''
 import tensorflow as tf
-# import utils
-# import config as cfg
-import Unet.aneurysm_unet.merging.utils as utils
-import Unet.aneurysm_unet.merging.config as cfg
+import utils
+import config as cfg
+# import Unet.aneurysm_unet.merging.utils as utils
+# import Unet.aneurysm_unet.merging.config as cfg
 
 
 class Model:
@@ -55,7 +55,7 @@ class Model:
             inputs = utils.conv2D('first_downconv', inputs, channel_n, [3, 3], [2, 2], padding='SAME')
             inputs = utils.Normalization(inputs, 'batch', self.training, 'first_downconv_norm')
             inputs = utils.activation('first_downconv_act', inputs, cfg.ACTIVATION_FUNC)
-
+            print(1, inputs)
             # entry xception layer
             layer = utils.xception_depthwise_separable_convlayer(name = 'entry1',
                                                                  inputs = inputs,
@@ -65,7 +65,7 @@ class Model:
                                                                  training = self.training,
                                                                  shortcut_conv = True,
                                                                  atrous = False)
-
+            print(2, layer)
             low_level_features = tf.identity(layer)
 
             layer = utils.xception_depthwise_separable_convlayer(name = 'entry2',
@@ -76,7 +76,7 @@ class Model:
                                                                  training = self.training,
                                                                  shortcut_conv = True,
                                                                  atrous = False)
-
+            print(3, layer)
             layer = utils.xception_depthwise_separable_convlayer(name = 'entry3',
                                                                  inputs = layer,
                                                                  channel_n = channel_n * 16,
@@ -85,7 +85,7 @@ class Model:
                                                                  training = self.training,
                                                                  shortcut_conv = True,
                                                                  atrous = False)
-
+            print(4, layer)
             for i in range(cfg.MIDDLE_REPEAT):
                 layer = utils.xception_depthwise_separable_convlayer(name = 'middle' + str(i),
                                                                      inputs = layer,
@@ -95,7 +95,7 @@ class Model:
                                                                      training = self.training,
                                                                      shortcut_conv = False,
                                                                      atrous = True)
-
+                print(i + 5, layer)
             # exit conv layer
             layer = utils.xception_depthwise_separable_convlayer(name = 'exit',
                                                                  inputs = layer,
@@ -114,10 +114,11 @@ class Model:
             # aspp layer
             layer = utils.atrous_spatial_pyramid_pooling(name = 'aspp',
                                                          inputs = layer,
-                                                         channel_n = channel_n * 2,
+                                                         channel_n = channel_n * 4,
                                                          output_stride = 16,
                                                          act_fn = cfg.ACTIVATION_FUNC,
                                                          training = self.training)
+            print('alslsldfa',layer)
 
         with tf.variable_scope('up'):
 
@@ -126,30 +127,31 @@ class Model:
                                             up_conv = layer,
                                             up_pool = [],
                                             channel_n = channel_n * 2,
-                                            pool_size = layer.get_shape().as_list()[-1] * 4,
+                                            pool_size = layer.get_shape().as_list()[1] * 4,
                                             mode = cfg.UPSAMPLING_TYPE)
             layer = utils.Normalization(layer, 'batch', self.training, 'x4_upsample_norm1')
             layer = utils.activation('x4_upsample_act1', layer, cfg.ACTIVATION_FUNC)
-
+            print('upupupup',layer)
             # low-level-features -> 1x1 conv
             low_level_features = utils.conv2D('low_level_conv', low_level_features, channel_n * 2, [1, 1], [1, 1], padding='SAME')
             low_level_features = utils.Normalization(low_level_features, 'batch', self.training, 'low_level_norm')
             low_level_features = utils.activation('low_level_act', low_level_features, cfg.ACTIVATION_FUNC)
-
+            print('lowlowlow', low_level_features)
             # concat aspp & low-level-features
             layer = tf.concat([layer, low_level_features], axis=3)
-
+            print('concat', layer)
             # 3x3 conv followed by x4 upsample
-            layer = utils.conv2D('last_conv_layer', layer, cfg.N_CLASS, [3, 3], [1, 1], padding='SAME')
+            layer = utils.conv2D('last_conv_layer', layer, cfg.N_CLASS * 2, [3, 3], [1, 1], padding='SAME')
             layer = utils.Normalization(layer, 'batch', self.training, 'last_conv_norm')
             layer = utils.activation('last_conv_act', layer, cfg.ACTIVATION_FUNC)
-
+            print('conv', layer)
             layer = utils.select_upsampling(name = 'x4_upsample2',
                                             up_conv = layer,
                                             up_pool = [],
                                             channel_n = cfg.N_CLASS,
                                             pool_size = cfg.IMG_SIZE,
                                             mode = cfg.UPSAMPLING_TYPE)
+            print('up', layer)
             layer = utils.Normalization(layer, 'batch', self.training, 'x4_upsample_norm2')
             layer = utils.activation('x4_upsample_act2', layer, cfg.ACTIVATION_FUNC)
 
