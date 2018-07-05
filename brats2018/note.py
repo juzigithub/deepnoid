@@ -159,7 +159,9 @@ def data_saver(data_path, splits, train):
         ##################################################
         train_sets_X, _ = get_normalized_img(train_sets, train=train)
         print(np.shape(train_sets_X))
-
+        np.save('./brats_val_image.npy', train_sets_X)
+        print('saved')
+        
 if __name__ == '__main__':
     # path1 = 'D:\\dataset\\BRATS\\2018\\small_data\\HGG\\'
     # path2 = 'D:\\dataset\\BRATS\\2018\\small_data\\LGG\\'
