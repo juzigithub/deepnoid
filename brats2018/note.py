@@ -4,6 +4,8 @@ from sklearn.model_selection import KFold
 import numpy as np
 import nibabel
 import cv2
+import _pickle as cpickle
+
 
 def get_path_list(data_path):
     id_list = []
@@ -151,11 +153,9 @@ def data_saver(data_path, splits, train):
             print(idx, np.shape(train_sets_X),np.shape(train_sets_Y),np.shape(val_sets_X),np.shape(val_sets_Y))
             np.save('./brats_train_image{}.npy'.format(idx), train_sets_X)
             np.save('./brats_train_label{}.npy'.format(idx), train_sets_Y)
-            np.save('./brats_val_label{}.npy'.format(idx), val_sets_X)
+            np.save('./brats_val_image{}.npy'.format(idx), val_sets_X)
             np.save('./brats_val_label{}.npy'.format(idx), val_sets_Y)
             print('{}.saved'.format(idx))
-
-
 
     else :
         train_sets = nii_names(data_path, train=False)
@@ -169,6 +169,10 @@ def data_saver(data_path, splits, train):
         print(np.shape(train_sets_X))
         np.save('./brats_val_image.npy', train_sets_X)
         print('saved')
+        with open('./pickle.pkl', 'wb') as f:
+            cpickle.dump(train_sets_X, f, protocol=3)
+        print('saved')
+
 
 if __name__ == '__main__':
     # path1 = 'D:\\dataset\\BRATS\\2018\\small_data\\HGG\\'
@@ -179,8 +183,8 @@ if __name__ == '__main__':
     path2 = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/LGG/'
     path3 = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Validation/'
     # data_types = ['flair', 't1', 't1ce', 't2']
-    data_saver([path1, path2], 3, True)
-    # data_saver([path3],1,False)
+    # data_saver([path1, path2], 3, True)
+    data_saver([path3],1,False)
 
 
     # get_path_list([path1, path2])
