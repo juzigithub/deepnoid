@@ -142,7 +142,7 @@ def data_saver(data_path, splits, train):
         train_sets, test_sets = cv(data_path, splits, shuffle=True)
         train_data_length = len(train_sets) // splits
         test_data_length = len(test_sets) // splits
-        print(train_sets)
+        # print(train_sets)
         print(np.shape(train_sets))
         ## 루프문 하나 더 만들어서 [idx][ : ] 로 세분화하기
         for idx in range(splits):
