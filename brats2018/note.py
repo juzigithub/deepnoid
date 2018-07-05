@@ -179,8 +179,8 @@ if __name__ == '__main__':
     path2 = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/LGG/'
     path3 = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Validation/'
     # data_types = ['flair', 't1', 't1ce', 't2']
-    # data_saver([path1, path2], 3, True)
-    data_saver([path3],1,False)
+    data_saver([path1, path2], 3, True)
+    # data_saver([path3],1,False)
 
 
     # get_path_list([path1, path2])
