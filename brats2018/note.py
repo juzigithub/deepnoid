@@ -151,12 +151,14 @@ def data_saver(data_path, splits, train):
             print(idx, np.shape(train_sets_X),np.shape(train_sets_Y),np.shape(val_sets_X),np.shape(val_sets_Y))
     else :
         train_sets = nii_names(data_path, train=False)
-        train_data_length = len(train_sets) // splits
-        for idx in range(splits):
-            train_sets_X, _ = get_normalized_img(train_sets[train_data_length * idx : train_data_length * (idx + 1)], train=train)
-            print(np.shape(train_sets_X))
-
-
+        ##################################################
+        # train_data_length = len(train_sets) // splits
+        # for idx in range(splits):
+        #     train_sets_X, _ = get_normalized_img(train_sets[train_data_length * idx : train_data_length * (idx + 1)], train=train)
+        #     print(np.shape(train_sets_X))
+        ##################################################
+        train_sets_X, _ = get_normalized_img(train_sets, train=train)
+        print(np.shape(train_sets_X))
 
 if __name__ == '__main__':
     # path1 = 'D:\\dataset\\BRATS\\2018\\small_data\\HGG\\'
@@ -167,7 +169,10 @@ if __name__ == '__main__':
     path2 = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/LGG/'
     path3 = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Validation/'
     # data_types = ['flair', 't1', 't1ce', 't2']
-    data_saver([path1, path2], 5, True)
+    # data_saver([path1, path2], 3, True)
+    data_saver([path3],1,False)
+
+
     # get_path_list([path1, path2])
     # get_path_list([path3])
 
