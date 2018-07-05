@@ -91,7 +91,7 @@ def get_normalized_img(data_sets, train):
     total_list = [np.array(total_list[idx], dtype=np.float32) for idx in range(len(total_list))]
 
     ################ Norm ###################
-    total_list = [(total_list[idx] / np.max(total_list[idx])) for idx in range(len(total_list))   ]
+    # total_list = [(total_list[idx] / np.max(total_list[idx])) for idx in range(len(total_list))   ]
     # total_list = [(total_list[idx] - np.mean(total_list[idx])) / np.std(total_list[idx]) for idx in range(len(total_list))]
 
     # print(np.shape(total_list))
@@ -169,19 +169,19 @@ def data_saver(data_path, splits, train):
         print(np.shape(train_sets_X))
         np.save('./brats_val_image.npy', train_sets_X)
         print('saved')
-        with open('./pickle.pkl', 'wb') as f:
-            cpickle.dump(train_sets_X, f, protocol=3)
-        print('saved')
+        # with open('./pickle.pkl', 'wb') as f:
+        #     cpickle.dump(train_sets_X, f, protocol=4)
+        # print('saved')
 
 
 if __name__ == '__main__':
-    # path1 = 'D:\\dataset\\BRATS\\2018\\small_data\\HGG\\'
-    # path2 = 'D:\\dataset\\BRATS\\2018\\small_data\\LGG\\'
-    # path3 = 'D:\\dataset\\BRATS\\2018\\MICCAI_BraTS_2018_Data_Validation\\'
-
-    path1 = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/HGG/'
-    path2 = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/LGG/'
-    path3 = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Validation/'
+    path1 = 'D:\\dataset\\BRATS\\2018\\small_data\\HGG\\'
+    path2 = 'D:\\dataset\\BRATS\\2018\\small_data\\LGG\\'
+    path3 = 'D:\\dataset\\BRATS\\2018\\MICCAI_BraTS_2018_Data_Validation\\'
+    #
+    # path1 = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/HGG/'
+    # path2 = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/LGG/'
+    # path3 = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Validation/'
     # data_types = ['flair', 't1', 't1ce', 't2']
     # data_saver([path1, path2], 3, True)
     data_saver([path3],1,False)
