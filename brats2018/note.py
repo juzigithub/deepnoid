@@ -149,6 +149,14 @@ def data_saver(data_path, splits, train):
             train_sets_X, train_sets_Y = get_normalized_img(train_sets[idx], train=train)
             val_sets_X, val_sets_Y = get_normalized_img(test_sets[idx], train=train)
             print(idx, np.shape(train_sets_X),np.shape(train_sets_Y),np.shape(val_sets_X),np.shape(val_sets_Y))
+            np.save('./brats_train_image{}.npy'.format(idx), train_sets_X)
+            np.save('./brats_train_label{}.npy'.format(idx), train_sets_Y)
+            np.save('./brats_val_label{}.npy'.format(idx), val_sets_X)
+            np.save('./brats_val_label{}.npy'.format(idx), val_sets_Y)
+            print('{}.saved'.format(idx))
+
+
+
     else :
         train_sets = nii_names(data_path, train=False)
         ##################################################
@@ -161,7 +169,7 @@ def data_saver(data_path, splits, train):
         print(np.shape(train_sets_X))
         np.save('./brats_val_image.npy', train_sets_X)
         print('saved')
-        
+
 if __name__ == '__main__':
     # path1 = 'D:\\dataset\\BRATS\\2018\\small_data\\HGG\\'
     # path2 = 'D:\\dataset\\BRATS\\2018\\small_data\\LGG\\'
