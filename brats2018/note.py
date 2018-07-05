@@ -159,9 +159,13 @@ def data_saver(data_path, splits, train):
 
 
 if __name__ == '__main__':
-    path1 = 'D:\\dataset\\BRATS\\2018\\small_data\\HGG\\'
-    path2 = 'D:\\dataset\\BRATS\\2018\\small_data\\LGG\\'
-    path3 = 'D:\\dataset\\BRATS\\2018\\MICCAI_BraTS_2018_Data_Validation\\'
+    # path1 = 'D:\\dataset\\BRATS\\2018\\small_data\\HGG\\'
+    # path2 = 'D:\\dataset\\BRATS\\2018\\small_data\\LGG\\'
+    # path3 = 'D:\\dataset\\BRATS\\2018\\MICCAI_BraTS_2018_Data_Validation\\'
+
+    path1 = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/HGG/'
+    path2 = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/LGG/'
+    path3 = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Validation/'
     # data_types = ['flair', 't1', 't1ce', 't2']
     data_saver([path1, path2], 5, True)
     # get_path_list([path1, path2])
