@@ -144,9 +144,9 @@ def data_saver(data_path, splits, train):
         train_sets, test_sets = cv(data_path, splits, shuffle=True)
         data_length = len(train_sets[1])*splits + len(test_sets[1])*splits*155
         chunk_length = data_length // splits
-        print(data_length)
-        print(chunk_length)
-        print(np.shape(test_sets))
+        print('data_length', data_length)
+        print('chunk_length', chunk_length)
+        print('test_sets_shape', np.shape(test_sets))
 
         # all_X = np.empty((0,2170, 240, 240, 4))
         # all_Y = np.empty((0,2170, 240, 240, 1))
