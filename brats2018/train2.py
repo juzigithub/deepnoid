@@ -10,12 +10,12 @@ import utils
 # import deeplab
 
 
-# import loader
-# import config as cfg
-# from model import Model
-import brats2018.config as cfg
-import brats2018.loader as loader
-from brats2018.model import Model
+import loader
+import config as cfg
+from model import Model
+# import brats2018.config as cfg
+# import brats2018.loader as loader
+# from brats2018.model import Model
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU
