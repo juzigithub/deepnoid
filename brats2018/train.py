@@ -213,9 +213,40 @@ class Train:
                 # print('val_step : ', val_step)
 
                 for idx1 in range(cfg.SPLITS):
-                    train_idx = [i for i in range(cfg.SPLITS) if i != idx1]
-                    val_idx = [idx1]
+                    # train_idx = [i for i in range(cfg.SPLITS) if i != idx1]
+                    # val_idx = [idx1]
+                    train_idx = [i for i in range(15)]
+                    val_idx = [idx1 + i for i in range(3)]
+                    for i in val_idx:
+                        train_idx.remove(i)
 
+                    train_X = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_image_chunk_{}.npy'.format(i)) for i in train_idx], axis=0)
+                    train_Y = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_label_chunk_{}.npy'.format(i)) for i in train_idx], axis=0)
+                    val_X = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_image_chunk_{}.npy'.format(i)) for i in val_idx], axis=0)
+                    val_Y = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_label_chunk_{}.npy'.format(i)) for i in val_idx], axis=0)
+                    print('train_x_shape : ', np.shape(train_X))
+                    print('train_y_shape : ', np.shape(train_Y))
+                    print('val_x_shape : ', np.shape(val_X))
+                    print('val_y_shape : ', np.shape(val_Y))
+
+                    for batch in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
+                                                        batch_size=cfg.BATCH_SIZE, shuffle=True):
+                        batch_x, batch_y = batch
+                        # step_time = time.time()
+                    print('type(batch_x) : ', type(batch_x))            # <class 'numpy.ndarray'>
+                    print('type(batch_y) : ', type(batch_y))            # <class 'numpy.ndarray'>
+                    print('batch_x.shape : ', batch_x.shape)            # (batch_size, 240, 240, 4)
+                    print('batch_y.shape : ', batch_y.shape)            # (batch_size, 240, 240)
+
+                    for batch in tl.iterate.minibatches(inputs=val_X, targets=val_Y,
+                                                        batch_size=cfg.BATCH_SIZE, shuffle=True):
+                        batch_x, batch_y = batch
+                        # step_time = time.time()
+                    print('type(batch_x) : ', type(batch_x))            # <class 'numpy.ndarray'>
+                    print('type(batch_y) : ', type(batch_y))            # <class 'numpy.ndarray'>
+                    print('batch_x.shape : ', batch_x.shape)            # (batch_size, 240, 240, 4)
+                    print('batch_y.shape : ', batch_y.shape)            # (batch_size, 240, 240)
+                    '''
                     for idx2 in range(cfg.SUB_SPLITS):
 
 
@@ -224,19 +255,14 @@ class Train:
                         val_X = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_image_chunk_{}.npy'.format(cfg.SUB_SPLITS * i + idx2)) for i in val_idx], axis=0)
                         val_Y = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_label_chunk_{}.npy'.format(cfg.SUB_SPLITS * i + idx2)) for i in val_idx], axis=0)
 
-
                         train_step = train_X.shape[0] // cfg.BATCH_SIZE
                         val_step = val_X.shape[0] // cfg.BATCH_SIZE
-
-
 
                         # shuffle
 
                         # create variables to save results
                         mean_iou_list, unfiltered_iou_list, loss_list = [], [], []
                         total_cost, total_val_iou, total_val_unfiltered_iou, step = 0, 0, 0, 0
-
-
 
                         # for bath in range(train_step):
                         for batch in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
@@ -249,11 +275,6 @@ class Train:
                         print('type(batch_y) : ', type(batch_y))            # <class 'numpy.ndarray'>
                         print('batch_x.shape : ', batch_x.shape)            # (batch_size, 240, 240, 4)
                         print('batch_y.shape : ', batch_y.shape)            # (batch_size, 240, 240)
-
-
-
-
-
 
 
 ######################################################
@@ -340,7 +361,7 @@ class Train:
                             # # save validation image results
                             # # if save_yn:
                             # #     self._make_img(predicted_result, x_list, y_list, address, cfg.W, cfg.P)
-
+                    '''
 ###################################################
 
     def _make_path(self, epoch):
