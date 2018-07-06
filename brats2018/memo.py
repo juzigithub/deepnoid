@@ -75,10 +75,10 @@ path = 'C:\\Users\\sunki\\PycharmProjects\\deepnoid\\brats2018\\'
 
 
 
-a = np.concatenate([np.load(path + 'brats_label_chunk_{}.npy'.format(i)) for i in range(1)], axis=0)
+# a = np.concatenate([np.load(path + 'brats_label_chunk_{}.npy'.format(i)) for i in range(1)], axis=0)
 # a = [i for i in range(5)]
 # a.remove(0)
-print(np.shape(a))
+# print(np.shape(a))
 
 
 
@@ -91,3 +91,7 @@ print(np.shape(a))
 #
 # d = np.concatenate([eval('a{}'.format(i)) for i in range(1,4)], axis=0)
 # print(d)
+
+train_idx = [i for i in range(15) if i != 1]
+# train_idx.remove(1)
+print(train_idx)

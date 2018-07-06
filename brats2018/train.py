@@ -87,7 +87,7 @@ class Train:
         if cfg.REBUILD_DATA:
             dstime = time.time()
 
-            loader.data_saver([cfg.HGG_DATA_PATH], cfg.SPLITS, train=True)
+            loader.data_saver([cfg.HGG_DATA_PATH], cfg.SPLITS * cfg.SUB_SPLITS, train=True)
 
             detime = time.time()
 
@@ -161,7 +161,7 @@ class Train:
                                                                      staircase=cfg.DECAY_STAIRCASE,
                                                                      name='learning_rate')
 
-        self.optimizer = utils.select_optimizer(cfg.OPTIMIZER, exponential_decay_learning_rate, self.model.loss, global_step)
+        # self.optimizer = utils.select_optimizer(cfg.OPTIMIZER, exponential_decay_learning_rate, self.model.loss, global_step)
 
     def train(self):
 
@@ -205,7 +205,7 @@ class Train:
                 # print('val_step : ', val_step)
 
                 for idx1 in range(cfg.SPLITS):
-                    train_idx = [i for i in range(cfg.SPLITS)].remove(idx1)
+                    train_idx = [i for i in range(cfg.SPLITS) if i != idx1]
                     val_idx = [idx1]
 
                     for idx2 in range(cfg.SUB_SPLITS):
