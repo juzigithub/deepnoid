@@ -100,7 +100,7 @@ def get_normalized_img(data_sets, train):
 
     total_list = np.transpose(total_list, [0, 1, 4, 3, 2])
     total_list = np.reshape(total_list, [m, -1, w, h])
-    print(np.shape(total_list))
+    # print(np.shape(total_list))
 
     ### show image #############################
     # cv2.imshow('a', total_list[0][1000])
@@ -143,10 +143,11 @@ def get_normalized_img(data_sets, train):
 def data_saver(data_path, save_path, splits, train):
     if train :
         train_sets, test_sets = cv(data_path, splits, shuffle=True)
-        data_length = len(train_sets[1])*splits + len(test_sets[1])*splits*155
-        chunk_length = data_length // splits
-        print('data_length', data_length)
-        print('chunk_length', chunk_length)
+        # data_length = len(train_sets[1])*splits + len(test_sets[1])*splits*155
+        # chunk_length = data_length // splits
+        # print('data_length', data_length)
+        # print('chunk_length', chunk_length)
+
         print('test_sets_shape', np.shape(test_sets))
 
         # all_X = np.empty((0,2170, 240, 240, 4))

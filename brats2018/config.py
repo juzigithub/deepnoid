@@ -6,7 +6,9 @@
 # Linux #
 # MODE = 'linux'
 # GPU = '1'
-# SAVE_DATA_PATH = './npy/'
+# SAVE_DATA_PATH = './npy/train/'        # train
+## SAVE_DATA_PATH = './npy/validation/'  # validation
+## SAVE_DATA_PATH = './npy/test/'        # test
 # HGG_DATA_PATH = "/home/hshin255/MICCAI_BraTS_2018_Data_Training_for_test/HGG/"
 # LGG_DATA_PATH = "/home/hshin255/MICCAI_BraTS_2018_Data_Training_for_test/LGG/"
 # SURVIVAL_CSV_PATH = "/home/hshin255/MICCAI_BraTS_2018_Data_Training_for_test/survival_data.csv"
@@ -14,7 +16,9 @@
 # Window #
 # MODE = 'window'
 # GPU = '1'
-# SAVE_DATA_PATH = '.\\npy\\'
+# SAVE_DATA_PATH = '.\\npy\\train\\'         # train
+## SAVE_DATA_PATH = '.\\npy\\validation\\'   # validation
+## SAVE_DATA_PATH = '.\\npy\\test\\'         # test
 # HGG_DATA_PATH = "C:\\Users\\hshin\\Desktop\\MICCAI_BraTS_2018_Data_Training\\HGG"
 # LGG_DATA_PATH = "C:\\Users\\hshin\\Desktop\\MICCAI_BraTS_2018_Data_Training\\LGG"
 # SURVIVAL_CSV_PATH = "C:\\Users\\hshin\\Desktop\\MICCAI_BraTS_2018_Data_Training\\survival_data.csv"
@@ -23,7 +27,9 @@
 # Linux #
 MODE = 'linux'
 GPU = '6'
-SAVE_DATA_PATH = './npy/'
+SAVE_DATA_PATH = './npy/train/'    # train
+# SAVE_DATA_PATH = './npy/validation/' # validation
+# SAVE_DATA_PATH = './npy/test/'       # test
 HGG_DATA_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/HGG/'
 LGG_DATA_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/LGG/'
 VAL_DATA_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Validation/'
@@ -32,17 +38,19 @@ SURVIVAL_CSV_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_
 # Window #
 # MODE = 'window'
 # GPU = '6'
-# SAVE_DATA_PATH = '.\\npy\\'
+# SAVE_DATA_PATH = '.\\npy\\train\\'        # train
+## SAVE_DATA_PATH = '.\\npy\\validation\\'  # validation
+## SAVE_DATA_PATH = '.\\npy\\test\\'        # test
 # HGG_DATA_PATH = 'D:\\dataset\\BRATS\\2018\\small_data\\HGG\\'
 # LGG_DATA_PATH = 'D:\\dataset\\BRATS\\2018\\small_data\\LGG\\'
 # VAL_DATA_PATH = 'D:\\dataset\\BRATS\\2018\\MICCAI_BraTS_2018_Data_Validation\\'
 # SURVIVAL_CSV_PATH = 'D:\\dataset\BRATS\\2018\\MICCAI_BraTS_2018_Data_Training\\survival_data.csv'
 
 
-
 ###  File setting ###
 DATA_FILE_TYPE = 'npy'
 REBUILD_DATA = True
+TRAIN_YN = True if 'train' in SAVE_DATA_PATH else False
 PATH_SLASH = '/' if MODE == 'linux' else '\\'
 IMG_SIZE = 240
 VALIDATION_RATIO = 15

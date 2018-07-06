@@ -85,15 +85,19 @@ class Train:
         # self.data_loader = loader.DataLoader()
         # self.model = resnet.Model()
         if cfg.REBUILD_DATA:
+            print('')
+            print('>>> Data Saving Started')
+            print('')
+
             dstime = time.time()
             tl.files.exists_or_mkdir(cfg.SAVE_DATA_PATH)
 
-            loader.data_saver([cfg.HGG_DATA_PATH], cfg.SAVE_DATA_PATH, cfg.SPLITS * cfg.SUB_SPLITS, train=True)
+            loader.data_saver([cfg.HGG_DATA_PATH], cfg.SAVE_DATA_PATH, cfg.SPLITS * cfg.SUB_SPLITS, train=cfg.TRAIN_YN)
 
             detime = time.time()
 
             print('')
-            print('>>> Data Loading Complete. Consumption Time :', detime - dstime)
+            print('>>> Data Saving Complete. Consumption Time :', detime - dstime)
             print('')
 
         # make paths
@@ -112,9 +116,6 @@ class Train:
         self.merged_summary = tf.summary.merge_all()
         self.writer = tf.summary.FileWriter(self.log_path)
 
-        print('')
-        print('>>> Data Loading Started')
-        print('')
 
 
         # data_list_loader + img_grey_size  -> save as pkl -> pkl data load
@@ -182,6 +183,12 @@ class Train:
             total_training_time = 0
 
             for epoch in range(cfg.EPOCHS):
+                # save image and model at the first epoch, final epoch and multiples of SAVING_EPOCH
+                save_yn = (epoch == 0 or epoch + 1 == cfg.EPOCHS or epoch % cfg.SAVING_EPOCH == 0)
+
+                # Make folder in the saving path for qualified epochs
+                if save_yn:
+                    self._make_path(epoch)
                 #
                 # idx = i*3
                 #
@@ -229,12 +236,7 @@ class Train:
                         mean_iou_list, unfiltered_iou_list, loss_list = [], [], []
                         total_cost, total_val_iou, total_val_unfiltered_iou, step = 0, 0, 0, 0
 
-                        # save image and model at the first epoch, final epoch and multiples of SAVING_EPOCH
-                        save_yn = (epoch == 0 or epoch + 1 == cfg.EPOCHS or epoch % cfg.SAVING_EPOCH == 0)
 
-                        # Make folder in the saving path for qualified epochs
-                        if save_yn:
-                            self._make_path(epoch)
 
                         # for bath in range(train_step):
                         for batch in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
