@@ -158,8 +158,6 @@ class Train:
         # print('self.all_Y.shape : ', self.all_Y.shape)
 
 
-
-
     def optimizer(self, global_step):
         exponential_decay_learning_rate = tf.train.exponential_decay(learning_rate=cfg.INIT_LEARNING_RATE,
                                                                      global_step=global_step,
@@ -170,13 +168,19 @@ class Train:
 
         self.optimizer = utils.select_optimizer(cfg.OPTIMIZER, exponential_decay_learning_rate, self.model.loss, global_step)
 
+
     def train(self):
+        global_step = tf.Variable(0, trainable=False, name='global_step')
+
+        # 배치정규화를 진행하는 경우 배치별 이동평균과 표준편차를 갱신해주는 update operation을 실행하고 지정해줍니다.
+        with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
+            self.optimizer(global_step)
 
         with tf.Session() as sess:
 
             #  Saving a model is saving variables such as weights, ans we call it as ckpt(check point file) in tensorflow
             # It's a tensorflow class saving ckpt file
-            # saver = tf.train.Saver()
+            saver = tf.train.Saver()
 
             # save graphs from tensorboard
             self.writer.add_graph(sess.graph)
