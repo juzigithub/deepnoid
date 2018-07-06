@@ -2,42 +2,48 @@
 
 ### Path info ###
 
-# # Linux #
+## hshin ##
+# Linux #
 # MODE = 'linux'
-# DATA_PATH = '/home/hshin255/MICCAI_BraTS_2018_Data_Training/'
-# HGG_data_path = "/home/hshin255/MICCAI_BraTS_2018_Data_Training/HGG/"
-# LGG_data_path = "/home/hshin255/MICCAI_BraTS_2018_Data_Training/LGG/"
-# survival_csv_path = "/home/hshin255/MICCAI_BraTS_2018_Data_Training/survival_data.csv"
-# PKL_DATA_PATH = DATA_PATH + '/pkl'
-# PKL_NAME = 'train.pkl'
+# GPU = '1'
+# HGG_DATA_PATH = "/home/hshin255/MICCAI_BraTS_2018_Data_Training_for_test/HGG/"
+# LGG_DATA_PATH = "/home/hshin255/MICCAI_BraTS_2018_Data_Training_for_test/LGG/"
+# SURVIVAL_CSV_PATH = "/home/hshin255/MICCAI_BraTS_2018_Data_Training_for_test/survival_data.csv"
 
+# Window #
+# MODE = 'window'
+# GPU = '1'
+# HGG_DATA_PATH = "C:\\Users\\hshin\\Desktop\\MICCAI_BraTS_2018_Data_Training\\HGG"
+# LGG_DATA_PATH = "C:\\Users\\hshin\\Desktop\\MICCAI_BraTS_2018_Data_Training\\LGG"
+# SURVIVAL_CSV_PATH = "C:\\Users\\hshin\\Desktop\\MICCAI_BraTS_2018_Data_Training\\survival_data.csv"
 
+## mspark ##
 # Linux #
 MODE = 'linux'
-DATA_PATH = '/home/hshin255/MICCAI_BraTS_2018_Data_Training_for_test/'
-HGG_data_path = "/home/hshin255/MICCAI_BraTS_2018_Data_Training_for_test/HGG/"
-LGG_data_path = "/home/hshin255/MICCAI_BraTS_2018_Data_Training_for_test/LGG/"
-survival_csv_path = "/home/hshin255/MICCAI_BraTS_2018_Data_Training_for_test/survival_data.csv"
-PKL_DATA_PATH = DATA_PATH + '/pkl'
-PKL_NAME = 'train.pkl'
+GPU = '6'
+HGG_DATA_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/HGG/'
+LGG_DATA_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/LGG/'
+VAL_DATA_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Validation/'
+SURVIVAL_CSV_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/survival_data.csv'
 
-# # Window #
+# Window #
 # MODE = 'window'
-# DATA_PATH = 'C:\\Users\\hshin\\Desktop\\MICCAI_BraTS_2018_Data_Training'
-# HGG_data_path = "C:\\Users\\hshin\\Desktop\\MICCAI_BraTS_2018_Data_Training\\HGG"
-# LGG_data_path = "C:\\Users\\hshin\\Desktop\\MICCAI_BraTS_2018_Data_Training\\LGG"
-# survival_csv_path = "C:\\Users\\hshin\\Desktop\\MICCAI_BraTS_2018_Data_Training\\survival_data.csv"
-# # TRAIN_DATA_PATH = DATA_PATH + '\\train'
-# # VAL_DATA_PATH = DATA_PATH + '\\test'
-# PKL_DATA_PATH = DATA_PATH + '\\pkl'
-# PKL_NAME = 'train.pkl'
+# GPU = '6'
+# HGG_DATA_PATH = 'D:\\dataset\\BRATS\\2018\\small_data\\HGG\\'
+# LGG_DATA_PATH = 'D:\\dataset\\BRATS\\2018\\small_data\\LGG\\'
+# VAL_DATA_PATH = 'D:\\dataset\\BRATS\\2018\\MICCAI_BraTS_2018_Data_Validation\\'
+# SURVIVAL_CSV_PATH = 'D:\\dataset\BRATS\\2018\\MICCAI_BraTS_2018_Data_Training\\survival_data.csv'
+
+
 
 ###  File setting ###
-DATA_FILE_TYPE = 'pkl'
-REBUILD_PKL = True
+DATA_FILE_TYPE = 'npy'
+REBUILD_DATA = True
 PATH_SLASH = '/' if MODE == 'linux' else '\\'
 IMG_SIZE = 240
 VALIDATION_RATIO = 15
+SPLITS = 15
+SUB_SPLITS = 3
 RGB_CHANNEL = 1
 N_CLASS = 4
 

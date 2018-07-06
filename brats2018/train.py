@@ -1,20 +1,20 @@
 import numpy as np
 import tensorflow as tf
 import tensorlayer as tl
+
 import os
-import config as cfg
+# import loadutils
 import time
 import utils
+# import resnet
+# import deeplab
 
-# import resnet as resnet
-# import loadutils as loader
-# import file_converter as fc
+import loader
+import config as cfg
+# import brats2018.config as cfg
+# import brats2018.loader as loader
 
-import brats2018.resnet as resnet
-import brats2018.loadutils as loader
-import brats2018.file_converter as fc
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "6"
+os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU
 
 class Train:
     def __init__(self):
@@ -82,10 +82,18 @@ class Train:
         print('self.val_sets_Y.shape : ', self.val_sets_Y.shape)
 
         '''
-
         # self.data_loader = loader.DataLoader()
-        self.model = resnet.Model()
-        self.splits = 5
+        # self.model = resnet.Model()
+        if cfg.REBUILD_DATA:
+            dstime = time.time()
+
+            loader.data_saver([cfg.HGG_DATA_PATH], cfg.SPLITS, train=True)
+
+            detime = time.time()
+
+            print('')
+            print('>>> Data Loading Complete. Consumption Time :', detime - dstime)
+            print('')
 
         # make paths
         *self.train_start_time, _, _, _, _ = time.localtime()
@@ -107,11 +115,11 @@ class Train:
         print('>>> Data Loading Started')
         print('')
 
-        dstime = time.time()
 
         # data_list_loader + img_grey_size  -> save as pkl -> pkl data load
         # Unlike other variables composes with valX = [abnorm(0) or norm(1) or else(2), img_da1ta]
         # self.train_sets_X, self.train_sets_Y, self.val_sets_X, self.val_sets_Y = self.data_loader.load_data(type='pkl', mode='train')
+        '''
         self.train_sets_X = np.load(cfg.HGG_data_path + 'brats_train_image.npy')
         self.train_sets_Y = np.load(cfg.HGG_data_path + 'brats_train_label.npy')
         self.val_sets_X = np.load(cfg.HGG_data_path + 'brats_val_image.npy')
@@ -121,13 +129,29 @@ class Train:
         print('self.train_sets_Y.shape : ', self.train_sets_Y.shape)
         print('self.val_sets_X.shape : ', self.val_sets_X.shape)
         print('self.val_sets_Y.shape : ', self.val_sets_Y.shape)
+        '''
+
+        # for i in range(self.splits):
+        #
+        #     chunk_x = np.load('brats_image_chunk_{}.npy'.format(i))
+        #     chunk_y = np.load('brats_label_chunk_{}.npy'.format(i))
 
 
-        detime = time.time()
 
-        print('')
-        print('>>> Data Loading Complete. Consumption Time :', detime - dstime)
-        print('')
+
+        # self.all_X = np.load(cfg.HGG_data_path + 'brats_image.npy') # all_x.shape = [14, 2710, 240, 240, 1] ## 6510 = 155*42
+        # self.all_Y = np.load(cfg.HGG_data_path + 'brats_train_label.npy') # all_Y.shape = [2710, 240, 240, 1] ## 6510 = 155*42
+        #
+
+
+        # self.all_X = np.load('brats_image.npy') # all_x.shape = [14, 2710, 240, 240, 1] ## 6510 = 155*42
+        # self.all_Y = np.load('brats_label.npy') # all_Y.shape = [2710, 240, 240, 1] ## 6510 = 155*42
+        #
+        # print('self.all_X.shape : ', self.all_X.shape)
+        # print('self.all_Y.shape : ', self.all_Y.shape)
+
+
+
 
     def optimizer(self, global_step):
         exponential_decay_learning_rate = tf.train.exponential_decay(learning_rate=cfg.INIT_LEARNING_RATE,
@@ -145,7 +169,7 @@ class Train:
 
             #  Saving a model is saving variables such as weights, ans we call it as ckpt(check point file) in tensorflow
             # It's a tensorflow class saving ckpt file
-            saver = tf.train.Saver()
+            # saver = tf.train.Saver()
 
             # save graphs from tensorboard
             self.writer.add_graph(sess.graph)
@@ -156,131 +180,171 @@ class Train:
             print("BEGIN TRAINING")
             total_training_time = 0
 
-            for i in range(self.splits):
+            for epoch in range(cfg.EPOCHS):
+                #
+                # idx = i*3
+                #
+                # train_X = np.vstack((self.all_X[:idx], self.all_X[idx+3:]))
+                # train_X = np.reshape(train_X, [26040, 240, 240, 4])
+                # train_Y = np.vstack((self.all_Y[:idx], self.all_Y[idx+3:]))
+                # train_Y = np.reshape(train_Y, [26040, 240, 240, 1])
+                # val_X,val_Y = self.all_X[idx:idx+3], self.all_Y[idx:idx+3]
+                # train_Y = np.reshape(train_Y, [6510, 240, 240, 1])
+                # print('type(train_X) : ', type(train_X))        # <class 'numpy.ndarray'>
+                # print('type(train_Y) : ', type(train_Y))        # <class 'numpy.ndarray'>
+                # print('train_X.shape : ', train_X.shape)        # (26040, 240, 240, 4)
+                # print('train_Y.shape : ', train_Y.shape)        # (26040, 240, 240)
+                # print('-----------------------val------------------------')
+                # print('type(val_X) : ', type(val_X))        # <class 'numpy.ndarray'>
+                # print('type(val_Y) : ', type(val_Y))        # <class 'numpy.ndarray'>
+                # print('val_X.shape : ', val_X.shape)        # (6510, 240, 240, 4)
+                # print('val_Y.shape : ', val_Y.shape)        # (6510, 240, 240)
+                # train_step = train_X.shape[0] // cfg.BATCH_SIZE
+                # val_step = val_X.shape[0] // cfg.BATCH_SIZE
+                # print('train_step : ', train_step)
+                # print('val_step : ', val_step)
 
-                train_X, train_Y = self.train_sets_X[i], self.train_sets_Y[i]
-                val_X,val_Y = self.val_sets_X[i], self.val_sets_Y[i]
-                print('type(train_X) : ', type(train_X))
-                print('type(train_Y) : ', type(train_Y))
-                print('train_X.shape : ', train_X.shape)
-                print('train_Y.shape : ', train_Y.shape)
-                print('-----------------------val------------------------')
-                print('type(val_X) : ', type(val_X))
-                print('type(val_Y) : ', type(val_Y))
-                print('val_X.shape : ', val_X.shape)
-                print('val_Y.shape : ', val_Y.shape)
-                train_step = len(train_X.shape[0]) // cfg.BATCH_SIZE
-                val_step = len(val_X.shape[0]) // cfg.BATCH_SIZE
-                print('train_step : ', train_step)
-                print('val_step : ', val_step)
+                for idx1 in range(cfg.SPLITS):
+                    train_idx = [i for i in range(cfg.SPLITS)].remove(idx1)
+                    val_idx = [idx1]
 
-                for epoch in range(cfg.EPOCHS):
-
-                    # shuffle
-
-                    # create variables to save results
-                    mean_iou_list, unfiltered_iou_list, loss_list = [], [], []
-                    total_cost, total_val_iou, total_val_unfiltered_iou, step = 0, 0, 0, 0
-
-                    # save image and model at the first epoch, final epoch and multiples of SAVING_EPOCH
-                    save_yn = (epoch == 0 or epoch + 1 == cfg.EPOCHS or epoch % cfg.SAVING_EPOCH == 0)
-
-                    # Make folder in the saving path for qualified epochs
-                    if save_yn:
-                        self._make_path(epoch)
-
-                    # for bath in range(train_step):
-                    for batch in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
-                                                        batch_size=cfg.BATCH_SIZE, shuffle=True):
-
-                        batch_x, batch_y = batch
-                        step_time = time.time()
-
-                        print('type(batch_x) : ', type(batch_x))
-                        print('type(batch_y) : ', type(batch_y))
-                        print('batch_x.shape : ', batch_x.shape)
-                        print('batch_y.shape : ', batch_y.shape)
-
-                        tr_feed_dict = {self.model.X: batch_x,
-                                        self.model.Y: batch_y,
-                                        self.model.training: True,
-                                        self.model.drop_rate: 0.2}
-
-                        cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
-
-                        total_cost += cost
-                        step += 1
-
-                        # print out current epoch, step and batch loss value
-                        # self.result = 'Epoch:', '[%d' % (epoch + 1), '/ %d]  ' % cfg.EPOCHS, 'Step:', step, '/', train_step,'  Batch loss:', cost
-                        self.result = 'Epoch: {0} / {1}, Step: {2} / {3}, Batch loss: {4}'.format((epoch + 1),
-                                                                                                  cfg.EPOCHS, step,
-                                                                                                  train_step, cost)
-
-                        print(self.result)
-                        utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
-
-                    for batch in tl.iterate.minibatches(inputs=val_X, targets=val_Y,
-                                                        batch_size=cfg.BATCH_SIZE, shuffle=True):
-
-                        batch_x, batch_y = batch
-                        step_time = time.time()
+                    for idx2 in range(cfg.SUB_SPLITS):
 
 
-                        # feed_dict for iterator
-                        val_feed_dict = {self.model.X: batch_x,
-                                         self.model.Y: batch_y,
-                                         self.model.training: False,
-                                         self.model.drop_rate: 0}
+                        train_X = np.concatenate([np.load('./brats_image_chunk_{}.npy'.format(cfg.SUB_SPLITS * i + idx2)) for i in train_idx], axis=0)
+                        train_Y = np.concatenate([np.load('./brats_label_chunk_{}.npy'.format(cfg.SUB_SPLITS * i + idx2)) for i in train_idx], axis=0)
+                        val_X = np.concatenate([np.load('./brats_image_chunk_{}.npy'.format(cfg.SUB_SPLITS * i + idx2)) for i in val_idx], axis=0)
+                        val_Y = np.concatenate([np.load('./brats_label_chunk_{}.npy'.format(cfg.SUB_SPLITS * i + idx2)) for i in val_idx], axis=0)
 
 
-                        # Calculate validation Iou(Intersection of Union). Iou is used as an accuracy in image segmentation.
-                        # return [acc, mean_iou, unfiltered_iou] in model.iou
-                        val_results, predicted_result, x_list, y_list = sess.run([self.model.results,
-                                                                                           self.model.foreground_predicted,
-                                                                                           self.model.X,
-                                                                                           self.model.Y],
-                                                                                          feed_dict=val_feed_dict)
-                        # acc, val_mean_iou, val_unfiltered_iou = val_results
+                        train_step = train_X.shape[0] // cfg.BATCH_SIZE
+                        val_step = val_X.shape[0] // cfg.BATCH_SIZE
 
-                        # convert received batch iou as a list
-                        ious = list(val_results[0])
-                        unfiltered_iou = np.mean(ious)
 
-                        # uses only iou > 0.01 (i.e. IoUs predicting over certain cutline) to calculate IoUs for diagnosis accuracy
-                        iou_list = []
 
-                        for iou in ious:
-                            if iou > 0.01:
-                                iou_list.append(iou)
+                        # shuffle
 
-                        after_filtered_length = len(iou_list)
-                        # before_filtered_length = len(ious)
+                        # create variables to save results
+                        mean_iou_list, unfiltered_iou_list, loss_list = [], [], []
+                        total_cost, total_val_iou, total_val_unfiltered_iou, step = 0, 0, 0, 0
 
-                        # val_batch_acc = after_filtered_length / before_filtered_length
+                        # save image and model at the first epoch, final epoch and multiples of SAVING_EPOCH
+                        save_yn = (epoch == 0 or epoch + 1 == cfg.EPOCHS or epoch % cfg.SAVING_EPOCH == 0)
 
-                        if after_filtered_length == 0:
-                            mean_iou = 0
-
-                        else:
-                            mean_iou = np.mean(iou_list)
-
-                        # Add IoUs per patch and accuracies to entire IoU value. As epoch terminated, convert to average IoU and ave accuracy.
-                        total_val_iou += mean_iou
-                        total_val_unfiltered_iou += unfiltered_iou
-
-                        # save validation image results
+                        # Make folder in the saving path for qualified epochs
                         if save_yn:
-                            self._make_img(predicted_result, x_list, y_list, address, cfg.W, cfg.P)
+                            self._make_path(epoch)
+
+                        # for bath in range(train_step):
+                        for batch in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
+                                                            batch_size=cfg.BATCH_SIZE, shuffle=True):
+
+                            batch_x, batch_y = batch
+                            # step_time = time.time()
+
+                            print('type(batch_x) : ', type(batch_x))            # <class 'numpy.ndarray'>
+                            print('type(batch_y) : ', type(batch_y))            # <class 'numpy.ndarray'>
+                            print('batch_x.shape : ', batch_x.shape)            # (batch_size, 240, 240, 4)
+                            print('batch_y.shape : ', batch_y.shape)            # (batch_size, 240, 240)
 
 
 
+
+
+
+
+######################################################
+                            # # batch_x = np.reshape(batch_x, [cfg.BATCH_SIZE, 240, 240, 1])
+                            # # batch_y = np.reshape(batch_y, [cfg.BATCH_SIZE, 240, 240, 1])
+                            #
+                            # tr_feed_dict = {self.model.X: batch_x,
+                            #                 self.model.Y: batch_y,
+                            #                 self.model.training: True,
+                            #                 self.model.drop_rate: 0.2}
+                            #
+                            # cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
+                            #
+                            # total_cost += cost
+                            # step += 1
+                            #
+                            # # print out current epoch, step and batch loss value
+                            # # self.result = 'Epoch:', '[%d' % (epoch + 1), '/ %d]  ' % cfg.EPOCHS, 'Step:', step, '/', train_step,'  Batch loss:', cost
+                            # self.result = 'Epoch: {0} / {1}, Sub splits : {2} / {3}, Step: {4} / {5}, Batch loss: {6}'.format((epoch + 1),
+                            #                                                                                                   cfg.EPOCHS,
+                            #                                                                                                   idx2,
+                            #                                                                                                   self.sub_splits,
+                            #                                                                                                   step,
+                            #                                                                                                   train_step,
+                            #                                                                                                   cost)
+                            #
+                            # print(self.result)
+                            # utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
+######################################################
+
+                        for batch in tl.iterate.minibatches(inputs=val_X, targets=val_Y,
+                                                            batch_size=cfg.BATCH_SIZE, shuffle=True):
+
+                            batch_x, batch_y = batch
+                            # step_time = time.time()
+                            print('type(batch_x) : ', type(batch_x))            # <class 'numpy.ndarray'>
+                            print('type(batch_y) : ', type(batch_y))            # <class 'numpy.ndarray'>
+                            print('batch_x.shape : ', batch_x.shape)            # (batch_size, 240, 240, 4)
+                            print('batch_y.shape : ', batch_y.shape)            # (batch_size, 240, 240)
+
+###################################################
+                            # # feed_dict for iterator
+                            # val_feed_dict = {self.model.X: batch_x,
+                            #                  self.model.Y: batch_y,
+                            #                  self.model.training: False,
+                            #                  self.model.drop_rate: 0}
+                            #
+                            #
+                            # # Calculate validation Iou(Intersection of Union). Iou is used as an accuracy in image segmentation.
+                            # # return [acc, mean_iou, unfiltered_iou] in model.iou
+                            # val_results, predicted_result, x_list, y_list = sess.run([self.model.results,
+                            #                                                           self.model.foreground_predicted,
+                            #                                                           self.model.X,
+                            #                                                           self.model.Y],
+                            #                                                          feed_dict=val_feed_dict)
+                            # # acc, val_mean_iou, val_unfiltered_iou = val_results
+                            #
+                            # # convert received batch iou as a list
+                            # ious = list(val_results[0])
+                            # unfiltered_iou = np.mean(ious)
+                            #
+                            # # uses only iou > 0.01 (i.e. IoUs predicting over certain cutline) to calculate IoUs for diagnosis accuracy
+                            # iou_list = []
+                            #
+                            # for iou in ious:
+                            #     if iou > 0.01:
+                            #         iou_list.append(iou)
+                            #
+                            # after_filtered_length = len(iou_list)
+                            # # before_filtered_length = len(ious)
+                            #
+                            # # val_batch_acc = after_filtered_length / before_filtered_length
+                            #
+                            # if after_filtered_length == 0:
+                            #     mean_iou = 0
+                            #
+                            # else:
+                            #     mean_iou = np.mean(iou_list)
+                            #
+                            # # Add IoUs per patch and accuracies to entire IoU value. As epoch terminated, convert to average IoU and ave accuracy.
+                            # total_val_iou += mean_iou
+                            # total_val_unfiltered_iou += unfiltered_iou
+                            #
+                            # # save validation image results
+                            # # if save_yn:
+                            # #     self._make_img(predicted_result, x_list, y_list, address, cfg.W, cfg.P)
+
+###################################################
 
     def _make_path(self, epoch):
         ### Savin A Model ###
 
         # Absolute path for model saving. save as 'file_name'.ckpt
-        self.model_save_path = self.model_path + '{0}{1}{0}Unet.ckpt'.format(cfg.PATH_SLASH,
+        self.model_save_path = self.model_path + '{0}{1}{0}brats.ckpt'.format(cfg.PATH_SLASH,
                                                                              str(epoch + 1))
 
         # create if there is no such file in a saving path
@@ -293,19 +357,10 @@ class Train:
         # save image and model at the first epoch, final epoch and multiples of SAVING_EPOCH
 
         dir_name = ['merged', 'pred', 'label', 'compare']
-        self.path_list = [
-            (self.img_path + '{0}{1}{0}' + name).format(cfg.PATH_SLASH, str(epoch + 1)) for name in
-            dir_name]
+        self.path_list = [(self.img_path + '{0}{1}{0}' + name).format(cfg.PATH_SLASH, str(epoch + 1)) for name in dir_name]
 
                         # load batch sized x y
 
 if __name__ == "__main__":
     trainer = Train()
     trainer.train()
-
-
-
-
-
-
-

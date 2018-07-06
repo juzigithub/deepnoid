@@ -54,6 +54,40 @@ import numpy as np
 # cv2.waitKey(0)
 # cv2.destroyAllWindows()
 
-a = 1
-for i in [a]:
-    print(1)
+# a = 1
+# for i in [a]:
+#     print(1)
+
+
+path = 'C:\\Users\\sunki\\PycharmProjects\\deepnoid\\brats2018\\'
+# seg = np.load(path + 'brats_label_chunk_2.npy')
+# # print(seg[0][0][0])
+# a = []
+# for n in range(300):
+#     for i in range(240):
+#         for j in range(240):
+#             a.append(seg[n][i][j][0])
+#             # print(seg[n][i][j][0])
+# # print(a)
+# print(type(a))
+# b = set(a)
+# print(b)
+
+
+
+a = np.concatenate([np.load(path + 'brats_label_chunk_{}.npy'.format(i)) for i in range(1)], axis=0)
+# a = [i for i in range(5)]
+# a.remove(0)
+print(np.shape(a))
+
+
+
+# for i in range(3):
+#     a = np.load(path + 'brats_label_chunk_{}.npy'.format(i))
+#     print(np.shape(a))
+# a1 = [[1,2]]
+# a2 = [[3,4]]
+# a3 = [[5,6]]
+#
+# d = np.concatenate([eval('a{}'.format(i)) for i in range(1,4)], axis=0)
+# print(d)

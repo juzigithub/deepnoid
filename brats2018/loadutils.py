@@ -245,15 +245,17 @@ def get_normalized_img_v1(data_path,data_types):
     return combined_array, all_3d_data, seg_img
 '''
 
-def get_normalized_img(data_path, id_list, data_types):
+def get_normalized_img(data_path, id_list, mean, sd, data_types):
 
     X = np.empty((0,240,240,4))
     Y = np.empty((0,240,240))
 
     # id_list = get_id_list(data_path)
-    mean, sd = get_mean_sd(data_path, id_list, data_types)
-    print('mean : ', mean)
-    print('sd : ', sd)
+    # all_idlist = get_id_list(data_path)
+    #
+    # mean, sd = get_mean_sd(data_path, all_idlist, data_types)
+    # print('mean : ', mean)
+    # print('sd : ', sd)
 
     for i in id_list:
         all_3d_data = np.empty((0,240,240,155))             # (4,240,240,155)
@@ -314,22 +316,42 @@ class DataLoader:
         print('self.val_sets.shape : ', self.val_sets.shape)
 
         # self.train_sets_X, self.train_sets_Y, self.val_sets_X, self.val_sets_Y = [], [], [], []
+
+        '''
         self.train_sets_X = np.empty((0,26040, 240, 240, 4))
         self.train_sets_Y = np.empty((0,26040, 240, 240))
         self.val_sets_X = np.empty((0,6510,240,240,4))
         self.val_sets_Y = np.empty((0,6510,240,240))
+        '''
+
+        self.all_X = np.empty((0,6510, 240, 240, 4))
+        self.all_Y = np.empty((0,6510, 240, 240, 4))
+
+        all_idlist = get_id_list(cfg.HGG_data_path)
+
+        self.mean, self.sd = get_mean_sd(cfg.HGG_data_path, all_idlist, data_types)
+        print('self.mean : ', self.mean)
+        print('self.sd : ', self.sd)
+
+        # for loading test
         # self.train_sets_X = np.empty((0,620, 240, 240, 4))
         # self.train_sets_Y = np.empty((0,620, 240, 240))
         # self.val_sets_X = np.empty((0,155,240,240,4))
         # self.val_sets_Y = np.empty((0,155,240,240))
 
-        print('type(self.train_sets_X) : ', type(self.train_sets_X))            # ndarray
+        # print('type(self.train_sets_X) : ', type(self.train_sets_X))            # ndarray
 
 
         for i in range(self.splits):
 
+
+            self.chunk_x, self.chunk_y = get_normalized_img(cfg.HGG_data_path, self.val_sets[i], self.mean, self.sd, self.data_types)
+
+
+            '''
             self.train_set_X, self.train_set_Y = get_normalized_img(cfg.HGG_data_path, self.train_sets[i], self.data_types)
             self.val_set_X, self.val_set_Y = get_normalized_img(cfg.HGG_data_path, self.val_sets[i], self.data_types)
+            '''
 
             # # --------------------- show data --------------------------------#
             #
@@ -341,18 +363,33 @@ class DataLoader:
             #
             # vis_imgs(x, y, 'brats2018/{}/_train_im.png')
 
-            print('type(self.train_set_X) : ', type(self.train_set_X))      # list , self.train_X.shape : (26040, 240, 240, 4)
+            # print('type(self.train_set_X) : ', type(self.train_set_X))      # list , self.train_X.shape : (26040, 240, 240, 4)
                                                                             # self.train_Y.shpae : Y.shape :  (26040, 240, 240)
 
             # self.train_sets_X.append(self.train_set_X)
             # self.train_sets_Y.append(self.train_set_Y)
             # self.val_sets_X.append(self.val_set_X)
             # self.val_sets_Y.append(self.val_set_Y)
-
+            '''
             self.train_sets_X = np.append(self.train_sets_X, [self.train_set_X], axis=0)
             self.train_sets_Y = np.append(self.train_sets_Y, [self.train_set_Y], axis=0)
             self.val_sets_X = np.append(self.val_sets_X, [self.val_set_X], axis=0)
             self.val_sets_Y = np.append(self.val_sets_Y, [self.val_set_Y], axis=0)
+            '''
+
+
+            self.all_X = np.append(self.all_X, [self.chunk_x], axis=0)
+            self.all_Y = np.append(self.all_Y, [self.chunk_y], axis=0)
+
+            print('self.chunk_x.shape : ', self.chunk_x.shape)  # shape :  (6510, 240, 240, 4)
+            print('self.chunk_y.shape : ', self.chunk_y.shape)  # shape :  (6510, 240, 240, 4)
+
+
+            np.save(cfg.HGG_data_path + 'brats_image_chunk_' + str(i), self.chunk_x)
+            print(' >>>  brats_image_chunk_' + str(i) + '.npy saved ')
+            np.save(cfg.HGG_data_path + 'brats_label_chunk_' + str(i), self.chunk_y)
+            print(' >>>  brats_label_chunk_' + str(i) + '.npy saved ')
+
 
             # self.train_sets_X[i] = [self.train_set_X]
             # self.train_sets_Y[i] = [self.train_set_Y]
@@ -364,20 +401,19 @@ class DataLoader:
         # self.val_sets_X = np.asarray(self.val_sets_X, dtype=np.float32)          # X.shape :  (26040, 240, 240, 4)
         # self.val_sets_Y = np.asarray(self.val_sets_Y, dtype=np.float32)          # Y.shape :  (26040, 240, 240)
 
-        print('type(self.train_sets_X) : ', type(self.train_sets_X.shape))
-        print('self.train_sets_X.shape : ', self.train_sets_X.shape)
-        print('self.train_sets_Y.shape : ', self.train_sets_Y.shape)
-        print('self.val_sets_X.shape : ', self.val_sets_X.shape)
-        print('self.val_sets_Y.shape : ', self.val_sets_Y.shape)
+        # print('type(self.train_sets_X) : ', type(self.train_sets_X.shape))
+        # print('self.train_sets_X.shape : ', self.train_sets_X.shape)                # shape :  (5, 26040, 240, 240, 4)
+        # print('self.train_sets_Y.shape : ', self.train_sets_Y.shape)                # shape :  (5, 26040, 240, 240, 4)
+        # print('self.val_sets_X.shape : ', self.val_sets_X.shape)                # shape :  (5, 6510, 240, 240, 4)
+        # print('self.val_sets_Y.shape : ', self.val_sets_Y.shape)                # shape :  (5, 6510, 240, 240, 4)
 
-        np.save(cfg.HGG_data_path + 'brats_train_image.npy', self.train_sets_X)
-        print(' >>>  brats_train_image.npy saved ')
-        np.save(cfg.HGG_data_path + 'brats_train_label.npy', self.train_sets_Y)
-        print(' >>>  brats_train_label.npy saved ')
-        np.save(cfg.HGG_data_path + 'brats_val_image.npy', self.val_sets_X)
-        print(' >>>  brats_val_image.npy saved ')
-        np.save(cfg.HGG_data_path + 'brats_val_label.npy', self.val_sets_Y)
-        print(' >>>  brats_val_label.npy saved ')
+        np.save(cfg.HGG_data_path + 'brats_image.npy', self.all_X)
+        print(' >>>  brats_image.npy saved ')
+        np.save(cfg.HGG_data_path + 'brats_train_label.npy', self.all_Y)
+        print(' >>>  brats_label.npy saved ')
+
+        print('self.all_X.shape : ', self.all_X.shape)                # shape :  (5, 6510, 240, 240, 4)
+        print('self.all_Y.shape : ', self.all_Y.shape)                # shape :  (5, 6510, 240, 240, 4)
 
 
     #
