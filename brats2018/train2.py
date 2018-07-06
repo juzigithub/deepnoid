@@ -261,11 +261,7 @@ class Train:
                         total_val_iou += mean_iou
                         total_val_unfiltered_iou += unfiltered_iou
 
-                    # 모델 저장
-                    if save_yn:
-                        saver.save(sess, self.model_save_path)
-                        print(">>> Model SAVED")
-                        print('')
+
 
                     end = time.time()
                     training_time = end - start
@@ -299,7 +295,11 @@ class Train:
                     unfiltered_iou_list.append(Valdation_Unfiltered_IoU)
                     loss_list.append(Loss)
 
-
+                # 모델 저장
+                if save_yn:
+                    saver.save(sess, self.model_save_path)
+                    print(">>> Model SAVED")
+                    print('')
 
                             # save validation image results
                             # if save_yn:
