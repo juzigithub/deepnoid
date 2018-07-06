@@ -92,7 +92,8 @@ def get_normalized_img(data_sets, train):
 
     ################ Norm ###################
     # total_list = [(total_list[idx] / np.max(total_list[idx])) for idx in range(len(total_list))   ]
-    total_list = [(total_list[idx] - np.mean(total_list[idx])) / np.std(total_list[idx]) for idx in range(4)]
+    # total_list = [(total_list[idx] - np.mean(total_list[idx])) / np.std(total_list[idx]) if idx <=3 else total_list[idx] for idx in range(len(total_list))]
+    total_list[:4] = [(total_list[idx] - np.mean(total_list[idx])) / np.std(total_list[idx]) for idx in range(4)]
 
     # print(np.shape(total_list))
     m, _, h, w, _ = np.shape(total_list)  # m : train 5(flair, t1, t1ce, t2, seg)/ validation or test 4(seg x), h,w : 240(img_size)
