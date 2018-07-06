@@ -6,6 +6,7 @@ import os
 # import loadutils
 import time
 import utils
+import performance_eval as pe
 # import resnet
 # import deeplab
 
@@ -26,6 +27,8 @@ class Train:
         # self.data_loader = loader.DataLoader()
         # self.model = resnet.Model()
         self.model = Model()
+        self.p_eval = pe.performance()
+
         if cfg.REBUILD_DATA:
             print('')
             print('>>> Data Saving Started')
@@ -162,6 +165,7 @@ class Train:
                     # val_idx = [idx + i for i in range(3)]
                     # for i in val_idx:
                     #     train_idx.remove(i)
+                    start = time.time()
                     train_X = np.vstack((self.all_X[:idx * self.val_data_length], self.all_X[(idx+1) * self.val_data_length:]))
                     train_Y = np.vstack((self.all_Y[:idx * self.val_data_length], self.all_Y[(idx+1) * self.val_data_length:]))
                     val_X = self.all_X[idx * self.val_data_length : (idx+1) * self.val_data_length]
@@ -229,7 +233,7 @@ class Train:
                                                                                   self.model.X,
                                                                                   self.model.Y],
                                                                                  feed_dict=val_feed_dict)
-                        # acc, val_mean_iou, val_unfiltered_iou = val_results
+                        acc, val_mean_iou, val_unfiltered_iou = val_results
 
                         # convert received batch iou as a list
                         ious = list(val_results[0])
@@ -256,6 +260,46 @@ class Train:
                         # Add IoUs per patch and accuracies to entire IoU value. As epoch terminated, convert to average IoU and ave accuracy.
                         total_val_iou += mean_iou
                         total_val_unfiltered_iou += unfiltered_iou
+
+                    # 모델 저장
+                    if save_yn:
+                        saver.save(sess, self.model_save_path)
+                        print(">>> Model SAVED")
+                        print('')
+
+                    end = time.time()
+                    training_time = end - start
+                    total_training_time += training_time
+
+                    Loss = total_cost / train_step
+                    Valdation_IoU = total_val_iou / val_step
+                    Valdation_Unfiltered_IoU = total_val_unfiltered_iou / val_step
+
+                    self.result = 'Epoch: {} / {}, Cross validation : {} / {}, Loss: {:.4f}, Validation IoU: {:.4f}, ' \
+                                  'Validation Unfiltered IoU: {:.4f}, Training time: {:.2f}'.format((epoch + 1),
+                                                                                                    cfg.EPOCHS,
+                                                                                                    idx + 1,
+                                                                                                    cfg.SPLITS,
+                                                                                                    Loss,
+                                                                                                    Valdation_IoU,
+                                                                                                    Valdation_Unfiltered_IoU,
+                                                                                                    training_time)
+                    print(self.result)
+                    utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
+
+                    result_dict = {self.p_eval.mean_iou: Valdation_IoU,
+                                   self.p_eval.tot_iou: Valdation_Unfiltered_IoU,
+                                   self.p_eval.loss: Loss}
+
+                    # TB
+                    summary = sess.run(self.merged_summary, feed_dict=result_dict)
+                    self.writer.add_summary(summary, global_step=epoch)
+
+                    mean_iou_list.append(Valdation_IoU)
+                    unfiltered_iou_list.append(Valdation_Unfiltered_IoU)
+                    loss_list.append(Loss)
+
+
 
                             # save validation image results
                             # if save_yn:
