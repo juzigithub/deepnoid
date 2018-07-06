@@ -86,8 +86,9 @@ class Train:
         # self.model = resnet.Model()
         if cfg.REBUILD_DATA:
             dstime = time.time()
+            tl.files.exists_or_mkdir(cfg.SAVE_DATA_PATH)
 
-            loader.data_saver([cfg.HGG_DATA_PATH], cfg.SPLITS * cfg.SUB_SPLITS, train=True)
+            loader.data_saver([cfg.HGG_DATA_PATH], cfg.SAVE_DATA_PATH, cfg.SPLITS * cfg.SUB_SPLITS, train=True)
 
             detime = time.time()
 
@@ -211,10 +212,10 @@ class Train:
                     for idx2 in range(cfg.SUB_SPLITS):
 
 
-                        train_X = np.concatenate([np.load('./brats_image_chunk_{}.npy'.format(cfg.SUB_SPLITS * i + idx2)) for i in train_idx], axis=0)
-                        train_Y = np.concatenate([np.load('./brats_label_chunk_{}.npy'.format(cfg.SUB_SPLITS * i + idx2)) for i in train_idx], axis=0)
-                        val_X = np.concatenate([np.load('./brats_image_chunk_{}.npy'.format(cfg.SUB_SPLITS * i + idx2)) for i in val_idx], axis=0)
-                        val_Y = np.concatenate([np.load('./brats_label_chunk_{}.npy'.format(cfg.SUB_SPLITS * i + idx2)) for i in val_idx], axis=0)
+                        train_X = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_image_chunk_{}.npy'.format(cfg.SUB_SPLITS * i + idx2)) for i in train_idx], axis=0)
+                        train_Y = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_label_chunk_{}.npy'.format(cfg.SUB_SPLITS * i + idx2)) for i in train_idx], axis=0)
+                        val_X = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_image_chunk_{}.npy'.format(cfg.SUB_SPLITS * i + idx2)) for i in val_idx], axis=0)
+                        val_Y = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_label_chunk_{}.npy'.format(cfg.SUB_SPLITS * i + idx2)) for i in val_idx], axis=0)
 
 
                         train_step = train_X.shape[0] // cfg.BATCH_SIZE

@@ -140,7 +140,7 @@ def get_normalized_img(data_sets, train):
     # print('X_shape', np.shape(X), 'Y_shape', np.shape(Y))
     return X, Y     # , seg
 
-def data_saver(data_path, splits, train):
+def data_saver(data_path, save_path, splits, train):
     if train :
         train_sets, test_sets = cv(data_path, splits, shuffle=True)
         data_length = len(train_sets[1])*splits + len(test_sets[1])*splits*155
@@ -165,8 +165,8 @@ def data_saver(data_path, splits, train):
             print('self.chunk_x.shape : ', chunk_X.shape)  # shape :  (6510, 240, 240, 4)
             print('self.chunk_y.shape : ', chunk_Y.shape)  # shape :  (6510, 240, 240, 4)
 
-            np.save('./brats_image_chunk_{}.npy'.format(idx), chunk_X)
-            np.save('./brats_label_chunk_{}.npy'.format(idx), chunk_Y)
+            np.save(save_path + 'brats_image_chunk_{}.npy'.format(idx), chunk_X)
+            np.save(save_path + 'brats_label_chunk_{}.npy'.format(idx), chunk_Y)
             print('{}.saved'.format(idx))
 
         #
