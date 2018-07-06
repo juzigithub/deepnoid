@@ -92,6 +92,9 @@ path = 'C:\\Users\\sunki\\PycharmProjects\\deepnoid\\brats2018\\'
 # d = np.concatenate([eval('a{}'.format(i)) for i in range(1,4)], axis=0)
 # print(d)
 
-train_idx = [i for i in range(15) if i != 1]
-# train_idx.remove(1)
-print(train_idx)
+train_idx = [i for i in range(5)]
+# for i in range(3):
+#     train_idx.remove(i)
+# print(train_idx)
+
+print(train_idx[1:])

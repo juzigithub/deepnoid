@@ -55,7 +55,7 @@ PATH_SLASH = '/' if MODE == 'linux' else '\\'
 IMG_SIZE = 240
 VALIDATION_RATIO = 15
 SPLITS = 5
-SUB_SPLITS = 3
+N_FILES = 3
 RGB_CHANNEL = 1
 N_CLASS = 4
 

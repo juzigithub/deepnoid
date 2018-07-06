@@ -10,12 +10,12 @@ import utils
 # import deeplab
 
 
-import loader
-import config as cfg
-from model import Model
-# import brats2018.config as cfg
-# import brats2018.loader as loader
-# from brats2018.model import Model
+# import loader
+# import config as cfg
+# from model import Model
+import brats2018.config as cfg
+import brats2018.loader as loader
+from brats2018.model import Model
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU
@@ -34,7 +34,7 @@ class Train:
             dstime = time.time()
             tl.files.exists_or_mkdir(cfg.SAVE_DATA_PATH)
 
-            loader.data_saver([cfg.HGG_DATA_PATH], cfg.SAVE_DATA_PATH, cfg.SPLITS * cfg.SUB_SPLITS, train=cfg.TRAIN_YN)
+            loader.data_saver([cfg.HGG_DATA_PATH], cfg.SAVE_DATA_PATH, cfg.N_FILES, train=cfg.TRAIN_YN)
 
             detime = time.time()
 
@@ -80,12 +80,12 @@ class Train:
         #     chunk_x = np.load('brats_image_chunk_{}.npy'.format(i))
         #     chunk_y = np.load('brats_label_chunk_{}.npy'.format(i))
 
-        self.all_X = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_image_chunk_{}.npy'.format(i)) for i in range(cfg.SUB_SPLITS * cfg.SPLITS)], axis=0)
-        self.all_Y = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_label_chunk_{}.npy'.format(i)) for i in range(cfg.SUB_SPLITS * cfg.SPLITS)], axis=0)
+        self.all_X = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_image_chunk_{}.npy'.format(i)) for i in range(cfg.N_FILES)], axis=0)
+        self.all_Y = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_label_chunk_{}.npy'.format(i)) for i in range(cfg.N_FILES)], axis=0)
+        self.data_length = np.shape(self.all_X)[0]
+        self.val_data_length = self.data_length // 5
         # self.all_X = np.load(cfg.HGG_data_path + 'brats_image.npy') # all_x.shape = [14, 2710, 240, 240, 1] ## 6510 = 155*42
         # self.all_Y = np.load(cfg.HGG_data_path + 'brats_train_label.npy') # all_Y.shape = [2710, 240, 240, 1] ## 6510 = 155*42
-        #
-
 
         # self.all_X = np.load('brats_image.npy') # all_x.shape = [14, 2710, 240, 240, 1] ## 6510 = 155*42
         # self.all_Y = np.load('brats_label.npy') # all_Y.shape = [2710, 240, 240, 1] ## 6510 = 155*42
@@ -158,14 +158,14 @@ class Train:
                 # print('val_step : ', val_step)
 
                 for idx in range(cfg.SPLITS):
-                    train_idx = [i for i in range(15)]
-                    val_idx = [idx + i for i in range(3)]
-                    for i in val_idx:
-                        train_idx.remove(i)
-                    train_X = np.vstack((self.all_X[:idx], self.all_X[idx+3:]))
-                    train_Y = np.vstack((self.all_Y[:idx], self.all_Y[idx+3:]))
-                    val_X = self.all_X[idx:idx+3]
-                    val_Y = self.all_Y[idx:idx+3]
+                    # train_idx = [i for i in range(15)]
+                    # val_idx = [idx + i for i in range(3)]
+                    # for i in val_idx:
+                    #     train_idx.remove(i)
+                    train_X = np.vstack((self.all_X[:idx * self.val_data_length], self.all_X[(idx+1) * self.val_data_length:]))
+                    train_Y = np.vstack((self.all_Y[:idx * self.val_data_length], self.all_Y[(idx+1) * self.val_data_length:]))
+                    val_X = self.all_X[idx * self.val_data_length : (idx+1) * self.val_data_length]
+                    val_Y = self.all_Y[idx * self.val_data_length : (idx+1) * self.val_data_length]
                     #
                     # train_X = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_image_chunk_{}.npy'.format(i)) for i in train_idx], axis=0)
                     # train_Y = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_label_chunk_{}.npy'.format(i)) for i in train_idx], axis=0)
@@ -188,9 +188,9 @@ class Train:
                         batch_x, batch_y = batch
                         # step_time = time.time()
                         tr_feed_dict = {self.model.X: batch_x,
-                                            self.model.Y: batch_y,
-                                            self.model.training: True,
-                                            self.model.drop_rate: 0.2}
+                                        self.model.Y: batch_y,
+                                        self.model.training: True,
+                                        self.model.drop_rate: 0.2}
 
                         cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
 
@@ -199,13 +199,13 @@ class Train:
 
                         # print out current epoch, step and batch loss value
                         # self.result = 'Epoch:', '[%d' % (epoch + 1), '/ %d]  ' % cfg.EPOCHS, 'Step:', step, '/', train_step,'  Batch loss:', cost
-                        self.result = 'Epoch: {0} / {1}, Sub splits : {2} / {3}, Step: {4} / {5}, Batch loss: {6}'.format((epoch + 1),
-                                                                                                                          cfg.EPOCHS,
-                                                                                                                          idx,
-                                                                                                                          cfg.SUB_SPLITS,
-                                                                                                                          step,
-                                                                                                                          train_step,
-                                                                                                                          cost)
+                        self.result = 'Epoch: {0} / {1}, Cross validation : {2} / {3}, Step: {4} / {5}, Batch loss: {6}'.format((epoch + 1),
+                                                                                                                                cfg.EPOCHS,
+                                                                                                                                idx + 1,
+                                                                                                                                cfg.SPLITS,
+                                                                                                                                step,
+                                                                                                                                train_step,
+                                                                                                                                cost)
 
                         print(self.result)
                         utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
