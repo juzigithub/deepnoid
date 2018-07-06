@@ -143,9 +143,8 @@ class Train:
         #     chunk_x = np.load('brats_image_chunk_{}.npy'.format(i))
         #     chunk_y = np.load('brats_label_chunk_{}.npy'.format(i))
 
-
-
-
+        self.all_X = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_image_chunk_{}.npy'.format(i)) for i in range(cfg.SUB_SPLITS * cfg.SPLITS)], axis=0)
+        self.all_Y = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_label_chunk_{}.npy'.format(i)) for i in range(cfg.SUB_SPLITS * cfg.SPLITS)], axis=0)
         # self.all_X = np.load(cfg.HGG_data_path + 'brats_image.npy') # all_x.shape = [14, 2710, 240, 240, 1] ## 6510 = 155*42
         # self.all_Y = np.load(cfg.HGG_data_path + 'brats_train_label.npy') # all_Y.shape = [2710, 240, 240, 1] ## 6510 = 155*42
         #
