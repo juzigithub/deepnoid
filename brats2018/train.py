@@ -9,10 +9,14 @@ import utils
 # import resnet
 # import deeplab
 
-import loader
-import config as cfg
-# import brats2018.config as cfg
-# import brats2018.loader as loader
+
+# import loader
+# import config as cfg
+# from model import Model
+import brats2018.config as cfg
+import brats2018.loader as loader
+from brats2018.model import Model
+
 
 os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU
 
@@ -84,6 +88,7 @@ class Train:
         '''
         # self.data_loader = loader.DataLoader()
         # self.model = resnet.Model()
+        self.model = Model()
         if cfg.REBUILD_DATA:
             print('')
             print('>>> Data Saving Started')
@@ -163,7 +168,7 @@ class Train:
                                                                      staircase=cfg.DECAY_STAIRCASE,
                                                                      name='learning_rate')
 
-        # self.optimizer = utils.select_optimizer(cfg.OPTIMIZER, exponential_decay_learning_rate, self.model.loss, global_step)
+        self.optimizer = utils.select_optimizer(cfg.OPTIMIZER, exponential_decay_learning_rate, self.model.loss, global_step)
 
     def train(self):
 
@@ -213,8 +218,7 @@ class Train:
                 # print('val_step : ', val_step)
 
                 for idx1 in range(cfg.SPLITS):
-                    # train_idx = [i for i in range(cfg.SPLITS) if i != idx1]
-                    # val_idx = [idx1]
+                    '''
                     train_idx = [i for i in range(15)]
                     val_idx = [idx1 + i for i in range(3)]
                     for i in val_idx:
@@ -246,7 +250,11 @@ class Train:
                     print('type(batch_y) : ', type(batch_y))            # <class 'numpy.ndarray'>
                     print('batch_x.shape : ', batch_x.shape)            # (batch_size, 240, 240, 4)
                     print('batch_y.shape : ', batch_y.shape)            # (batch_size, 240, 240)
+
+
                     '''
+                    train_idx = [i for i in range(cfg.SPLITS) if i != idx1]
+                    val_idx = [idx1]
                     for idx2 in range(cfg.SUB_SPLITS):
 
 
@@ -271,38 +279,29 @@ class Train:
                             batch_x, batch_y = batch
                             # step_time = time.time()
 
-                        print('type(batch_x) : ', type(batch_x))            # <class 'numpy.ndarray'>
-                        print('type(batch_y) : ', type(batch_y))            # <class 'numpy.ndarray'>
-                        print('batch_x.shape : ', batch_x.shape)            # (batch_size, 240, 240, 4)
-                        print('batch_y.shape : ', batch_y.shape)            # (batch_size, 240, 240)
-
-
 ######################################################
-                            # # batch_x = np.reshape(batch_x, [cfg.BATCH_SIZE, 240, 240, 1])
-                            # # batch_y = np.reshape(batch_y, [cfg.BATCH_SIZE, 240, 240, 1])
-                            #
-                            # tr_feed_dict = {self.model.X: batch_x,
-                            #                 self.model.Y: batch_y,
-                            #                 self.model.training: True,
-                            #                 self.model.drop_rate: 0.2}
-                            #
-                            # cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
-                            #
-                            # total_cost += cost
-                            # step += 1
-                            #
-                            # # print out current epoch, step and batch loss value
-                            # # self.result = 'Epoch:', '[%d' % (epoch + 1), '/ %d]  ' % cfg.EPOCHS, 'Step:', step, '/', train_step,'  Batch loss:', cost
-                            # self.result = 'Epoch: {0} / {1}, Sub splits : {2} / {3}, Step: {4} / {5}, Batch loss: {6}'.format((epoch + 1),
-                            #                                                                                                   cfg.EPOCHS,
-                            #                                                                                                   idx2,
-                            #                                                                                                   self.sub_splits,
-                            #                                                                                                   step,
-                            #                                                                                                   train_step,
-                            #                                                                                                   cost)
-                            #
-                            # print(self.result)
-                            # utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
+                            tr_feed_dict = {self.model.X: batch_x,
+                                            self.model.Y: batch_y,
+                                            self.model.training: True,
+                                            self.model.drop_rate: 0.2}
+
+                            cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
+
+                            total_cost += cost
+                            step += 1
+
+                            # print out current epoch, step and batch loss value
+                            # self.result = 'Epoch:', '[%d' % (epoch + 1), '/ %d]  ' % cfg.EPOCHS, 'Step:', step, '/', train_step,'  Batch loss:', cost
+                            self.result = 'Epoch: {0} / {1}, Sub splits : {2} / {3}, Step: {4} / {5}, Batch loss: {6}'.format((epoch + 1),
+                                                                                                                              cfg.EPOCHS,
+                                                                                                                              idx2,
+                                                                                                                              cfg.SUB_SPLITS,
+                                                                                                                              step,
+                                                                                                                              train_step,
+                                                                                                                              cost)
+
+                            print(self.result)
+                            utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 ######################################################
 
                         for batch in tl.iterate.minibatches(inputs=val_X, targets=val_Y,
@@ -310,58 +309,54 @@ class Train:
 
                             batch_x, batch_y = batch
                             # step_time = time.time()
-                        print('type(batch_x) : ', type(batch_x))            # <class 'numpy.ndarray'>
-                        print('type(batch_y) : ', type(batch_y))            # <class 'numpy.ndarray'>
-                        print('batch_x.shape : ', batch_x.shape)            # (batch_size, 240, 240, 4)
-                        print('batch_y.shape : ', batch_y.shape)            # (batch_size, 240, 240)
-                        print('-------------', idx1, idx2)
+
 ###################################################
-                            # # feed_dict for iterator
-                            # val_feed_dict = {self.model.X: batch_x,
-                            #                  self.model.Y: batch_y,
-                            #                  self.model.training: False,
-                            #                  self.model.drop_rate: 0}
-                            #
-                            #
-                            # # Calculate validation Iou(Intersection of Union). Iou is used as an accuracy in image segmentation.
-                            # # return [acc, mean_iou, unfiltered_iou] in model.iou
-                            # val_results, predicted_result, x_list, y_list = sess.run([self.model.results,
-                            #                                                           self.model.foreground_predicted,
-                            #                                                           self.model.X,
-                            #                                                           self.model.Y],
-                            #                                                          feed_dict=val_feed_dict)
-                            # # acc, val_mean_iou, val_unfiltered_iou = val_results
-                            #
-                            # # convert received batch iou as a list
-                            # ious = list(val_results[0])
-                            # unfiltered_iou = np.mean(ious)
-                            #
-                            # # uses only iou > 0.01 (i.e. IoUs predicting over certain cutline) to calculate IoUs for diagnosis accuracy
-                            # iou_list = []
-                            #
-                            # for iou in ious:
-                            #     if iou > 0.01:
-                            #         iou_list.append(iou)
-                            #
-                            # after_filtered_length = len(iou_list)
-                            # # before_filtered_length = len(ious)
-                            #
-                            # # val_batch_acc = after_filtered_length / before_filtered_length
-                            #
-                            # if after_filtered_length == 0:
-                            #     mean_iou = 0
-                            #
-                            # else:
-                            #     mean_iou = np.mean(iou_list)
-                            #
-                            # # Add IoUs per patch and accuracies to entire IoU value. As epoch terminated, convert to average IoU and ave accuracy.
-                            # total_val_iou += mean_iou
-                            # total_val_unfiltered_iou += unfiltered_iou
-                            #
-                            # # save validation image results
-                            # # if save_yn:
-                            # #     self._make_img(predicted_result, x_list, y_list, address, cfg.W, cfg.P)
-                    '''
+                            # feed_dict for iterator
+                            val_feed_dict = {self.model.X: batch_x,
+                                             self.model.Y: batch_y,
+                                             self.model.training: False,
+                                             self.model.drop_rate: 0}
+
+
+                            # Calculate validation Iou(Intersection of Union). Iou is used as an accuracy in image segmentation.
+                            # return [acc, mean_iou, unfiltered_iou] in model.iou
+                            val_results, predicted_result, x_list, y_list = sess.run([self.model.results,
+                                                                                      self.model.logit,
+                                                                                      self.model.X,
+                                                                                      self.model.Y],
+                                                                                     feed_dict=val_feed_dict)
+                            # acc, val_mean_iou, val_unfiltered_iou = val_results
+
+                            # convert received batch iou as a list
+                            ious = list(val_results[0])
+                            unfiltered_iou = np.mean(ious)
+
+                            # uses only iou > 0.01 (i.e. IoUs predicting over certain cutline) to calculate IoUs for diagnosis accuracy
+                            iou_list = []
+
+                            for iou in ious:
+                                if iou > 0.01:
+                                    iou_list.append(iou)
+
+                            after_filtered_length = len(iou_list)
+                            # before_filtered_length = len(ious)
+
+                            # val_batch_acc = after_filtered_length / before_filtered_length
+
+                            if after_filtered_length == 0:
+                                mean_iou = 0
+
+                            else:
+                                mean_iou = np.mean(iou_list)
+
+                            # Add IoUs per patch and accuracies to entire IoU value. As epoch terminated, convert to average IoU and ave accuracy.
+                            total_val_iou += mean_iou
+                            total_val_unfiltered_iou += unfiltered_iou
+
+                            # save validation image results
+                            # if save_yn:
+                            #     self._make_img(predicted_result, x_list, y_list, address, cfg.W, cfg.P)
+
 ###################################################
 
     def _make_path(self, epoch):
