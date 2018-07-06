@@ -243,10 +243,10 @@ class Train:
                             batch_x, batch_y = batch
                             # step_time = time.time()
 
-                            print('type(batch_x) : ', type(batch_x))            # <class 'numpy.ndarray'>
-                            print('type(batch_y) : ', type(batch_y))            # <class 'numpy.ndarray'>
-                            print('batch_x.shape : ', batch_x.shape)            # (batch_size, 240, 240, 4)
-                            print('batch_y.shape : ', batch_y.shape)            # (batch_size, 240, 240)
+                        print('type(batch_x) : ', type(batch_x))            # <class 'numpy.ndarray'>
+                        print('type(batch_y) : ', type(batch_y))            # <class 'numpy.ndarray'>
+                        print('batch_x.shape : ', batch_x.shape)            # (batch_size, 240, 240, 4)
+                        print('batch_y.shape : ', batch_y.shape)            # (batch_size, 240, 240)
 
 
 
@@ -287,11 +287,11 @@ class Train:
 
                             batch_x, batch_y = batch
                             # step_time = time.time()
-                            print('type(batch_x) : ', type(batch_x))            # <class 'numpy.ndarray'>
-                            print('type(batch_y) : ', type(batch_y))            # <class 'numpy.ndarray'>
-                            print('batch_x.shape : ', batch_x.shape)            # (batch_size, 240, 240, 4)
-                            print('batch_y.shape : ', batch_y.shape)            # (batch_size, 240, 240)
-
+                        print('type(batch_x) : ', type(batch_x))            # <class 'numpy.ndarray'>
+                        print('type(batch_y) : ', type(batch_y))            # <class 'numpy.ndarray'>
+                        print('batch_x.shape : ', batch_x.shape)            # (batch_size, 240, 240, 4)
+                        print('batch_y.shape : ', batch_y.shape)            # (batch_size, 240, 240)
+                        print('-------------', idx1, idx2)
 ###################################################
                             # # feed_dict for iterator
                             # val_feed_dict = {self.model.X: batch_x,
