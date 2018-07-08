@@ -25,9 +25,10 @@ class Model:
         self.et_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.bg_pred, target=self.bg_label)
 
 
-        self.loss = cfg.LAMBDA[0] * self.bg_loss + cfg.LAMBDA[1] * self.ncr_loss + \
-                    cfg.LAMBDA[2] * self.ed_loss + cfg.LAMBDA[3] * self.et_loss
+        # self.loss = cfg.LAMBDA[0] * self.bg_loss + cfg.LAMBDA[1] * self.ncr_loss + \
+        #             cfg.LAMBDA[2] * self.ed_loss + cfg.LAMBDA[3] * self.et_loss
 
+        self.loss = 0.1 * self.bg_loss + 0.2 * self.ncr_loss + 0.3 * self.ed_loss + 0.4 * self.et_loss
         self.pred_list, self.label_list = utils.convert_to_subregions(self.pred,
                                                                       self.Y,
                                                                       [cfg.ET_LABEL, cfg.TC_LABEL, cfg.WT_LABEL],
