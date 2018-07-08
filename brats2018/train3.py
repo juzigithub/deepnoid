@@ -138,7 +138,6 @@ class Train:
                         seg = key[index].reshape(batch_y.shape)
                         batch_y = np.eye(4)[seg]
 
-
                         # step_time = time.time()
                         tr_feed_dict = {self.model.X: batch_x,
                                         self.model.Y: batch_y,
@@ -146,33 +145,20 @@ class Train:
                                         self.model.drop_rate: 0.2}
 
                         # cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
-                        pred, Y, cost, _ = sess.run([self.model.pred, self.model.Y, self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
-
-                        pred_list, label_list = utils.convert_to_subregions(pred,
-                                                                            Y,
-                                                                            [cfg.ET_LABEL, cfg.TC_LABEL, cfg.WT_LABEL],
-                                                                            one_hot=True)
-                        et_result = utils.cal_result(pred_list[0], label_list[0], one_hot=False)
-                        tc_result = utils.cal_result(pred_list[1], label_list[1], one_hot=False)
-                        wt_result = utils.cal_result(pred_list[2], label_list[2], one_hot=False)
-
-                        print('-----------------------------')
-                        print('et', et_result)
-                        print('tc', tc_result)
-                        print('wt', wt_result)
-                        print('-----------------------------')
+                        cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
 
                         total_cost += cost
                         step += 1
 
                         # print out current epoch, step and batch loss value
-                        self.result = 'Epoch: {0} / {1}, Cross validation : {2} / {3}, Step: {4} / {5}, Batch loss: {6}'.format((epoch + 1),
-                                                                                                                                cfg.EPOCHS,
-                                                                                                                                idx + 1,
-                                                                                                                                cfg.SPLITS,
-                                                                                                                                step,
-                                                                                                                                train_step,
-                                                                                                                                cost)
+                        self.result = 'Epoch: {0} / {1}, Cross validation : {2} / {3}, Step: {4} / {5}, Batch loss: {6}'.format(
+                            (epoch + 1),
+                            cfg.EPOCHS,
+                            idx + 1,
+                            cfg.SPLITS,
+                            step,
+                            train_step,
+                            cost)
 
                         print(self.result)
                         # utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
@@ -187,51 +173,25 @@ class Train:
                         seg = key[index].reshape(batch_y.shape)
                         batch_y = np.eye(4)[seg]
 
-
-
                         val_feed_dict = {self.model.X: batch_x,
                                          self.model.Y: batch_y,
                                          self.model.training: False,
                                          self.model.drop_rate: 0}
 
+                        pred, label = sess.run([self.model.pred, self.model.Y], feed_dict=val_feed_dict)
 
+                        pred_list, label_list = utils.convert_to_subregions(pred, label,
+                                                                            [cfg.ET_LABEL, cfg.TC_LABEL, cfg.WT_LABEL],
+                                                                            one_hot=True)
+                        et_result = utils.cal_result(pred_list[0], label_list[0], one_hot=False)
+                        tc_result = utils.cal_result(pred_list[1], label_list[1], one_hot=False)
+                        wt_result = utils.cal_result(pred_list[2], label_list[2], one_hot=False)
 
-
-
-                        # Calculate validation Iou(Intersection of Union). Iou is used as an accuracy in image segmentation.
-                        # return [acc, mean_iou, unfiltered_iou] in model.iou
-                        # val_results, predicted_result, x_list, y_list = sess.run([self.model.results,
-                        #                                                           self.model.logit,
-                        #                                                           self.model.X,
-                        #                                                           self.model.Y],
-                        #                                                          feed_dict=val_feed_dict)
-
-                        # # convert received batch iou as a list
-                        # ious = list(val_results[0])
-                        # accs = list(val_results[1])
-                        # unfiltered_iou = np.mean(ious)
-                        #
-                        # # uses only iou > 0.01 (i.e. IoUs predicting over certain cutline) to calculate IoUs for diagnosis accuracy
-                        # iou_list = []
-                        #
-                        # for iou in ious:
-                        #     if iou > 0.01:
-                        #         iou_list.append(iou)
-                        #
-                        # after_filtered_length = len(iou_list)
-                        # # before_filtered_length = len(ious)
-                        #
-                        # # val_batch_acc = after_filtered_length / before_filtered_length
-                        #
-                        # if after_filtered_length == 0:
-                        #     mean_iou = 0
-                        #
-                        # else:
-                        #     mean_iou = np.mean(iou_list)
-                        #
-                        # # Add IoUs per patch and accuracies to entire IoU value. As epoch terminated, convert to average IoU and ave accuracy.
-                        # total_val_iou += mean_iou
-                        # total_val_unfiltered_iou += unfiltered_iou
+                        print('-----------------------------')
+                        print('et', et_result)
+                        print('tc', tc_result)
+                        print('wt', wt_result)
+                        print('-----------------------------')
 
 
 

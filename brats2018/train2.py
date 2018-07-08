@@ -233,10 +233,10 @@ class Train:
                                                                                   self.model.X,
                                                                                   self.model.Y],
                                                                                  feed_dict=val_feed_dict)
-                        acc, val_mean_iou, val_unfiltered_iou = val_results
 
                         # convert received batch iou as a list
                         ious = list(val_results[0])
+                        accs = list(val_results[1])
                         unfiltered_iou = np.mean(ious)
 
                         # uses only iou > 0.01 (i.e. IoUs predicting over certain cutline) to calculate IoUs for diagnosis accuracy

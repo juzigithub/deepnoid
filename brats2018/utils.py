@@ -232,38 +232,38 @@ def cal_result(pred, label, one_hot=False):
     _pred2 = _pred.reshape(np.shape(_pred)[0], -1)
     _label2 = _label.reshape(np.shape(_label)[0], -1)
 
-    cm = confusion_matrix(_label1, _pred1, labels=[0,1])
-
-    TP = np.diag(cm)
-    FP = cm.sum(axis=0) - TP
-    FN = cm.sum(axis=1) - TP
-    TN = cm.sum() - (FP + FN + TP)
+    cm = confusion_matrix(_label1, _pred1, labels=[0, 1])
+    TP = cm[1][1]
+    FP = cm[0][1]
+    FN = cm[1][0]
+    TN = cm[0][0]
 
     # accuracy, sensitivity, specificity, mean iou, dice coefficient, hausdorff
-    acc = (TP + TN).sum() / (TP + FP + FN + TN).sum()
-    sens = TP.sum() / (TP + FN).sum()
-    spec = TN.sum() / (TN + FP).sum()
-    miou = (TP / (FP + FN + TP)).mean()
-    dice = (2*TP).sum() / (2*TP + FP + FN).sum()
+    acc = (TP + TN) / (TP + FP + FN + TN)
+    sens = TP / (TP + FN)
+    spec = TN / (TN + FP)
+    miou = TP / (FP + FN + TP)
+    dice = (2 * TP) / (2 * TP + FP + FN)
     hdorff = max(directed_hausdorff(_pred2, _label2)[0], directed_hausdorff(_label2, _pred2)[0])
 
-    return acc, sens, spec, miou, dice, hdorff
+    return [acc, sens, spec, miou, dice, hdorff]
 
 def convert_to_subregions(pred, label, convert_keys, one_hot=True):
     if one_hot:
-        pred_arr = np.argmax(pred.eval(), axis=-1)
-        label_arr = np.argmax(label.eval(), axis=-1)
+        pred_arr = np.argmax(pred, axis=-1)
+        label_arr = np.argmax(label, axis=-1)
     else:
-        pred_arr = pred.eval()
-        label_arr = label.eval()
+        pred_arr = pred
+        label_arr = label
 
     pred_list = []
     label_list = []
-    for idx, convert_key in enumerate(convert_keys):
-        key = np.array(convert_key)
-        _, pred_index = np.unique(pred_arr, return_inverse=True)
-        _, label_index = np.unique(label_arr, return_inverse=True)
 
+    _, pred_index = np.unique(pred_arr, return_inverse=True)
+    _, label_index = np.unique(label_arr, return_inverse=True)
+
+    for convert_key in convert_keys:
+        key = np.array(convert_key)
         pred_list.append(key[pred_index].reshape(pred_arr.shape))
         label_list.append(key[label_index].reshape(label_arr.shape))
 

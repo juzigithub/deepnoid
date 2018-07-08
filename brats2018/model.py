@@ -23,12 +23,8 @@ class Model:
         self.ncr_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.ncr_pred, target=self.ncr_label)
         self.ed_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.ed_pred, target=self.bg_label)
         self.et_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.bg_pred, target=self.bg_label)
-
-
-        # self.loss = cfg.LAMBDA[0] * self.bg_loss + cfg.LAMBDA[1] * self.ncr_loss + \
-        #             cfg.LAMBDA[2] * self.ed_loss + cfg.LAMBDA[3] * self.et_loss
-
-        self.loss = cfg.LAMBDA[0] * self.bg_loss + cfg.LAMBDA[1] * self.ncr_loss + cfg.LAMBDA[2] * self.ed_loss + cfg.LAMBDA[3] * self.et_loss
+        self.loss = cfg.LAMBDA[0] * self.bg_loss + cfg.LAMBDA[1] * self.ncr_loss + \
+                    cfg.LAMBDA[2] * self.ed_loss + cfg.LAMBDA[3] * self.et_loss
 
 
 
