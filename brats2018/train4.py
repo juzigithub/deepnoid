@@ -159,19 +159,19 @@ class Train:
                         # cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
                         pred, Y, cost, _ = sess.run([self.model.pred, self.model.Y, self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
 
-                        pred_list, label_list = utils.convert_to_subregions(pred,
-                                                                            Y,
-                                                                            [cfg.ET_LABEL, cfg.TC_LABEL, cfg.WT_LABEL],
-                                                                            one_hot=True)
-                        et_result = utils.cal_result(pred_list[0], label_list[0], one_hot=False)
-                        tc_result = utils.cal_result(pred_list[1], label_list[1], one_hot=False)
-                        wt_result = utils.cal_result(pred_list[2], label_list[2], one_hot=False)
-
-                        print('-----------------------------')
-                        print('et', et_result)
-                        print('tc', tc_result)
-                        print('wt', wt_result)
-                        print('-----------------------------')
+                        # pred_list, label_list = utils.convert_to_subregions(pred,
+                        #                                                     Y,
+                        #                                                     [cfg.ET_LABEL, cfg.TC_LABEL, cfg.WT_LABEL],
+                        #                                                     one_hot=True)
+                        # et_result = utils.cal_result(pred_list[0], label_list[0], one_hot=False)
+                        # tc_result = utils.cal_result(pred_list[1], label_list[1], one_hot=False)
+                        # wt_result = utils.cal_result(pred_list[2], label_list[2], one_hot=False)
+                        #
+                        # print('-----------------------------')
+                        # print('et', et_result)
+                        # print('tc', tc_result)
+                        # print('wt', wt_result)
+                        # print('-----------------------------')
 
                         total_cost += cost
                         step += 1
