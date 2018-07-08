@@ -139,7 +139,7 @@ def get_normalized_img(data_sets, train):
     # Y = np.expand_dims(total_list[4], axis=3) if train else []        # [n, img_size, img_size, 1]
 
 
-    key = np.array([0,1,2,3], dtype=np.float32)
+    key = np.array([0,1,2,3])
     _, index = np.unique(total_list[4], return_inverse=True)
     seg = key[index].reshape(total_list[4].shape)
 
@@ -148,7 +148,7 @@ def get_normalized_img(data_sets, train):
     Y = np.eye(4)[seg]
     # b = np.eye(4)[a]
 
-    print('y_shape',np.shape(Y))
+
     # print('X_shape', np.shape(X), 'Y_shape', np.shape(Y))
     return X, Y     # , seg
 
