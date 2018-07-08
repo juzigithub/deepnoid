@@ -136,7 +136,11 @@ def get_normalized_img(data_sets, train):
     # cv2.destroyAllWindows()
     ##################################################
     X = np.reshape(total_list[0:4], [-1, w, h, m-1 if train else m]) # [n, img_size, img_size, 4(flair, t1, t1ce, t2)]
-    Y = np.expand_dims(total_list[4], axis=3) if train else []        # [n, img_size, img_size, 1]
+    # Y = np.expand_dims(total_list[4], axis=3) if train else []        # [n, img_size, img_size, 1]
+    Y = np.eye(4)[total_list[4]]
+    # b = np.eye(4)[a]
+
+
     # print('X_shape', np.shape(X), 'Y_shape', np.shape(Y))
     return X, Y     # , seg
 
@@ -163,8 +167,8 @@ def data_saver(data_path, save_path, splits, train):
             # all_X = np.append(all_X, chunk_X, axis = 0)
             # all_Y = np.append(all_Y, chunk_Y, axis = 0)
 
-            print('self.chunk_x.shape : ', chunk_X.shape)  # shape :  (6510, 240, 240, 4)
-            print('self.chunk_y.shape : ', chunk_Y.shape)  # shape :  (6510, 240, 240, 4)
+            print('self.chunk_x.shape : ', chunk_X.shape)  # shape :  (n, 240, 240, 4)
+            print('self.chunk_y.shape : ', chunk_Y.shape)  # shape :  (n, 240, 240, 4)
 
             np.save(save_path + 'brats_image_chunk_{}.npy'.format(idx), chunk_X)
             np.save(save_path + 'brats_label_chunk_{}.npy'.format(idx), chunk_Y)
