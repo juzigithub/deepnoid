@@ -1,45 +1,40 @@
-'''
-model construct
-
-by 신형은 주임
-'''
 import tensorflow as tf
+
 import utils
 import config as cfg
-# import Unet.aneurysm_unet.merging.utils as utils
-# import Unet.aneurysm_unet.merging.config as cfg
+# import brats2018.utils as utils
+# import brats2018.config as cfg
+
 
 class Model:
     def __init__(self):
         self.drop_rate = tf.placeholder(tf.float32, name='drop_rate')
         self.training = tf.placeholder(tf.bool, name='training')
         self.X = tf.placeholder(tf.float32, [None, cfg.IMG_SIZE, cfg.IMG_SIZE, 4], name='X')
-        self.Y = tf.placeholder(tf.float32, [None, cfg.IMG_SIZE, cfg.IMG_SIZE, 1], name='Y')
-        # self.X_ADD = tf.placeholder(tf.int32, [None, 3], name='X_ADD')
-
-        # iterator 설정
-        # self.dataset = tf.data.Dataset.from_tensor_slices((self.X, self.Y, self.X_ADD)).shuffle(buffer_size=cfg.BUFFER_SIZE)
-        # self.dataset = self.dataset.batch(cfg.BATCH_SIZE).repeat()
-        # self.features, self.labels, self.address 를 iterator 변수로 설정 -> iterator 변수 호출 시 다음 데이터를 불러옵니다.
-        # self.iter = self.dataset.make_initializable_iterator()
-        # self.features, self.labels, self.address = self.iter.get_next()  #### self.X, self.Y 들어갈 자리에 self.features, self.labels 입력
-
+        self.Y = tf.placeholder(tf.float32, [None, cfg.IMG_SIZE, cfg.IMG_SIZE, 4], name='Y')
         self.logit = self.resnet()
 
+        self.pred = tf.nn.softmax(logits=self.logit)
+
+        self.bg_pred, self.ncr_pred, self.ed_pred, self.et_pred = tf.split(self.pred, [1,1,1,1], axis=3)
+        self.bg_label, self.ncr_label, self.ed_label, self.et_label = tf.split(self.Y, [1,1,1,1], axis=3)
+
+        self.bg_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.bg_pred, target=self.bg_label)
+        self.ncr_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.ncr_pred, target=self.ncr_label)
+        self.ed_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.ed_pred, target=self.bg_label)
+        self.et_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.bg_pred, target=self.bg_label)
 
 
-        # self.pred = tf.nn.softmax(logits=self.logit)
-        # 활성화 시킨 probability map을 split 하여 foreground와 background로 분리합니다.
-        # self.foreground_predicted, self.background_predicted, _, _ = tf.split(self.pred, [1, 1], 3)
+        self.loss = cfg.LAMBDA[0] * self.bg_loss + cfg.LAMBDA[1] * self.ncr_loss + \
+                    cfg.LAMBDA[2] * self.ed_loss + cfg.LAMBDA[3] * self.et_loss
 
-        # 라벨이미지 역시 foreground와 background로 분리합니다
-        # self.foreground_truth, self.background_truth = tf.split(self.labels, [1, 1], 3)
-##################################################
-        # self.loss_1 = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.foreground_predicted, target=self.foreground_truth)
-        # self.loss_2 = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.background_predicted, target=self.background_truth)
-        self.loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.logit, target=self.Y)
-##################################################
-        self.results = list(utils.iou_coe(output=self.logit, target=self.Y))
+        self.pred_list, self.label_list = utils.convert_to_subregions(self.pred,
+                                                                      self.Y,
+                                                                      [cfg.ET_LABEL, cfg.TC_LABEL, cfg.WT_LABEL],
+                                                                      one_hot=True)
+        self.et_result = utils.cal_result(self.pred_list[0], self.label_list[0], one_hot=False)
+        self.tc_result = utils.cal_result(self.pred_list[1], self.label_list[1], one_hot=False)
+        self.wt_result = utils.cal_result(self.pred_list[2], self.label_list[2], one_hot=False)
 
 
     def resnet(self):
@@ -125,6 +120,6 @@ class Model:
                 pool_size *= 2
                 inputs= utils.select_upsampling('last_upsampling', inputs, [], channel_n, pool_size, cfg.UPSAMPLING_TYPE)
 
-            up_conv_f = utils.conv2D('final_upconv', inputs, 1, [1,1], [1,1], 'SAME')
+            up_conv_f = utils.conv2D('final_upconv', inputs, 4, [1,1], [1,1], 'SAME')
 
         return up_conv_f

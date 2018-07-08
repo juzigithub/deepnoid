@@ -137,19 +137,13 @@ def get_normalized_img(data_sets, train):
     ##################################################
     X = np.reshape(total_list[0:4], [-1, w, h, m-1 if train else m]) # [n, img_size, img_size, 4(flair, t1, t1ce, t2)]
     # Y = np.expand_dims(total_list[4], axis=3) if train else []        # [n, img_size, img_size, 1]
+    Y = total_list[4] if train else []
 
+    # key = np.array(cfg.TRAIN_LABEL)
+    # _, index = np.unique(total_list[4], return_inverse=True)
+    # seg = key[index].reshape(total_list[4].shape)
+    # Y = np.eye(4)[seg]
 
-    key = np.array([0,1,2,3])
-    _, index = np.unique(total_list[4], return_inverse=True)
-    seg = key[index].reshape(total_list[4].shape)
-
-
-
-    Y = np.eye(4)[seg]
-    # b = np.eye(4)[a]
-
-
-    # print('X_shape', np.shape(X), 'Y_shape', np.shape(Y))
     return X, Y     # , seg
 
 def data_saver(data_path, save_path, splits, train):

@@ -70,7 +70,7 @@ BUFFER_SIZE = 3000
 INIT_N_FILTER = 24
 ACTIVATION_FUNC = 'relu'        # relu, lrelu, elu, prelu, selu
 LOSS_FUNC = 'dice'              # dice, focal, cross_entropy, dice_sum, huber, weighted_cross_entropy
-LAMBDA = 0.8                    # forground loss : LAMBDA / background loss : (1 - LAMBDA)
+LAMBDA = [0.1, 0.4, 0.2, 0.3]   # [bg, ncr, ed, et]
 OPTIMIZER = 'adam'              # adam, rmsprop, sgd
 INIT_LEARNING_RATE = 0.005
 DECAY_RATE = 0.9
@@ -82,6 +82,13 @@ UPSAMPLING_TYPE = 'transpose'   # resize, transpose, add, concat
 GROUP_N = 8                     # group size of group_conv & group_norm
 DROPOUT_RATE = 0.5
 
+TRAIN_LABEL = [0, 1, 2, 3]
+ET_LABEL = [0, 0, 0, 1]
+TC_LABEL = [0, 1, 0, 1]
+WT_LABEL = [0, 1, 1, 1]
+# et_key = np.array([0, 0, 0, 1], dtype=np.float32)
+# tc_key = np.array([0, 1, 0, 1], dtype=np.float32)
+# wt_key = np.array([0, 1, 1, 1], dtype=np.float32)
 ### Unet ###
 DEPTH = 4
 
