@@ -137,7 +137,7 @@ def get_normalized_img(data_sets, train):
     ##################################################
     X = np.reshape(total_list[0:4], [-1, w, h, m-1 if train else m]) # [n, img_size, img_size, 4(flair, t1, t1ce, t2)]
     # Y = np.expand_dims(total_list[4], axis=3) if train else []        # [n, img_size, img_size, 1]
-    Y = np.eye(4)[total_list[4]]
+    Y = np.eye(4)[total_list[4].astype(int)]
     # b = np.eye(4)[a]
 
 
