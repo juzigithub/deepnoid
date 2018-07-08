@@ -42,7 +42,7 @@ class Model:
         with tf.variable_scope('down'):
 
             inputs = self.X     # iterator 변수 self.features 를 이용해 inputs 생성
-            channel_n = cfg.INIT_N_FILTER
+            channel_n = 4
             pool_size = cfg.IMG_SIZE
 
             if cfg.FIRST_DOWNSAMPLING:
