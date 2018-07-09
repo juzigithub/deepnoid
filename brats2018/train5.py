@@ -231,6 +231,7 @@ class Train:
                         # original_img : batch_x / et_img : pred_list[0] / tc_img : pred_list[1] / wt_img : pred_list[2]
                         print_img_idx += cfg.BATCH_SIZE
                         print(print_img_idx)
+                        print('shape',np.shape(label_list[0]))
                         if (print_img_idx >= 78) :
                             revert_img_idx = -2 - print_img_idx % 78
                             print_img_idx = 0
