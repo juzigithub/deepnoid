@@ -119,7 +119,6 @@ class Train:
 
                     train_idx = [i for i in range(cfg.SPLITS) if i != idx]
                     val_idx = idx
-
                     train_X = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_image_chunk_{}.npy'.format(i)) for i in train_idx], axis=0)
                     train_Y = np.concatenate([np.load(cfg.SAVE_DATA_PATH + 'brats_label_chunk_{}.npy'.format(i)) for i in train_idx], axis=0)
                     val_X = np.load(cfg.SAVE_DATA_PATH + 'brats_image_chunk_{}.npy'.format(val_idx))
@@ -145,8 +144,11 @@ class Train:
 
                         # make_one_hot
                         key = np.array(cfg.TRAIN_LABEL)
+                        # [0,1,2,3]
                         _, index = np.unique(batch_y, return_inverse=True)
+                        # 4 -> 3
                         seg = key[index].reshape(batch_y.shape)
+
                         batch_y = np.eye(4)[seg]
 
 
@@ -207,7 +209,7 @@ class Train:
                         tc_result_list.append(utils.cal_result(pred_list[1], label_list[1], one_hot=False))
                         wt_result_list.append(utils.cal_result(pred_list[2], label_list[2], one_hot=False))
 
-                    
+
 
 
 
