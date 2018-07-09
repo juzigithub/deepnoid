@@ -262,6 +262,9 @@ class Train:
                             # ori=batch_x[revert_img_idx][:][:][0] + np.abs(np.min(batch_x[revert_img_idx][:][:][0]))
                             # ori = ori.reshape([240,240])
                             print('ori_shape', np.shape(ori))
+                            for i in range(240):
+                                for j in range(240):
+                                    print(ori[i][j])
                             ori = ori/np.max(ori)
                             # print('re', revert_img_idx)
                             # print(np.shape(ori))
