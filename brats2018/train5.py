@@ -234,7 +234,7 @@ class Train:
                         print('shape',np.shape(label_list[0]))
                         print('sshape', np.shape(label_list[0][-6]))
                         if (print_img_idx >= 78) :
-                            revert_img_idx = -2 - print_img_idx % 78
+                            revert_img_idx = -1 - print_img_idx % 78
                             print_img_idx = 0
 
 
@@ -244,10 +244,15 @@ class Train:
                             tc_mask = utils.masking_rgb(label_list[1][revert_img_idx], color='red')
                             wt_mask = utils.masking_rgb(label_list[2][revert_img_idx], color='green')
 
+                            ori=batch_x[revert_img_idx] + np.abs(np.min(batch_x[revert_img_idx]))
+                            ori = ori/np.max(ori)
+                            print('re', revert_img_idx)
+                            print(np.shape(ori))
+
                             cv2.imwrite('./et.jpg', et_mask)
                             cv2.imwrite('./tc.jpg', tc_mask)
                             cv2.imwrite('./wt.jpg', wt_mask)
-
+                            cv2.imwrite('./or.jpg', ori)
 
                         ########################################
 
