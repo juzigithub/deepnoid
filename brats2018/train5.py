@@ -242,9 +242,9 @@ class Train:
                             tc_mask = utils.masking_rgb(label_list[1][print_img_idx], color='red')
                             wt_mask = utils.masking_rgb(label_list[2][print_img_idx], color='green')
 
-                            cv2.imwrite('d:\\et.jpg', et_mask)
-                            cv2.imwrite('d:\\tc.jpg', tc_mask)
-                            cv2.imwrite('d:\\wt.jpg', wt_mask)
+                            cv2.imwrite('./et.jpg', et_mask)
+                            cv2.imwrite('./tc.jpg', tc_mask)
+                            cv2.imwrite('./wt.jpg', wt_mask)
 
 
                         ########################################
