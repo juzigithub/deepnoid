@@ -202,7 +202,7 @@ class Train:
                         key = np.array(cfg.TRAIN_LABEL)
                         _, index = np.unique(batch_y, return_inverse=True)
                         seg = key[index].reshape(batch_y.shape)
-                        batch_y = np.eye(4)[seg]
+                        batch_y = np.eye(len(cfg.TRAIN_LABEL))[seg]
 
 
 
@@ -213,10 +213,20 @@ class Train:
 
 
                         pred, label = sess.run([self.model.pred, self.model.Y], feed_dict=val_feed_dict)
+                        pred = np.argmax(pred, axis=-1)
+                        label = np.argmax(label, axis=-1)
+
+
+                        # label -> pred
+                        _, index = np.unique(label, return_inverse=True)
+                        seg = key[index].reshape(label.shape)
+                        pred_print = np.eye(len(cfg.TRAIN_LABEL))[seg]
+                        pred_print = np.transpose(pred_print, [-1, 0, 1, 2])
+
 
                         pred_list, label_list = utils.convert_to_subregions(pred, label,
                                                                             [cfg.ET_LABEL, cfg.TC_LABEL, cfg.WT_LABEL],
-                                                                            one_hot=True)
+                                                                            one_hot=False)
 
                         et_one_batch_result = utils.cal_result(pred_list[0], label_list[0], one_hot=False)
                         tc_one_batch_result = utils.cal_result(pred_list[1], label_list[1], one_hot=False)
@@ -239,12 +249,17 @@ class Train:
 
 
 
-                            # label_list -> pred_list
-                            et_mask = utils.masking_rgb(label_list[0][revert_img_idx], color='blue')
-                            tc_mask = utils.masking_rgb(label_list[1][revert_img_idx], color='red')
-                            wt_mask = utils.masking_rgb(label_list[2][revert_img_idx], color='green')
+                            et_mask = utils.masking_rgb(pred_print[1][revert_img_idx], color='blue')
+                            tc_mask = utils.masking_rgb(pred_print[2][revert_img_idx], color='red')
+                            wt_mask = utils.masking_rgb(pred_print[3][revert_img_idx], color='green')
+
+
+
+
+
 
                             ori=batch_x[revert_img_idx][:][:][0] + np.abs(np.min(batch_x[revert_img_idx][:][:][0]))
+                            ori = ori.reshape([240,240])
                             ori = ori/np.max(ori)
                             # print('re', revert_img_idx)
                             # print(np.shape(ori))
