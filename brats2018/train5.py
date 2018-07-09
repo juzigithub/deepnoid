@@ -244,10 +244,10 @@ class Train:
                             tc_mask = utils.masking_rgb(label_list[1][revert_img_idx], color='red')
                             wt_mask = utils.masking_rgb(label_list[2][revert_img_idx], color='green')
 
-                            ori=batch_x[revert_img_idx] + np.abs(np.min(batch_x[revert_img_idx]))
+                            ori=batch_x[revert_img_idx][:][:][0] + np.abs(np.min(batch_x[revert_img_idx][:][:][0]))
                             ori = ori/np.max(ori)
-                            print('re', revert_img_idx)
-                            print(np.shape(ori))
+                            # print('re', revert_img_idx)
+                            # print(np.shape(ori))
 
                             cv2.imwrite('./et.jpg', et_mask)
                             cv2.imwrite('./tc.jpg', tc_mask)
