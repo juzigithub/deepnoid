@@ -232,6 +232,7 @@ class Train:
                         print_img_idx += cfg.BATCH_SIZE
                         print(print_img_idx)
                         print('shape',np.shape(label_list[0]))
+                        print('sshape', np.shape(label_list[0][-6]))
                         if (print_img_idx >= 78) :
                             revert_img_idx = -2 - print_img_idx % 78
                             print_img_idx = 0
