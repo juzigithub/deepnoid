@@ -919,7 +919,7 @@ def xception_depthwise_separable_convlayer(name, inputs, channel_n, last_stride,
 #############################################################################################################################
 
 def masking_rgb(img, color=None):
-    if np.shape(img) <= 2:
+    if len(np.shape(img)) <= 2:
         _img = np.expand_dims(img, axis=3)
     else:
         _img = img
