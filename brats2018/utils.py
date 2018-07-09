@@ -914,3 +914,21 @@ def xception_depthwise_separable_convlayer(name, inputs, channel_n, last_stride,
 
     return l
 
+#############################################################################################################################
+#                                                    Result Function                                                        #
+#############################################################################################################################
+
+def masking_rgb(img, color=None):
+    if color != None:
+        rgb_dic = {'blue': 0, 'green': 1, 'red': 2}
+        rgb_list = [np.zeros(np.shape(img)) for _ in range(3)]
+        rgb_list[rgb_dic[color]] = img
+        B, G, R = rgb_list
+    else:
+        B = G = R = img
+
+    concat_img = np.concatenate((B, G, R), axis=-1)
+    out_img = concat_img * 255
+
+    return out_img
+
