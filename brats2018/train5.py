@@ -123,10 +123,6 @@ class Train:
                 val_X = np.load(cfg.SAVE_DATA_PATH + 'brats_image_chunk_{}.npy'.format(val_idx))
                 val_Y = np.load(cfg.SAVE_DATA_PATH + 'brats_label_chunk_{}.npy'.format(val_idx))
 
-                # train_X = np.vstack((self.all_X[:idx * self.val_data_length], self.all_X[(idx+1) * self.val_data_length:]))
-                # train_Y = np.vstack((self.all_Y[:idx * self.val_data_length], self.all_Y[(idx+1) * self.val_data_length:]))
-                # val_X = self.all_X[idx * self.val_data_length : (idx+1) * self.val_data_length]
-                # val_Y = self.all_Y[idx * self.val_data_length : (idx+1) * self.val_data_length]
 
                 train_step = train_X.shape[0] // cfg.BATCH_SIZE
                 val_step = val_X.shape[0] // cfg.BATCH_SIZE
@@ -152,47 +148,47 @@ class Train:
                     # Make folder in the saving path for qualified epochs
                     if save_yn:
                         self._make_path(epoch)
-
-                    for batch in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
-                                                        batch_size=cfg.BATCH_SIZE, shuffle=True):
-                        batch_x, batch_y = batch
-
-                        # make_one_hot
-                        key = np.array(cfg.TRAIN_LABEL)
-                        # [0,1,2,3]
-                        _, index = np.unique(batch_y, return_inverse=True)
-                        # 4 -> 3
-                        seg = key[index].reshape(batch_y.shape)
-
-                        batch_y = np.eye(4)[seg]
-
-
-                        # step_time = time.time()
-                        tr_feed_dict = {self.model.X: batch_x,
-                                        self.model.Y: batch_y,
-                                        self.model.training: True,
-                                        self.model.drop_rate: 0.2}
-
-                        # cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
-                        cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
-
-
-
-                        total_cost += cost
-                        step += 1
-
-                        # print out current epoch, step and batch loss value
-                        self.result = 'Cross validation : {0} / {1}, Epoch: {2} / {3}, Step: {4} / {5}, Batch loss: {6}'.format((idx + 1),
-                                                                                                                                cfg.SPLITS,
-                                                                                                                                epoch + 1,
-                                                                                                                                cfg.EPOCHS,
-                                                                                                                                step,
-                                                                                                                                train_step,
-                                                                                                                                cost)
-
-                        print(self.result)
-                        # utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
-
+#########################################################
+                    # for batch in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
+                    #                                     batch_size=cfg.BATCH_SIZE, shuffle=True):
+                    #     batch_x, batch_y = batch
+                    #
+                    #     # make_one_hot
+                    #     key = np.array(cfg.TRAIN_LABEL)
+                    #     # [0,1,2,3]
+                    #     _, index = np.unique(batch_y, return_inverse=True)
+                    #     # 4 -> 3
+                    #     seg = key[index].reshape(batch_y.shape)
+                    #
+                    #     batch_y = np.eye(4)[seg]
+                    #
+                    #
+                    #     # step_time = time.time()
+                    #     tr_feed_dict = {self.model.X: batch_x,
+                    #                     self.model.Y: batch_y,
+                    #                     self.model.training: True,
+                    #                     self.model.drop_rate: 0.2}
+                    #
+                    #     # cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
+                    #     cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
+                    #
+                    #
+                    #
+                    #     total_cost += cost
+                    #     step += 1
+                    #
+                    #     # print out current epoch, step and batch loss value
+                    #     self.result = 'Cross validation : {0} / {1}, Epoch: {2} / {3}, Step: {4} / {5}, Batch loss: {6}'.format((idx + 1),
+                    #                                                                                                             cfg.SPLITS,
+                    #                                                                                                             epoch + 1,
+                    #                                                                                                             cfg.EPOCHS,
+                    #                                                                                                             step,
+                    #                                                                                                             train_step,
+                    #                                                                                                             cost)
+                    #
+                    #     print(self.result)
+                    #     # utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
+###################################################
                     et_one_epoch_result_list = []
                     tc_one_epoch_result_list = []
                     wt_one_epoch_result_list = []
