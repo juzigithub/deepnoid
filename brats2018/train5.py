@@ -230,17 +230,17 @@ class Train:
                         # image save #
                         # original_img : batch_x / et_img : pred_list[0] / tc_img : pred_list[1] / wt_img : pred_list[2]
                         print_img_idx += cfg.BATCH_SIZE
-
+                        print(print_img_idx)
                         if (print_img_idx >= 78) :
-                            # revert_img_idx = -2 - print_img_idx % 78
+                            revert_img_idx = -2 - print_img_idx % 78
                             print_img_idx = 0
 
 
 
                             # label_list -> pred_list
-                            et_mask = utils.masking_rgb(label_list[0][print_img_idx], color='blue')
-                            tc_mask = utils.masking_rgb(label_list[1][print_img_idx], color='red')
-                            wt_mask = utils.masking_rgb(label_list[2][print_img_idx], color='green')
+                            et_mask = utils.masking_rgb(label_list[0][revert_img_idx], color='blue')
+                            tc_mask = utils.masking_rgb(label_list[1][revert_img_idx], color='red')
+                            wt_mask = utils.masking_rgb(label_list[2][revert_img_idx], color='green')
 
                             cv2.imwrite('./et.jpg', et_mask)
                             cv2.imwrite('./tc.jpg', tc_mask)
