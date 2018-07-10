@@ -113,7 +113,7 @@ class Model:
                                              idx=i)
                 print('up_conv', inputs)
                 pool_size_h = pool_size_h + 1 if pool_size_h % 2 == 0 else pool_size_h
-                pool_size_w = pool_size_w + 1 if pool_size_w % 2 == 0 else pool_size_w
+                # pool_size_w = pool_size_w + 1 if pool_size_w % 2 == 0 else pool_size_w
 
             if cfg.FIRST_DOWNSAMPLING:
                 channel_n //= 2
