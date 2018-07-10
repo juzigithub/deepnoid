@@ -245,7 +245,6 @@ class Train:
                         print('sshape', np.shape(label_list[0][-6]))
                         if (print_img_idx >= 65) :
                             revert_img_idx = -1 - print_img_idx % 65
-                            print_img_idx = 0
 
 
 
@@ -258,10 +257,10 @@ class Train:
 
                             print('bat', np.shape(batch_x))
                             ori = np.transpose(batch_x, [-1, 0, 1, 2])
-                            for i in range(190):
-                                for j in range(160):
-                                    print(ori[0][-1][i][j])
-                            ori = ori[0][revert_img_idx] * 255
+                            # for i in range(190):
+                            #     for j in range(160):
+                                    # print(ori[0][-1][i][j])
+                            ori = ori[0][revert_img_idx]
                             # ori=batch_x[revert_img_idx][:][:][0] + np.abs(np.min(batch_x[revert_img_idx][:][:][0]))
                             # ori = ori.reshape([240,240])
                             print('ori_shape', np.shape(ori))
@@ -275,7 +274,8 @@ class Train:
                             cv2.imwrite('./tc.jpg', tc_mask)
                             cv2.imwrite('./wt.jpg', wt_mask)
                             cv2.imwrite('./or.jpg', ori)
-
+                        if (print_img_idx >= 149) :
+                            print_img_idx = print_img_idx - 149
                         ########################################
 
 
