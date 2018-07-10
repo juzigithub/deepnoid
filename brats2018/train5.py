@@ -281,14 +281,13 @@ class Train:
                             tc_mask = utils.masking_rgb(pred_print[2][i], color='red')
                             wt_mask = utils.masking_rgb(pred_print[3][i], color='green')
 
-                            et_tc_mask = cv2.addWeighted(et_mask, float(50) * p, tc_mask, float(50) * p, 0)
-                            et_tc_wt_mask = cv2.addWeighted(et_tc_mask, float(70) * p, wt_mask, float(30) * p, 0)
+                            et_tc_mask = cv2.addWeighted(et_mask, float(50) * p, tc_mask, float(50) * p, 0) * 255
+                            et_tc_wt_mask = cv2.addWeighted(et_tc_mask, float(70) * p, wt_mask, float(30) * p, 0) * 255
 
                             ori = np.transpose(batch_x, [-1, 0, 1, 2])
                             ori = utils.masking_rgb(ori[0][i], color=None)
 
-                            result_image = cv2.addWeighted(ori, float(100 - 40) * p, et_tc_wt_mask, float(60) * p, 0)
-                            result_image *= 255
+                            result_image = cv2.addWeighted(ori, float(100 - 40) * p, et_tc_wt_mask, float(60) * p, 0) * 255
 
                             cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
                             cv2.imwrite('./img/epoch{}/mask/batch{}_{}_et.jpg'.format(epoch+1, print_img_idx, i+1), et_mask)
@@ -314,18 +313,21 @@ class Train:
                     total_training_time += training_time
 
                     Loss = total_cost / train_step
+                    print('et_one_epoch_mean', et_one_epoch_mean)
+                    print('tc_one_epoch_mean', tc_one_epoch_mean)
+                    print('wt_one_epoch_mean', wt_one_epoch_mean)
 
 
                     self.result = ' Cross validation : {} / {}, Epoch: {} / {}, ET_RESULT: {:.4f}, TC_RESULT {:.4f}, ' \
                                   'WT_RESULT: {:.4f}, Loss : {:.4f}, Training time: {:.2f}'.format((idx+1),
-                                                                                               cfg.SPLITS,
-                                                                                               (epoch + 1),
-                                                                                               cfg.EPOCHS,
-                                                                                               et_one_epoch_mean,
-                                                                                               tc_one_epoch_mean,
-                                                                                               wt_one_epoch_mean,
-                                                                                               Loss,
-                                                                                               training_time)
+                                                                                                   cfg.SPLITS,
+                                                                                                   (epoch + 1),
+                                                                                                   cfg.EPOCHS,
+                                                                                                   et_one_epoch_mean,
+                                                                                                   tc_one_epoch_mean,
+                                                                                                   wt_one_epoch_mean,
+                                                                                                   Loss,
+                                                                                                   training_time)
                     print(self.result)
                     utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 
