@@ -230,8 +230,8 @@ class Train:
 
 
                         # label -> pred
-                        _, index = np.unique(label, return_inverse=True)
-                        seg = key[index].reshape(label.shape)
+                        _, index = np.unique(pred, return_inverse=True)
+                        seg = key[index].reshape(pred.shape)
                         pred_print = np.eye(len(cfg.TRAIN_LABEL))[seg]
                         pred_print = np.transpose(pred_print, [-1, 0, 1, 2])
 
