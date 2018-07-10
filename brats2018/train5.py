@@ -258,8 +258,8 @@ class Train:
 
                             print('bat', np.shape(batch_x))
                             ori = np.transpose(batch_x, [-1, 0, 1, 2])
-                            for i in range(240):
-                                for j in range(240):
+                            for i in range(190):
+                                for j in range(160):
                                     print(ori[0][-1][i][j])
                             ori = ori[0][revert_img_idx]
                             # ori=batch_x[revert_img_idx][:][:][0] + np.abs(np.min(batch_x[revert_img_idx][:][:][0]))
