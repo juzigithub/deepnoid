@@ -91,7 +91,7 @@ class Model:
             for i in reversed(range(cfg.DEPTH)):
                 channel_n //= 2
                 pool_size_h *= 2
-                pool_size_w *= 2
+                # pool_size_w *= 2
                 inputs = utils.select_upsampling(name=str(i) + '_upsampling',
                                                  up_conv=inputs,
                                                  up_pool=self.up_pool[i],
