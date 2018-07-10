@@ -4,8 +4,19 @@ from sklearn.model_selection import KFold
 import numpy as np
 import nibabel
 import config as cfg
+from sklearn.preprocessing import scale
+import cv2
+from scipy import ndimage
 
 os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU
+
+def crop_volume_with_bounding_box(volume, min_idx, max_idx):
+
+    output = volume[np.ix_(range(min_idx[0], max_idx[0] + 1),
+                           range(min_idx[1], max_idx[1] + 1),
+                           range(min_idx[2], max_idx[2] + 1))]
+
+    return output
 
 def get_path_list(data_path):
     id_list = []
@@ -86,34 +97,89 @@ def get_normalized_img(data_sets, train):
         # t2_list.append(nibabel.load(data[3]).get_fdata())
         # seg_list.append(nibabel.load(data[4]).get_fdata())
 
-        [total_list[idx].append(nibabel.load(data[idx]).get_fdata()) for idx in range(len(total_list))]
+        for idx in range(len(total_list)):
 
-    total_list = [np.array(total_list[idx], dtype=np.float32) for idx in range(len(total_list))]
+            vol = nibabel.load(data[idx]).get_fdata()
+            print('vol.shape : ', vol.shape)
+            b_min, b_max = [41, 31, 3] , [200, 220, 152]
+            # dropped first 2, last 3 scans, and cropped to [160, 190]
+            vol = crop_volume_with_bounding_box(vol,b_min,b_max)
+            print('vol.shape : ', vol.shape)
+            total_list[idx].append(vol)
+
+
+        # [total_list[idx].append(nibabel.load(data[idx]).get_fdata()) for idx in range(len(total_list))]
 
     ################ Norm ###################
     # total_list = [(total_list[idx] / np.max(total_list[idx])) for idx in range(len(total_list))   ]
     # total_list = [(total_list[idx] - np.mean(total_list[idx])) / np.std(total_list[idx]) if idx <=3 else total_list[idx] for idx in range(len(total_list))]
-    total_list[:4] = [(total_list[idx] - np.mean(total_list[idx])) / np.std(total_list[idx]) for idx in range(4)]
+    # total_list[:4] = [(total_list[idx] - np.mean(total_list[idx])) / np.std(total_list[idx]) for idx in range(4)]
 
-    # print(np.shape(total_list))
+
+
+    print('np.shape(total_list) : ' , np.shape(total_list)) # (5, 42, 160, 190, 150)
     m, _, h, w, _ = np.shape(total_list)  # m : train 5(flair, t1, t1ce, t2, seg)/ validation or test 4(seg x), h,w : 240(img_size)
 
     total_list = np.transpose(total_list, [0, 1, 4, 3, 2])
-    total_list = np.reshape(total_list, [m, -1, w, h])
+    total_list = np.reshape(total_list, [m, -1, w, h])          # (5, 6300, 190, 160)
+    print('np.shape(total_list) : ' , np.shape(total_list))
+
+    for idx, imgset in enumerate(total_list):
+        # to avoid normalizing seg
+        if idx < 4:
+            shape = np.shape(imgset)
+            imgset = imgset.reshape([len(imgset), -1])
+            scale(imgset, axis=1, copy=False)
+            imgset = imgset / (np.max(imgset, axis=1) + 1e-6).reshape([-1,1])
+            imgset = imgset.reshape(shape)
+            total_list[idx] = imgset
+
     # print(np.shape(total_list))
 
     ### show image #############################
     # cv2.imshow('a', total_list[0][1000])
     # cv2.imshow('aa', total_list[4][1000])
+    # #
+    # cv2.imshow('b', total_list[0][10])
+    # cv2.imshow('bb', total_list[4][10)
     #
-    # cv2.imshow('b', total_list[0][150])
-    # cv2.imshow('bb', total_list[4][150])
+    # cv2.imshow('c', total_list[0][20])
+    # cv2.imshow('c1', total_list[1][20])
+    # cv2.imshow('c2', total_list[2][20])
+    # cv2.imshow('c3', total_list[3][20])
+    # cv2.imshow('cc', total_list[4][20])
 
-    # cv2.imshow('c', total_list[0][200])
-    # cv2.imshow('c1', total_list[1][200])
-    # cv2.imshow('c2', total_list[2][200])
-    # cv2.imshow('c3', total_list[3][200])
-    # cv2.imshow('cc', total_list[4][200])
+    # tl.files.exists_or_mkdir(cfg.IMG_SAVE_DATA_PATH)
+
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'af.jpg', total_list[0][20])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'at1.jpg', total_list[1][20])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'at1ce.jpg', total_list[2][20])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'at2.jpg', total_list[3][20])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'aseg.jpg', total_list[4][20])
+    #
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'bf.jpg', total_list[0][50])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'bt1.jpg', total_list[1][50])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'bt1ce.jpg', total_list[2][50])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'bt2.jpg', total_list[3][50])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'bseg.jpg', total_list[4][50])
+    #
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'cf.jpg', total_list[0][75])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'ct1.jpg', total_list[1][75])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'ct1ce.jpg', total_list[2][75])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'ct2.jpg', total_list[3][75])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'cseg.jpg', total_list[4][75])
+    #
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'df.jpg', total_list[0][100])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'dt1.jpg', total_list[1][100])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'dt1ce.jpg', total_list[2][100])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'dt2.jpg', total_list[3][100])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'dseg.jpg', total_list[4][100])
+    #
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'ef.jpg', total_list[0][2000])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'et1.jpg', total_list[1][2000])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'et1ce.jpg', total_list[2][2000])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'et2.jpg', total_list[3][2000])
+    # cv2.imwrite(cfg.IMG_SAVE_DATA_PATH + 'eseg.jpg', total_list[4][2000])
     #
     # cv2.imshow('d', total_list[0][50])
     # cv2.imshow('dd', total_list[4][50])
@@ -244,4 +310,3 @@ if __name__ == '__main__':
     # print(type(a))
     # b = a.get_fdata()
     # print(b)
-
