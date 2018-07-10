@@ -39,8 +39,8 @@ class Model:
 
             inputs = self.X  # iterator 변수 self.features 를 이용해 inputs 생성
             channel_n = cfg.INIT_N_FILTER
-            pool_size_h = 190
-            pool_size_w = 160
+            pool_size_h = cfg.IMG_SIZE[0][0]
+            pool_size_w = cfg.IMG_SIZE[0][1]
 
             if cfg.FIRST_DOWNSAMPLING:
                 pool_size_h //= 2
@@ -52,10 +52,10 @@ class Model:
                                                    cfg.DOWNSAMPLING_TYPE)
 
             for i in range(cfg.DEPTH):
-                pool_size_h //= 2
-                pool_size_w //= 2
-                pool_size_h = pool_size_h if pool_size_h % 2 == 0 else pool_size_h - 1
-                pool_size_w = pool_size_w if pool_size_w % 2 == 0 else pool_size_w - 1
+                pool_size_h = cfg.IMG_SIZE[i+1][0]
+                pool_size_w = cfg.IMG_SIZE[i+1][1]
+                # pool_size_h = pool_size_h if pool_size_h % 2 == 0 else pool_size_h - 1
+                # pool_size_w = pool_size_w if pool_size_w % 2 == 0 else pool_size_w - 1
                 self.down_conv[i] = utils.depthwise_separable_convlayer(name='dsconv' + str(i),
                                                                         inputs=inputs,
                                                                         channel_n=channel_n,
@@ -90,8 +90,10 @@ class Model:
             # pool_size_w = pool_size_w + 1 if pool_size_w % 2 == 0 else pool_size_w
             for i in reversed(range(cfg.DEPTH)):
                 channel_n //= 2
-                pool_size_h *= 2
-                pool_size_w *= 2
+                # pool_size_h *= 2
+                # pool_size_w *= 2
+                pool_size_h = cfg.IMG_SIZE[i+1][0]
+                pool_size_w = cfg.IMG_SIZE[i+1][1]
                 inputs = utils.select_upsampling(name=str(i) + '_upsampling',
                                                  up_conv=inputs,
                                                  up_pool=self.up_pool[i],
@@ -112,7 +114,7 @@ class Model:
                                              training=self.training,
                                              idx=i)
                 print('up_conv', inputs)
-                pool_size_h = pool_size_h + 1 if pool_size_h % 2 == 0 else pool_size_h
+                # pool_size_h = pool_size_h + 1 if pool_size_h % 2 == 0 else pool_size_h
                 # pool_size_w = pool_size_w + 1 if pool_size_w % 2 == 0 else pool_size_w
 
             if cfg.FIRST_DOWNSAMPLING:
