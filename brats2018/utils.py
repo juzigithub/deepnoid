@@ -400,18 +400,18 @@ def select_upsampling(name, up_conv, up_pool, channel_n, pool_size_h, pool_size_
       up_pool = re_conv2D(name + '_reconv', up_conv, shape)
 
     elif mode == 'transpose':
-        up_pool = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n * 2], shape, [1,2,2,1], 'SAME')
+        up_pool = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n * 2], shape, [1,2,2,1], 'VALID')
         up_pool = tf.reshape(up_pool, shape)
 
     elif mode == 'add':
         up_pool1 = re_conv2D(name + '_reconv', up_conv, shape)
-        up_pool2 = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n * 2], shape, [1,2,2,1], 'SAME')
+        up_pool2 = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n * 2], shape, [1,2,2,1], 'VALID')
         up_pool2 = tf.reshape(up_pool2, shape)
         up_pool = up_pool1 + up_pool2
 
     elif mode == 'concat':
         up_pool1 = re_conv2D(name + '_reconv', up_conv, shape)
-        up_pool2 = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n * 2], shape, [1, 2, 2, 1], 'SAME')
+        up_pool2 = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n * 2], shape, [1, 2, 2, 1], 'VALID')
         up_pool2 = tf.reshape(up_pool2, shape)
         up_pool = concat(name + '_upsampling_concat', [up_pool1, up_pool2], axis=3)
         up_pool = conv2D(name + '_bottleneck', up_pool, channel_n, [1,1], [1,1], padding='SAME')
