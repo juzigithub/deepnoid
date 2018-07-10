@@ -54,8 +54,8 @@ class Model:
             for i in range(cfg.DEPTH):
                 pool_size_h //= 2
                 pool_size_w //= 2
-                pool_size_h = pool_size_h if pool_size_h % 2 == 0 else pool_size_h + 1
-                pool_size_w = pool_size_w if pool_size_w % 2 == 0 else pool_size_w + 1
+                pool_size_h = pool_size_h if pool_size_h % 2 == 0 else pool_size_h - 1
+                pool_size_w = pool_size_w if pool_size_w % 2 == 0 else pool_size_w - 1
                 self.down_conv[i] = utils.depthwise_separable_convlayer(name='dsconv' + str(i),
                                                                         inputs=inputs,
                                                                         channel_n=channel_n,
@@ -111,6 +111,8 @@ class Model:
                                              training=self.training,
                                              idx=i)
                 print('up_conv', inputs)
+                pool_size_h = pool_size_h + 1 if pool_size_h % 2 == 0 else pool_size_h
+                pool_size_w = pool_size_w + 1 if pool_size_w % 2 == 0 else pool_size_w
 
             if cfg.FIRST_DOWNSAMPLING:
                 channel_n //= 2
