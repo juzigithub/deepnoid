@@ -45,12 +45,17 @@ class Model:
             if cfg.FIRST_DOWNSAMPLING:
                 pool_size_h //= 2
                 pool_size_w //= 2
+                pool_size_h = pool_size_h if pool_size_h % 2 == 0 else pool_size_h + 1
+                pool_size_w = pool_size_w if pool_size_w % 2 == 0 else pool_size_w + 1
+
                 inputs = utils.select_downsampling('first_downsampling', inputs, [], channel_n, pool_size_h, pool_size_w,
                                                    cfg.DOWNSAMPLING_TYPE)
 
             for i in range(cfg.DEPTH):
                 pool_size_h //= 2
                 pool_size_w //= 2
+                pool_size_h = pool_size_h if pool_size_h % 2 == 0 else pool_size_h + 1
+                pool_size_w = pool_size_w if pool_size_w % 2 == 0 else pool_size_w + 1
                 self.down_conv[i] = utils.depthwise_separable_convlayer(name='dsconv' + str(i),
                                                                         inputs=inputs,
                                                                         channel_n=channel_n,
