@@ -257,6 +257,8 @@ class Train:
                             et_tc_wt_mask = cv2.addWeighted(et_tc_mask, float(70) * p, wt_mask, float(30) * p, 0)
                             ori = np.transpose(batch_x, [-1, 0, 1, 2])
                             ori = utils.masking_rgb(ori[0][revert_img_idx], color=None)
+                            print('mask', np.shape(et_tc_wt_mask))
+                            print('ori', np.shape(ori))
                             result_image = cv2.addWeighted(ori, float(100 - 40) * p, et_tc_wt_mask, float(60) * p, 0)
 
 
