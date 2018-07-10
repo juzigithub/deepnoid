@@ -49,7 +49,7 @@ SURVIVAL_CSV_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_
 
 ###  File setting ###
 DATA_FILE_TYPE = 'npy'
-REBUILD_DATA = True
+REBUILD_DATA = False
 TRAIN_YN = True if 'train' in SAVE_DATA_PATH else False
 PATH_SLASH = '/' if MODE == 'linux' else '\\'
 IMG_SIZE = [192, 160]
@@ -63,18 +63,18 @@ N_CLASS = 4
 ### Common ###
 
 FIRST_DOWNSAMPLING = False
-EPOCHS = 200
+EPOCHS = 100
 SAVING_EPOCH = 5
 BATCH_SIZE = 28
 BUFFER_SIZE = 3000
 INIT_N_FILTER = 24
-ACTIVATION_FUNC = 'relu'        # relu, lrelu, elu, prelu, selu
+ACTIVATION_FUNC = 'elu'        # relu, lrelu, elu, prelu, selu
 LOSS_FUNC = 'dice'              # dice, focal, cross_entropy, dice_sum, huber, weighted_cross_entropy
-LAMBDA = [0.1, 0.4, 0.2, 0.3]   # [bg, ncr, ed, et]
-OPTIMIZER = 'adam'              # adam, rmsprop, sgd
-INIT_LEARNING_RATE = 0.005
+LAMBDA = [0.1, 0.4, 0.4, 0.1]   # [bg, ncr, ed, et]
+OPTIMIZER = 'rmsprop'              # adam, rmsprop, sgd
+INIT_LEARNING_RATE = 0.0005
 DECAY_RATE = 0.9
-DECAY_STEP = 2500
+DECAY_STEP = 900
 DECAY_STAIRCASE = True
 NORMALIZATION_TYPE = 'batch'    # batch, group
 DOWNSAMPLING_TYPE = 'neighbor'  # neighbor, maxpool, avgpool
