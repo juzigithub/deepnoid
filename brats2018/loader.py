@@ -100,11 +100,11 @@ def get_normalized_img(data_sets, train):
         for idx in range(len(total_list)):
 
             vol = nibabel.load(data[idx]).get_fdata()
-            print('vol.shape : ', vol.shape)
+            # print('vol.shape : ', vol.shape)
             b_min, b_max = [41, 31, 3] , [200, 220, 152]
             # dropped first 2, last 3 scans, and cropped to [160, 190]
             vol = crop_volume_with_bounding_box(vol,b_min,b_max)
-            print('vol.shape : ', vol.shape)
+            # print('vol.shape : ', vol.shape)
             total_list[idx].append(vol)
 
 
