@@ -101,7 +101,7 @@ def get_normalized_img(data_sets, train):
 
             vol = nibabel.load(data[idx]).get_fdata()
             # print('vol.shape : ', vol.shape)
-            b_min, b_max = [41, 31, 3] , [200, 220, 152]
+            b_min, b_max = [41, 30, 3] , [200, 221, 152]
             # dropped first 2, last 3 scans, and cropped to [160, 190]
             vol = crop_volume_with_bounding_box(vol,b_min,b_max)
             # print('vol.shape : ', vol.shape)

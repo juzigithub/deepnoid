@@ -52,7 +52,7 @@ DATA_FILE_TYPE = 'npy'
 REBUILD_DATA = True
 TRAIN_YN = True if 'train' in SAVE_DATA_PATH else False
 PATH_SLASH = '/' if MODE == 'linux' else '\\'
-IMG_SIZE = [[190, 160],[94, 80],[46, 40],[22,20],[10,10]]
+IMG_SIZE = [192, 160]
 VALIDATION_RATIO = 15
 SPLITS = 5
 N_FILES = 3
@@ -77,8 +77,8 @@ DECAY_RATE = 0.9
 DECAY_STEP = 2500
 DECAY_STAIRCASE = True
 NORMALIZATION_TYPE = 'batch'    # batch, group
-DOWNSAMPLING_TYPE = 'neighbor'   # neighbor, maxpool, avgpool
-UPSAMPLING_TYPE = 'resize'      # resize, transpose, add, concat
+DOWNSAMPLING_TYPE = 'neighbor'  # neighbor, maxpool, avgpool
+UPSAMPLING_TYPE = 'add'         # resize, transpose, add, concat
 GROUP_N = 8                     # group size of group_conv & group_norm
 DROPOUT_RATE = 0.5
 

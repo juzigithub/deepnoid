@@ -275,19 +275,19 @@ class Train:
                         #     print_img *= -1
                         #     print_img_idx = print_img_idx - 149
                         #################################################
-                        p = 0.0001
-                        for i in range(0, cfg.BATCH_SIZE, cfg.BATCH_SIZE//5):
+                        p = 0.01
+                        for i in range(0, cfg.BATCH_SIZE, cfg.BATCH_SIZE//3):
                             et_mask = utils.masking_rgb(pred_print[1][i], color='blue')
                             tc_mask = utils.masking_rgb(pred_print[2][i], color='red')
                             wt_mask = utils.masking_rgb(pred_print[3][i], color='green')
 
                             et_tc_mask = cv2.addWeighted(et_mask, float(50) * p, tc_mask, float(50) * p, 0) * 255
-                            et_tc_wt_mask = cv2.addWeighted(et_tc_mask, float(70) * p, wt_mask, float(30) * p, 0) * 255
+                            et_tc_wt_mask = cv2.addWeighted(et_tc_mask, float(50) * p, wt_mask, float(50) * p, 0) * 255
 
                             ori = np.transpose(batch_x, [-1, 0, 1, 2])
                             ori = utils.masking_rgb(ori[0][i], color=None)
 
-                            result_image = cv2.addWeighted(ori, float(100 - 40) * p, et_tc_wt_mask, float(60) * p, 0) * 255
+                            result_image = cv2.addWeighted(ori, float(100 - 60) * p, et_tc_wt_mask, float(60) * p, 0) * 255
 
                             cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
                             cv2.imwrite('./img/epoch{}/mask/batch{}_{}_et.jpg'.format(epoch+1, print_img_idx, i+1), et_mask)
