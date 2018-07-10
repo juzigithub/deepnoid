@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import tensorflow as tf
-
+import numpy as np
+from sklearn.metrics import confusion_matrix
+from scipy.spatial.distance import directed_hausdorff
 
 #############################################################################################################################
 #                                                    Layer Functions                                                        #
@@ -214,7 +216,58 @@ def iou_coe(output, target, smooth=1e-5):
     return iou, inse, pre
 
 
+def cal_result(pred, label, one_hot=False):
+    # convert one-hot labels to multiple labels
+    if one_hot:
+        _pred = np.argmax(pred, axis=-1)
+        _label = np.argmax(label, axis=-1)
 
+    else:
+        _pred = pred
+        _label = label
+
+    _pred1 = _pred.flatten()
+    _label1 = _label.flatten()
+
+    _pred2 = _pred.reshape(np.shape(_pred)[0], -1)
+    _label2 = _label.reshape(np.shape(_label)[0], -1)
+
+    cm = confusion_matrix(_label1, _pred1, labels=[0, 1])
+    TP = cm[1][1]
+    FP = cm[0][1]
+    FN = cm[1][0]
+    TN = cm[0][0]
+
+    # accuracy, sensitivity, specificity, mean iou, dice coefficient, hausdorff
+    acc = (TP + TN) / (TP + FP + FN + TN)
+    sens = TP / (TP + FN)
+    spec = TN / (TN + FP)
+    miou = TP / (FP + FN + TP)
+    dice = (2 * TP) / (2 * TP + FP + FN)
+    hdorff = max(directed_hausdorff(_pred2, _label2)[0], directed_hausdorff(_label2, _pred2)[0])
+
+    return [acc, sens, spec, miou, dice, hdorff]
+
+def convert_to_subregions(pred, label, convert_keys, one_hot=True):
+    if one_hot:
+        pred_arr = np.argmax(pred, axis=-1)
+        label_arr = np.argmax(label, axis=-1)
+    else:
+        pred_arr = pred
+        label_arr = label
+
+    pred_list = []
+    label_list = []
+
+    _, pred_index = np.unique(pred_arr, return_inverse=True)
+    _, label_index = np.unique(label_arr, return_inverse=True)
+
+    for convert_key in convert_keys:
+        key = np.array(convert_key)
+        pred_list.append(key[pred_index].reshape(pred_arr.shape))
+        label_list.append(key[label_index].reshape(label_arr.shape))
+
+    return pred_list, label_list
 
 
 #############################################################################################################################
@@ -364,6 +417,7 @@ def select_upsampling(name, up_conv, up_pool, channel_n, pool_size_h, pool_size_
         up_pool = conv2D(name + '_bottleneck', up_pool, channel_n, [1,1], [1,1], padding='SAME')
 
     return up_pool
+
 
 #############################################################################################################################
 #                                                    Save Functions                                                         #
@@ -861,3 +915,25 @@ def xception_depthwise_separable_convlayer(name, inputs, channel_n, last_stride,
 
     return l
 
+#############################################################################################################################
+#                                                    Result Function                                                        #
+#############################################################################################################################
+
+def masking_rgb(img, color=None):
+    if len(np.shape(img)) <= 2:
+        _img = np.expand_dims(img, axis=3)
+    else:
+        _img = img
+
+    if color != None:
+        rgb_dic = {'blue': 0, 'green': 1, 'red': 2}
+        rgb_list = [np.zeros(np.shape(_img)) for _ in range(3)]
+        rgb_list[rgb_dic[color]] = _img
+        B, G, R = rgb_list
+    else:
+        B = G = R = img
+
+    concat_img = np.concatenate((B, G, R), axis=-1)
+    out_img = concat_img * 255
+
+    return out_img
