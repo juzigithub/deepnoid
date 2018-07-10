@@ -240,12 +240,10 @@ class Train:
                         # image save #
                         # original_img : batch_x / et_img : pred_list[0] / tc_img : pred_list[1] / wt_img : pred_list[2]
                         print_img_idx += cfg.BATCH_SIZE
-                        print(print_img_idx)
-                        print('shape',np.shape(label_list[0]))
-                        print('sshape', np.shape(label_list[0][-6]))
-                        if (print_img_idx >= 65) and print_img==1:
+
+                        if (print_img_idx >= 60) and print_img==1:
                             print_img *= -1
-                            revert_img_idx = -1 - print_img_idx % 65
+                            revert_img_idx = -1 - print_img_idx % 60
 
 
 
@@ -253,28 +251,22 @@ class Train:
                             tc_mask = utils.masking_rgb(pred_print[2][revert_img_idx], color='red')
                             wt_mask = utils.masking_rgb(pred_print[3][revert_img_idx], color='green')
 
-
-
-
-                            print('bat', np.shape(batch_x))
+                            mask = et_mask + tc_mask + wt_mask
                             ori = np.transpose(batch_x, [-1, 0, 1, 2])
-                            # for i in range(190):
-                            #     for j in range(160):
-                                    # print(ori[0][-1][i][j])
                             ori = ori[0][revert_img_idx] * 255
-                            # ori=batch_x[revert_img_idx][:][:][0] + np.abs(np.min(batch_x[revert_img_idx][:][:][0]))
-                            # ori = ori.reshape([240,240])
-                            print('ori_shape', np.shape(ori))
-                            # for i in range(240):
-                            #     for j in range(240):
-                            #         print(ori[i][j])
-                            # print('re', revert_img_idx)
-                            # print(np.shape(ori))
+                            p = 0.0001
+                            result_image = cv2.addWeighted(ori, float(100 - 40) * p, mask, float(60) * p, 0)
+
 
                             cv2.imwrite('./et.jpg', et_mask)
                             cv2.imwrite('./tc.jpg', tc_mask)
                             cv2.imwrite('./wt.jpg', wt_mask)
                             cv2.imwrite('./or.jpg', ori)
+                            cv2.imwrite('./result.jpg', result_image)
+                            cv2.imwrite('./mask.jpg', mask)
+
+
+
                         if (print_img_idx >= 149) :
                             print_img *= -1
                             print_img_idx = print_img_idx - 149
