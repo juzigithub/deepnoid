@@ -193,7 +193,7 @@ class Train:
                     tc_one_epoch_result_list = []
                     wt_one_epoch_result_list = []
                     print_img_idx = 0
-
+                    print_img = 1
                     for batch in tl.iterate.minibatches(inputs=val_X, targets=val_Y,
                                                         batch_size=cfg.BATCH_SIZE, shuffle=False):
                         batch_x, batch_y = batch
@@ -243,7 +243,8 @@ class Train:
                         print(print_img_idx)
                         print('shape',np.shape(label_list[0]))
                         print('sshape', np.shape(label_list[0][-6]))
-                        if (print_img_idx >= 65) :
+                        if (print_img_idx >= 65) and print_img==1:
+                            print_img *= -1
                             revert_img_idx = -1 - print_img_idx % 65
 
 
@@ -275,6 +276,7 @@ class Train:
                             cv2.imwrite('./wt.jpg', wt_mask)
                             cv2.imwrite('./or.jpg', ori)
                         if (print_img_idx >= 149) :
+                            print_img *= -1
                             print_img_idx = print_img_idx - 149
                         ########################################
 
