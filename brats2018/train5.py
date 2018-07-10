@@ -276,7 +276,7 @@ class Train:
                         #     print_img_idx = print_img_idx - 149
                         #################################################
                         p = 0.0001
-                        for i in range(cfg.BATCH_SIZE, step=cfg.BATCH_SIZE//5):
+                        for i in range(0, cfg.BATCH_SIZE, cfg.BATCH_SIZE//5):
                             et_mask = utils.masking_rgb(pred_print[1][i], color='blue')
                             tc_mask = utils.masking_rgb(pred_print[2][i], color='red')
                             wt_mask = utils.masking_rgb(pred_print[3][i], color='green')
