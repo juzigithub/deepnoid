@@ -78,7 +78,7 @@ DECAY_STEP = 2500
 DECAY_STAIRCASE = True
 NORMALIZATION_TYPE = 'batch'    # batch, group
 DOWNSAMPLING_TYPE = 'neighbor'   # neighbor, maxpool, avgpool
-UPSAMPLING_TYPE = 'transpose'   # resize, transpose, add, concat
+UPSAMPLING_TYPE = 'resize'      # resize, transpose, add, concat
 GROUP_N = 8                     # group size of group_conv & group_norm
 DROPOUT_RATE = 0.5
 
