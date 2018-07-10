@@ -39,15 +39,18 @@ class Model:
 
             inputs = self.X  # iterator 변수 self.features 를 이용해 inputs 생성
             channel_n = cfg.INIT_N_FILTER
-            pool_size = cfg.IMG_SIZE
+            pool_size_h = 190
+            pool_size_w = 160
 
             if cfg.FIRST_DOWNSAMPLING:
-                pool_size //= 2
-                inputs = utils.select_downsampling('first_downsampling', inputs, [], channel_n, pool_size,
+                pool_size_h //= 2
+                pool_size_w //= 2
+                inputs = utils.select_downsampling('first_downsampling', inputs, [], channel_n, pool_size_h, pool_size_w,
                                                    cfg.DOWNSAMPLING_TYPE)
 
             for i in range(cfg.DEPTH):
-                pool_size //= 2
+                pool_size_h //= 2
+                pool_size_w //= 2
                 self.down_conv[i] = utils.depthwise_separable_convlayer(name='dsconv' + str(i),
                                                                         inputs=inputs,
                                                                         channel_n=channel_n,
@@ -63,7 +66,8 @@ class Model:
                                                               down_conv=self.down_conv[i],
                                                               down_pool=self.down_pool[i],
                                                               channel_n=channel_n,
-                                                              pool_size=pool_size,
+                                                              pool_size_h=pool_size_h,
+                                                              pool_size_w=pool_size_w,
                                                               mode=cfg.DOWNSAMPLING_TYPE)
 
                 inputs = tf.identity(self.down_pool[i])
@@ -80,12 +84,14 @@ class Model:
 
             for i in reversed(range(cfg.DEPTH)):
                 channel_n //= 2
-                pool_size *= 2
+                pool_size_h *= 2
+                pool_size_w *= 2
                 inputs = utils.select_upsampling(name=str(i) + '_upsampling',
                                                  up_conv=inputs,
                                                  up_pool=self.up_pool[i],
                                                  channel_n=channel_n,
-                                                 pool_size=pool_size,
+                                                 pool_size_h=pool_size_h,
+                                                 pool_size_w=pool_size_w,
                                                  mode=cfg.UPSAMPLING_TYPE)
                 print('up_pool', inputs)
 
@@ -103,8 +109,9 @@ class Model:
 
             if cfg.FIRST_DOWNSAMPLING:
                 channel_n //= 2
-                pool_size *= 2
-                inputs = utils.select_upsampling('last_upsampling', inputs, [], channel_n, pool_size,
+                pool_size_h *= 2
+                pool_size_w *= 2
+                inputs = utils.select_upsampling('last_upsampling', inputs, [], channel_n, pool_size_h, pool_size_w,
                                                  cfg.UPSAMPLING_TYPE)
 
             up_conv_f = utils.conv2D('final_upconv', inputs, cfg.N_CLASS, [1, 1], [1, 1], 'SAME')
