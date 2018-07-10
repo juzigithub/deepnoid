@@ -10,8 +10,8 @@ class Model:
     def __init__(self):
         self.drop_rate = tf.placeholder(tf.float32, name='drop_rate')
         self.training = tf.placeholder(tf.bool, name='training')
-        self.X = tf.placeholder(tf.float32, [None, cfg.IMG_SIZE, cfg.IMG_SIZE, 4], name='X')
-        self.Y = tf.placeholder(tf.float32, [None, cfg.IMG_SIZE, cfg.IMG_SIZE, 4], name='Y')
+        self.X = tf.placeholder(tf.float32, [None, 190, 160, 4], name='X')
+        self.Y = tf.placeholder(tf.float32, [None, 190, 160, 4], name='Y')
         self.logit = self.mobilenet()
 
         self.pred = tf.nn.softmax(logits=self.logit)
