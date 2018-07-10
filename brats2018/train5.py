@@ -146,6 +146,11 @@ class Train:
                     save_yn = (epoch == 0 or epoch + 1 == cfg.EPOCHS or epoch % cfg.SAVING_EPOCH == 0)
 
                     # Make folder in the saving path for qualified epochs
+                    tl.files.exists_or_mkdir('./img/epoch{}/result/'.format(str(epoch + 1)))
+                    tl.files.exists_or_mkdir('./img/epoch{}/mask/'.format(str(epoch + 1)))
+                    tl.files.exists_or_mkdir('./img/epoch{}/original/'.format(str(epoch + 1)))
+
+
                     if save_yn:
                         self._make_path(epoch)
 #########################################################
@@ -193,9 +198,10 @@ class Train:
                     tc_one_epoch_result_list = []
                     wt_one_epoch_result_list = []
                     print_img_idx = 0
-                    print_img = 1
+                    # print_img = 1
                     for batch in tl.iterate.minibatches(inputs=val_X, targets=val_Y,
                                                         batch_size=cfg.BATCH_SIZE, shuffle=False):
+                        print_img_idx += 1
                         batch_x, batch_y = batch
 
                         # make_one_hot
@@ -239,40 +245,58 @@ class Train:
                         ########################################
                         # image save #
                         # original_img : batch_x / et_img : pred_list[0] / tc_img : pred_list[1] / wt_img : pred_list[2]
-                        print_img_idx += cfg.BATCH_SIZE
-
-                        if (print_img_idx >= 60) and print_img==1:
-                            print_img *= -1
-                            revert_img_idx = -1 - print_img_idx % 60
-
-
-
-                            et_mask = utils.masking_rgb(pred_print[1][revert_img_idx], color='blue')
-                            tc_mask = utils.masking_rgb(pred_print[2][revert_img_idx], color='red')
-                            wt_mask = utils.masking_rgb(pred_print[3][revert_img_idx], color='green')
-
-                            p = 0.0001
+                        #################################################
+                        # print_img_idx += cfg.BATCH_SIZE
+                        # if (print_img_idx >= 60) and print_img==1:
+                        #     print_img *= -1
+                        #     revert_img_idx = -1 - print_img_idx % 60
+                        #
+                        #     et_mask = utils.masking_rgb(pred_print[1][revert_img_idx], color='blue')
+                        #     tc_mask = utils.masking_rgb(pred_print[2][revert_img_idx], color='red')
+                        #     wt_mask = utils.masking_rgb(pred_print[3][revert_img_idx], color='green')
+                        #
+                        #     p = 0.0001
+                        #
+                        #     et_tc_mask = cv2.addWeighted(et_mask, float(50) * p, tc_mask, float(50) * p, 0)
+                        #     et_tc_wt_mask = cv2.addWeighted(et_tc_mask, float(70) * p, wt_mask, float(30) * p, 0)
+                        #     ori = np.transpose(batch_x, [-1, 0, 1, 2])
+                        #     ori = utils.masking_rgb(ori[0][revert_img_idx], color=None)
+                        #     print('mask', np.shape(et_tc_wt_mask))
+                        #     print('ori', np.shape(ori))
+                        #     result_image = cv2.addWeighted(ori, float(100 - 40) * p, et_tc_wt_mask, float(60) * p, 0)
+                        #     result_image *= 255
+                        #
+                        #     cv2.imwrite('./et.jpg', et_mask)
+                        #     cv2.imwrite('./tc.jpg', tc_mask)
+                        #     cv2.imwrite('./wt.jpg', wt_mask)
+                        #     cv2.imwrite('./or.jpg', ori)
+                        #     cv2.imwrite('./result.jpg', result_image)
+                        # if (print_img_idx >= 149) :
+                        #     print_img *= -1
+                        #     print_img_idx = print_img_idx - 149
+                        #################################################
+                        p = 0.0001
+                        for i in range(cfg.BATCH_SIZE, step=cfg.BATCH_SIZE//5):
+                            et_mask = utils.masking_rgb(pred_print[1][i], color='blue')
+                            tc_mask = utils.masking_rgb(pred_print[2][i], color='red')
+                            wt_mask = utils.masking_rgb(pred_print[3][i], color='green')
 
                             et_tc_mask = cv2.addWeighted(et_mask, float(50) * p, tc_mask, float(50) * p, 0)
                             et_tc_wt_mask = cv2.addWeighted(et_tc_mask, float(70) * p, wt_mask, float(30) * p, 0)
+
                             ori = np.transpose(batch_x, [-1, 0, 1, 2])
-                            ori = utils.masking_rgb(ori[0][revert_img_idx], color=None)
-                            print('mask', np.shape(et_tc_wt_mask))
-                            print('ori', np.shape(ori))
+                            ori = utils.masking_rgb(ori[0][i], color=None)
+
                             result_image = cv2.addWeighted(ori, float(100 - 40) * p, et_tc_wt_mask, float(60) * p, 0)
+                            result_image *= 255
 
+                            cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
+                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_et.jpg'.format(epoch+1, print_img_idx, i+1), et_mask)
+                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_tc.jpg'.format(epoch+1, print_img_idx, i+1), tc_mask)
+                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_wt.jpg'.format(epoch+1, print_img_idx, i+1), wt_mask)
+                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_all.jpg'.format(epoch+1, print_img_idx, i+1), et_tc_wt_mask)
+                            cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
 
-                            cv2.imwrite('./et.jpg', et_mask)
-                            cv2.imwrite('./tc.jpg', tc_mask)
-                            cv2.imwrite('./wt.jpg', wt_mask)
-                            cv2.imwrite('./or.jpg', ori)
-                            cv2.imwrite('./result.jpg', result_image)
-
-
-
-                        if (print_img_idx >= 149) :
-                            print_img *= -1
-                            print_img_idx = print_img_idx - 149
                         ########################################
 
 
