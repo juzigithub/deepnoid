@@ -251,11 +251,13 @@ class Train:
                             tc_mask = utils.masking_rgb(pred_print[2][revert_img_idx], color='red')
                             wt_mask = utils.masking_rgb(pred_print[3][revert_img_idx], color='green')
 
-                            mask = et_mask + tc_mask + wt_mask
+                            p = 0.0001
+
+                            et_tc_mask = cv2.addWeighted(et_mask, float(50) * p, tc_mask, float(50) * p, 0)
+                            et_tc_wt_mask = cv2.addWeighted(et_tc_mask, float(70) * p, wt_mask, float(30) * p, 0)
                             ori = np.transpose(batch_x, [-1, 0, 1, 2])
                             ori = utils.masking_rgb(ori[0][revert_img_idx], color=None)
-                            p = 0.0001
-                            result_image = cv2.addWeighted(ori, float(100 - 40) * p, mask, float(60) * p, 0)
+                            result_image = cv2.addWeighted(ori, float(100 - 40) * p, et_tc_wt_mask, float(60) * p, 0)
 
 
                             cv2.imwrite('./et.jpg', et_mask)
@@ -263,7 +265,6 @@ class Train:
                             cv2.imwrite('./wt.jpg', wt_mask)
                             cv2.imwrite('./or.jpg', ori)
                             cv2.imwrite('./result.jpg', result_image)
-                            cv2.imwrite('./mask.jpg', mask)
 
 
 
