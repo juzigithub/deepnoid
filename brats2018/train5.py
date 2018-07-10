@@ -243,8 +243,8 @@ class Train:
                         print(print_img_idx)
                         print('shape',np.shape(label_list[0]))
                         print('sshape', np.shape(label_list[0][-6]))
-                        if (print_img_idx >= 78) :
-                            revert_img_idx = -1 - print_img_idx % 78
+                        if (print_img_idx >= 65) :
+                            revert_img_idx = -1 - print_img_idx % 65
                             print_img_idx = 0
 
 
@@ -261,7 +261,7 @@ class Train:
                             for i in range(190):
                                 for j in range(160):
                                     print(ori[0][-1][i][j])
-                            ori = ori[0][revert_img_idx]
+                            ori = ori[0][revert_img_idx] * 255
                             # ori=batch_x[revert_img_idx][:][:][0] + np.abs(np.min(batch_x[revert_img_idx][:][:][0]))
                             # ori = ori.reshape([240,240])
                             print('ori_shape', np.shape(ori))
