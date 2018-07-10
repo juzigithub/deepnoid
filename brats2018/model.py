@@ -92,8 +92,8 @@ class Model:
                 channel_n //= 2
                 # pool_size_h *= 2
                 # pool_size_w *= 2
-                pool_size_h = cfg.IMG_SIZE[i][0]
-                pool_size_w = cfg.IMG_SIZE[i][1]
+                pool_size_h = cfg.IMG_SIZE[i+5][0]
+                pool_size_w = cfg.IMG_SIZE[i+5][1]
                 inputs = utils.select_upsampling(name=str(i) + '_upsampling',
                                                  up_conv=inputs,
                                                  up_pool=self.up_pool[i],

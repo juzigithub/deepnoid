@@ -52,7 +52,7 @@ DATA_FILE_TYPE = 'npy'
 REBUILD_DATA = True
 TRAIN_YN = True if 'train' in SAVE_DATA_PATH else False
 PATH_SLASH = '/' if MODE == 'linux' else '\\'
-IMG_SIZE = [[190, 160],[94, 80],[46, 40],[22,20],[10,10]]
+IMG_SIZE = [[190, 160],[95, 80],[47, 40],[23,20],[11,10],[190,160],[94,80],[46,40],[22,20]]
 VALIDATION_RATIO = 15
 SPLITS = 5
 N_FILES = 3
