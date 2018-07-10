@@ -86,7 +86,7 @@ class Model:
                                            training=self.training)
 
         with tf.variable_scope('up'):
-            pool_size_h = pool_size_h + 1 if pool_size_h % 2 == 0 else pool_size_h
+            # pool_size_h = pool_size_h + 1 if pool_size_h % 2 == 0 else pool_size_h
             # pool_size_w = pool_size_w + 1 if pool_size_w % 2 == 0 else pool_size_w
             for i in reversed(range(cfg.DEPTH)):
                 channel_n //= 2
