@@ -154,45 +154,45 @@ class Train:
                     if save_yn:
                         self._make_path(epoch)
 #########################################################
-                    # for batch in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
-                    #                                     batch_size=cfg.BATCH_SIZE, shuffle=True):
-                    #     batch_x, batch_y = batch
-                    #
-                    #     # make_one_hot
-                    #     key = np.array(cfg.TRAIN_LABEL)
-                    #     # [0,1,2,3]
-                    #     _, index = np.unique(batch_y, return_inverse=True)
-                    #     # 4 -> 3
-                    #     seg = key[index].reshape(batch_y.shape)
-                    #
-                    #     batch_y = np.eye(4)[seg]
-                    #
-                    #
-                    #     # step_time = time.time()
-                    #     tr_feed_dict = {self.model.X: batch_x,
-                    #                     self.model.Y: batch_y,
-                    #                     self.model.training: True,
-                    #                     self.model.drop_rate: 0.2}
-                    #
-                    #     # cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
-                    #     cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
-                    #
-                    #
-                    #
-                    #     total_cost += cost
-                    #     step += 1
-                    #
-                    #     # print out current epoch, step and batch loss value
-                    #     self.result = 'Cross validation : {0} / {1}, Epoch: {2} / {3}, Step: {4} / {5}, Batch loss: {6}'.format((idx + 1),
-                    #                                                                                                             cfg.SPLITS,
-                    #                                                                                                             epoch + 1,
-                    #                                                                                                             cfg.EPOCHS,
-                    #                                                                                                             step,
-                    #                                                                                                             train_step,
-                    #                                                                                                             cost)
-                    #
-                    #     print(self.result)
-                    #     # utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
+                    for batch in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
+                                                        batch_size=cfg.BATCH_SIZE, shuffle=True):
+                        batch_x, batch_y = batch
+
+                        # make_one_hot
+                        key = np.array(cfg.TRAIN_LABEL)
+                        # [0,1,2,3]
+                        _, index = np.unique(batch_y, return_inverse=True)
+                        # 4 -> 3
+                        seg = key[index].reshape(batch_y.shape)
+
+                        batch_y = np.eye(4)[seg]
+
+
+                        # step_time = time.time()
+                        tr_feed_dict = {self.model.X: batch_x,
+                                        self.model.Y: batch_y,
+                                        self.model.training: True,
+                                        self.model.drop_rate: 0.2}
+
+                        # cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
+                        cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
+
+
+
+                        total_cost += cost
+                        step += 1
+
+                        # print out current epoch, step and batch loss value
+                        self.result = 'Cross validation : {0} / {1}, Epoch: {2} / {3}, Step: {4} / {5}, Batch loss: {6}'.format((idx + 1),
+                                                                                                                                cfg.SPLITS,
+                                                                                                                                epoch + 1,
+                                                                                                                                cfg.EPOCHS,
+                                                                                                                                step,
+                                                                                                                                train_step,
+                                                                                                                                cost)
+
+                        print(self.result)
+                        # utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 ###################################################
                     et_one_epoch_result_list = []
                     tc_one_epoch_result_list = []
@@ -275,26 +275,29 @@ class Train:
                         #     print_img *= -1
                         #     print_img_idx = print_img_idx - 149
                         #################################################
-                        p = 0.00001
-                        for i in range(0, cfg.BATCH_SIZE, cfg.BATCH_SIZE//3):
-                            et_mask = utils.masking_rgb(pred_print[1][i], color='blue')
-                            tc_mask = utils.masking_rgb(pred_print[2][i], color='red')
-                            wt_mask = utils.masking_rgb(pred_print[3][i], color='green')
-
-                            et_tc_mask = cv2.addWeighted(et_mask, float(50) * p, tc_mask, float(50) * p, 0) * 255
-                            et_tc_wt_mask = cv2.addWeighted(et_tc_mask, float(50) * p, wt_mask, float(50) * p, 0) * 255
-
-                            ori = np.transpose(batch_x, [-1, 0, 1, 2])
-                            ori = utils.masking_rgb(ori[0][i], color=None)
-
-                            result_image = cv2.addWeighted(ori, float(100 - 60) * p, et_tc_wt_mask, float(60) * p, 0) * 255
-
-                            cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
-                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_et.jpg'.format(epoch+1, print_img_idx, i+1), et_mask)
-                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_tc.jpg'.format(epoch+1, print_img_idx, i+1), tc_mask)
-                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_wt.jpg'.format(epoch+1, print_img_idx, i+1), wt_mask)
-                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_all.jpg'.format(epoch+1, print_img_idx, i+1), et_tc_wt_mask)
-                            cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
+                        # p = 0.00001
+                        # for i in range(0, cfg.BATCH_SIZE, cfg.BATCH_SIZE//3):
+                        #     et_mask = utils.masking_rgb(pred_print[1][i], color='blue')
+                        #     tc_mask = utils.masking_rgb(pred_print[2][i], color='red')
+                        #     wt_mask = utils.masking_rgb(pred_print[3][i], color='green')
+                        #
+                        #     # et_tc_mask = cv2.addWeighted(et_mask, float(50) * p, tc_mask, float(50) * p, 0) * 255
+                        #     # et_tc_wt_mask = cv2.addWeighted(et_tc_mask, float(50) * p, wt_mask, float(50) * p, 0) * 255
+                        #     # tc -> wt -> et
+                        #     et_tc_wt_mask =
+                        #
+                        #
+                        #     ori = np.transpose(batch_x, [-1, 0, 1, 2])
+                        #     ori = utils.masking_rgb(ori[0][i], color=None)
+                        #
+                        #     result_image = cv2.addWeighted(ori, float(100 - 60) * p, et_tc_wt_mask, float(60) * p, 0) * 255
+                        #
+                        #     cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
+                        #     cv2.imwrite('./img/epoch{}/mask/batch{}_{}_et.jpg'.format(epoch+1, print_img_idx, i+1), et_mask)
+                        #     cv2.imwrite('./img/epoch{}/mask/batch{}_{}_tc.jpg'.format(epoch+1, print_img_idx, i+1), tc_mask)
+                        #     cv2.imwrite('./img/epoch{}/mask/batch{}_{}_wt.jpg'.format(epoch+1, print_img_idx, i+1), wt_mask)
+                        #     cv2.imwrite('./img/epoch{}/mask/batch{}_{}_all.jpg'.format(epoch+1, print_img_idx, i+1), et_tc_wt_mask)
+                        #     cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
 
                         ########################################
 
