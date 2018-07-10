@@ -201,7 +201,8 @@ def get_normalized_img(data_sets, train):
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
     ##################################################
-    X = np.reshape(total_list[0:4], [-1, w, h, m-1 if train else m]) # [n, img_size, img_size, 4(flair, t1, t1ce, t2)]
+    X = np.transpose(total_list[0:4], [1, 2, 3, 0])              # [n, img_size, img_size, 4(flair, t1, t1ce, t2)]
+
     # Y = np.expand_dims(total_list[4], axis=3) if train else []        # [n, img_size, img_size, 1]
     Y = total_list[4] if train else []
 
