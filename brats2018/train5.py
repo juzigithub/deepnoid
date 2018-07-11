@@ -352,17 +352,25 @@ class Train:
                     print('tc_one_epoch_mean', tc_one_epoch_mean)
                     print('wt_one_epoch_mean', wt_one_epoch_mean)
 
-
+                    # [acc, sens, spec, miou, dice, hdorff]
                     self.result = ' Cross validation : {} / {}, Epoch: {} / {}, Loss : {}, Training time: {:.2f}' \
-                                  '\n\tET_RESULT: {}, \n\tTC_RESULT {}, \n\tWT_RESULT: {}'.format((idx+1),
+                                  '\n1) ET >>> ' \
+                                  '\n\t Accuracy : {:.4f}, Sensitivity : {:.4f}, Specificity : {:.4f}' \
+                                  '\n\t mean_IoU : {:.4f}, Dice_score : {:.4f}, Hausdorff : {:.4f}' \
+                                  '\n2) TC >>> ' \
+                                  '\n\t Accuracy : {:.4f}, Sensitivity : {:.4f}, Specificity : {:.4f}' \
+                                  '\n\t mean_IoU : {:.4f}, Dice_score : {:.4f}, Hausdorff : {:.4f}' \
+                                  '\n3) WT >>> ' \
+                                  '\n\t Accuracy : {:.4f}, Sensitivity : {:.4f}, Specificity : {:.4f}' \
+                                  '\n\t mean_IoU : {:.4f}, Dice_score : {:.4f}, Hausdorff : {:.4f}'.format((idx+1),
                                                                                                   cfg.SPLITS,
                                                                                                   (epoch + 1),
                                                                                                   cfg.EPOCHS,
                                                                                                   Loss,
                                                                                                   training_time,
-                                                                                                  et_one_epoch_mean,
-                                                                                                  tc_one_epoch_mean,
-                                                                                                  wt_one_epoch_mean)
+                                                                                                  *et_one_epoch_mean,
+                                                                                                  *tc_one_epoch_mean,
+                                                                                                  *wt_one_epoch_mean)
                     print(self.result)
                     utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 
@@ -401,15 +409,23 @@ class Train:
                             #     self._make_img(predicted_result, x_list, y_list, address, cfg.W, cfg.P)
                 self.result = '################# SPLIT #################\n' \
                               'Cross validation : {} / {}, Epoch: {} / {}, Training time: {:.2f}'  \
-                              '\n\tET_RESULT: {}, \n\tTC_RESULT {}, \n\tWT_RESULT: {}\n' \
+                              '\n1) ET >>> ' \
+                              '\n\t Accuracy : {:.4f}, Sensitivity : {:.4f}, Specificity : {:.4f}' \
+                              '\n\t mean_IoU : {:.4f}, Dice_score : {:.4f}, Hausdorff : {:.4f}' \
+                              '\n2) TC >>> ' \
+                              '\n\t Accuracy : {:.4f}, Sensitivity : {:.4f}, Specificity : {:.4f}' \
+                              '\n\t mean_IoU : {:.4f}, Dice_score : {:.4f}, Hausdorff : {:.4f}' \
+                              '\n3) WT >>> ' \
+                              '\n\t Accuracy : {:.4f}, Sensitivity : {:.4f}, Specificity : {:.4f}' \
+                              '\n\t mean_IoU : {:.4f}, Dice_score : {:.4f}, Hausdorff : {:.4f}' \
                               '#########################################'.format((idx + 1),
                                                                                  cfg.SPLITS,
                                                                                  (epoch + 1),
                                                                                  cfg.EPOCHS,
                                                                                  split_training_time,
-                                                                                 et_one_split_mean,
-                                                                                 tc_one_split_mean,
-                                                                                 wt_one_split_mean)
+                                                                                 *et_one_split_mean,
+                                                                                 *tc_one_split_mean,
+                                                                                 *wt_one_split_mean)
                 print(self.result)
                 utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 
@@ -421,31 +437,46 @@ class Train:
             wt_total_std = np.std(np.array(wt_total_result_list), axis=0)
 
             # [acc, sens, spec, miou, dice, hdorff]
-            self.result = 'ET >>> \n\tAccuracy: {} ± {} \n\tSensitivity {} ± {} \n\tSpecificity: {} ± {} ' \
-                          '\n\tDice Score : {} ± {} \n\tMean IoU : {} ± {} \n\tHausdorff_D : {} ± {}'.format(et_total_mean[0], et_total_std[0],
-                                                                                                             et_total_mean[1], et_total_std[1],
-                                                                                                             et_total_mean[2], et_total_std[2],
-                                                                                                             et_total_mean[3], et_total_std[3],
-                                                                                                             et_total_mean[4], et_total_std[4],
-                                                                                                             et_total_mean[5], et_total_std[5])
+            self.result = 'ET >>> ' \
+                          '\n\tAccuracy: {:.4f} ± {:.2f} ' \
+                          '\n\tSensitivity {:.4f} ± {:.2f} ' \
+                          '\n\tSpecificity: {:.4f} ± {:.2f} ' \
+                          '\n\tDice Score : {:.4f} ± {:.2f} ' \
+                          '\n\tMean IoU : {:.4f} ± {:.2f} ' \
+                          '\n\tHausdorff_D : {:.4f} ± {:.2f}'.format(et_total_mean[0], et_total_std[0],
+                                                                     et_total_mean[1], et_total_std[1],
+                                                                     et_total_mean[2], et_total_std[2],
+                                                                     et_total_mean[3], et_total_std[3],
+                                                                     et_total_mean[4], et_total_std[4],
+                                                                     et_total_mean[5], et_total_std[5])
             utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 
-            self.result = 'TC >>> \n\tAccuracy: {} ± {} \n\tSensitivity {} ± {} \n\tSpecificity: {} ± {} ' \
-                          '\n\tDice Score : {} ± {} \n\tMean IoU : {} ± {} \n\tHausdorff_D : {} ± {}'.format(tc_total_mean[0], tc_total_std[0],
-                                                                                                             tc_total_mean[1], tc_total_std[1],
-                                                                                                             tc_total_mean[2], tc_total_std[2],
-                                                                                                             tc_total_mean[3], tc_total_std[3],
-                                                                                                             tc_total_mean[4], tc_total_std[4],
-                                                                                                             tc_total_mean[5], tc_total_std[5])
+            self.result = 'TC >>> ' \
+                          '\n\tAccuracy: {:.4f} ± {:.2f} ' \
+                          '\n\tSensitivity {:.4f} ± {:.2f} ' \
+                          '\n\tSpecificity: {:.4f} ± {:.2f} ' \
+                          '\n\tDice Score : {:.4f} ± {:.2f} ' \
+                          '\n\tMean IoU : {:.4f} ± {:.2f} ' \
+                          '\n\tHausdorff_D : {:.4f} ± {:.2f}'.format(tc_total_mean[0], tc_total_std[0],
+                                                                     tc_total_mean[1], tc_total_std[1],
+                                                                     tc_total_mean[2], tc_total_std[2],
+                                                                     tc_total_mean[3], tc_total_std[3],
+                                                                     tc_total_mean[4], tc_total_std[4],
+                                                                     tc_total_mean[5], tc_total_std[5])
             utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 
-            self.result = 'WT >>> \n\tAccuracy: {} ± {} \n\tSensitivity {} ± {} \n\tSpecificity: {} ± {} ' \
-                          '\n\tDice Score : {} ± {} \n\tMean IoU : {} ± {} \n\tHausdorff_D : {} ± {}'.format(wt_total_mean[0], wt_total_std[0],
-                                                                                                             wt_total_mean[1], wt_total_std[1],
-                                                                                                             wt_total_mean[2], wt_total_std[2],
-                                                                                                             wt_total_mean[3], wt_total_std[3],
-                                                                                                             wt_total_mean[4], wt_total_std[4],
-                                                                                                             wt_total_mean[5], wt_total_std[5])
+            self.result = 'WT >>> ' \
+                          '\n\tAccuracy: {:.4f} ± {:.2f} ' \
+                          '\n\tSensitivity {:.4f} ± {:.2f} ' \
+                          '\n\tSpecificity: {:.4f} ± {:.2f} ' \
+                          '\n\tDice Score : {:.4f} ± {:.2f} ' \
+                          '\n\tMean IoU : {:.4f} ± {:.2f} ' \
+                          '\n\tHausdorff_D : {:.4f} ± {:.2f}'.format(wt_total_mean[0], wt_total_std[0],
+                                                                     wt_total_mean[1], wt_total_std[1],
+                                                                     wt_total_mean[2], wt_total_std[2],
+                                                                     wt_total_mean[3], wt_total_std[3],
+                                                                     wt_total_mean[4], wt_total_std[4],
+                                                                     wt_total_mean[5], wt_total_std[5])
             utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 
             # print('TC >>> Accuracy: {}, Sensitivity {}, Specificity: {}, Dice Score : {}, Mean IoU : {}, Hausdorff_D : {}'.format(tc_total_mean[0],
