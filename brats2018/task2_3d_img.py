@@ -28,7 +28,7 @@ label = np.array(label)
 _, length, _, _ = np.shape(label)
 length //= 150
 for idx in range(length):
-    survival_img = label[:,idx:150*(idx+1),:,:].transpose([0, 2, 3, 1])
+    survival_img = label[:,150*idx:150*(idx+1),:,:].transpose([0, 2, 3, 1])
     print(np.shape(survival_img))
     np.save(cfg.SAVE_SURVIVAL_DATA_PATH + '{}.npy'.format(survival_id_list[idx]), survival_img)
 
