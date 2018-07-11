@@ -283,9 +283,12 @@ class Train:
                         #################################################
                         p = 0.0001
                         for i in range(0, cfg.BATCH_SIZE, cfg.BATCH_SIZE//2):
-                            et_mask = utils.masking_rgb(pred_print[1][i], color='blue')
-                            tc_mask = utils.masking_rgb(pred_print[2][i], color='red')
-                            wt_mask = utils.masking_rgb(pred_print[3][i], color='green')
+                            # et -> ncr
+                            ncr_mask = utils.masking_rgb(pred_print[1][i], color='blue')
+                            # tc -> ed
+                            ed_mask = utils.masking_rgb(pred_print[2][i], color='red')
+                            # wt -> et
+                            et_mask = utils.masking_rgb(pred_print[3][i], color='green')
 
                             # et_tc_mask = cv2.addWeighted(et_mask, float(50) * p, tc_mask, float(50) * p, 0) * 255
                             # et_tc_wt_mask = cv2.addWeighted(et_tc_mask, float(50) * p, wt_mask, float(50) * p, 0) * 255
@@ -302,18 +305,19 @@ class Train:
                             # result_image = cv2.addWeighted(ori, float(100 - 60) * p, et_tc_wt_mask, float(60) * p, 0) * 255
 
                             # cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
+                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_ncr.jpg'.format(epoch+1, print_img_idx, i+1), ncr_mask)
+                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_ed.jpg'.format(epoch+1, print_img_idx, i+1), ed_mask)
                             cv2.imwrite('./img/epoch{}/mask/batch{}_{}_et.jpg'.format(epoch+1, print_img_idx, i+1), et_mask)
-                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_tc.jpg'.format(epoch+1, print_img_idx, i+1), tc_mask)
-                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_wt.jpg'.format(epoch+1, print_img_idx, i+1), wt_mask)
                             # cv2.imwrite('./img/epoch{}/mask/batch{}_{}_all.jpg'.format(epoch+1, print_img_idx, i+1), et_tc_wt_mask)
-                            cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
+                            if print_img_idx == 1:
+                                cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
 
                         ########################################
 
 
-                    et_one_epoch_mean = np.mean(et_one_epoch_result_list, axis=0)
-                    tc_one_epoch_mean = np.mean(tc_one_epoch_result_list, axis=0)
-                    wt_one_epoch_mean = np.mean(wt_one_epoch_result_list, axis=0)
+                    et_one_epoch_mean = np.mean(np.array(et_one_epoch_result_list), axis=0)
+                    tc_one_epoch_mean = np.mean(np.array(tc_one_epoch_result_list), axis=0)
+                    wt_one_epoch_mean = np.mean(np.array(wt_one_epoch_result_list), axis=0)
 
                     et_one_split_result.append(et_one_epoch_mean)
                     tc_one_split_result.append(tc_one_epoch_mean)

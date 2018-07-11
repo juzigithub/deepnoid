@@ -228,15 +228,17 @@ def cal_result(pred, label, one_hot=False):
 
     _pred1 = _pred.flatten()
     _label1 = _label.flatten()
-
+    print('_pred1_shape', np.shape(_pred1))
     _pred2 = _pred.reshape(np.shape(_pred)[0], -1)
     _label2 = _label.reshape(np.shape(_label)[0], -1)
 
     cm = confusion_matrix(_label1, _pred1, labels=[0, 1])
-    TP = cm[1][1]
-    FP = cm[0][1]
-    FN = cm[1][0]
-    TN = cm[0][0]
+    TP = cm[1][1].astype(np.float32)
+    FP = cm[0][1].astype(np.float32)
+    FN = cm[1][0].astype(np.float32)
+    TN = cm[0][0].astype(np.float32)
+
+    print('TP,FP,FN,TN',TP, FP, FN, TN)
 
     # accuracy, sensitivity, specificity, mean iou, dice coefficient, hausdorff
     acc = (TP + TN) / (TP + FP + FN + TN)
