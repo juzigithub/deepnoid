@@ -8,7 +8,7 @@ import utils
 # import brats2018.utils as utils
 
 if cfg.REBUILD_TASK2_DATA:
-    survival_id_list = loader.survival_data_saver([cfg.HGG_DATA_PATH], cfg.SURVIVAL_CSV_PATH, cfg.SAVE_SURVIVAL_DATA_PATH, train=cfg.TRAIN_YN)
+    survival_id_list = loader.survival_data_saver(cfg.HGG_DATA_PATH, cfg.SURVIVAL_CSV_PATH, cfg.SAVE_SURVIVAL_DATA_PATH, train=cfg.TRAIN_YN)
 task2_Y = np.load(cfg.SAVE_SURVIVAL_DATA_PATH + 'task2_train_label.npy')
 
 key = np.array(cfg.TRAIN_LABEL)
