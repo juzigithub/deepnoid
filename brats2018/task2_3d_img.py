@@ -2,12 +2,14 @@ import numpy as np
 import config as cfg
 import loader
 import utils
+import tensorlayer as tl
 #
 # import brats2018.loader as loader
 # import brats2018.config as cfg
 # import brats2018.utils as utils
 
 if cfg.REBUILD_TASK2_DATA:
+    tl.files.exists_or_mkdir(cfg.SAVE_SURVIVAL_DATA_PATH)
     survival_id_list = loader.survival_data_saver(cfg.HGG_DATA_PATH, cfg.SURVIVAL_CSV_PATH, cfg.SAVE_SURVIVAL_DATA_PATH, train=cfg.TRAIN_YN)
 task2_Y = np.load(cfg.SAVE_SURVIVAL_DATA_PATH + 'task2_train_label.npy')
 
