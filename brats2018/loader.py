@@ -5,10 +5,11 @@ import numpy as np
 import nibabel
 import config as cfg
 from sklearn.preprocessing import scale
+import csv
 import cv2
 from scipy import ndimage
 
-os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU
+os.environ["CUDA_VISIBLE_DEVICES"] = '6' # cfg.GPU
 
 def crop_volume_with_bounding_box(volume, min_idx, max_idx):
 
@@ -213,9 +214,69 @@ def get_normalized_img(data_sets, train):
 
     return X, Y     # , seg
 
-def data_saver(data_path, save_path, splits, train):
+# data_path = HGG_path , save_path = SAVE_SURVIVAL_DATA_PATH
+def survival_data_saver(data_path, csv_path, save_path, train=True):
+    survival_id_list = []
+    survival_age_list = []
+    survival_survival_list = []
+    survival_ResectionStatus_list = []
+
+    with open(csv_path, 'r') as f:
+        reader = csv.reader(f)
+        next(reader)
+        for idx, content in enumerate(reader):
+            if content[3] == 'GTR':
+                survival_id_list.append(content[0])
+                survival_age_list.append(float(content[1]))
+                survival_survival_list.append(int(content[2]))
+                survival_ResectionStatus_list.append(content[3])
+
+    file_list = []
+    survival_path_list = [os.path.join(data_path, os.path.basename(p), os.path.basename(p)) for p in survival_id_list]
+
+    for path in survival_path_list:
+        flair_path = path + '_flair.nii.gz'
+        t1_path = flair_path.replace('flair', 't1')
+        t1ce_path = flair_path.replace('flair', 't1ce')
+        t2_path = flair_path.replace('flair', 't2')
+        seg_path = flair_path.replace('flair', 'seg')
+
+        if train :
+            file_list.append([flair_path, t1_path, t1ce_path, t2_path, seg_path] )
+        else :
+            file_list.append([flair_path, t1_path, t1ce_path, t2_path])
+
     if train :
-        train_sets, test_sets = cv(data_path, splits, shuffle=True)
+        ## 루프문 하나 더 만들어서 [idx][ : ] 로 세분화하기
+        # train_sets_X, train_sets_Y = get_normalized_img(train_sets[idx], train=train)
+        train_sets_X, train_sets_Y= get_normalized_img(file_list, train=train)
+        print('idx, chunk_x.shape, chunk_y.shape', np.shape(train_sets_X),np.shape(train_sets_Y))
+
+        print('self.chunk_x.shape : ', train_sets_X.shape)  # shape :  (n, 240, 240, 4)
+        print('self.chunk_y.shape : ', train_sets_Y.shape)  # shape :  (n, 240, 240, 4)
+
+        np.save(save_path + 'task2_train_image.npy', train_sets_X)
+        np.save(save_path + 'task2_train_label.npy', train_sets_Y)
+        print('saved')
+
+    else :
+        train_sets_X, _ = get_normalized_img(file_list, train=train)
+        print(np.shape(train_sets_X))
+        np.save('./task2_val_image.npy', train_sets_X)
+        print('saved')
+
+    return survival_id_list
+
+# data_path = 'D:\\dataset\\BRATS\\2018\\MICCAI_BraTS_2018_Data_Training\\HGG\\'
+# csv_path = 'D:\\dataset\BRATS\\2018\\MICCAI_BraTS_2018_Data_Training\\survival_data.csv'
+# save_path = 'D:\\aa\\'
+# print(survival_data_saver('D:\\dataset\\BRATS\\2018\\MICCAI_BraTS_2018_Data_Training\\HGG\\','D:\\dataset\BRATS\\2018\\MICCAI_BraTS_2018_Data_Training\\survival_data.csv'))
+# survival_data_saver(data_path, csv_path, save_path)
+
+
+def data_saver(data_path, save_path, splits, train, shuffle=True):
+    if train :
+        train_sets, test_sets = cv(data_path, splits, shuffle=shuffle)
         # data_length = len(train_sets[1])*splits + len(test_sets[1])*splits*155
         # chunk_length = data_length // splits
         # print('data_length', data_length)
