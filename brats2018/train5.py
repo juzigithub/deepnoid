@@ -33,9 +33,9 @@ class Train:
         self.model = Model()
         self.p_eval = pe.performance()
 
-        if cfg.REBUILD_DATA:
+        if cfg.REBUILD_TASK1_DATA:
             print('')
-            print('>>> Data Saving Started')
+            print('>>> Task1 Data Saving Started')
             print('')
 
             dstime = time.time()
@@ -46,8 +46,26 @@ class Train:
             detime = time.time()
 
             print('')
-            print('>>> Data Saving Complete. Consumption Time :', detime - dstime)
+            print('>>> Task1 Data Saving Complete. Consumption Time :', detime - dstime)
             print('')
+
+        if cfg.REBUILD_TASK2_DATA:
+            print('')
+            print('>>> Task2 Data Saving Started')
+            print('')
+
+            dstime = time.time()
+            tl.files.exists_or_mkdir(cfg.SAVE_TASK2_DATA_PATH)
+
+            self.survival_id_list = loader.survival_data_saver(cfg.HGG_DATA_PATH, cfg.SURVIVAL_CSV_PATH, cfg.SAVE_SURVIVAL_DATA_PATH, train=cfg.TRAIN_YN)
+
+            detime = time.time()
+
+            print('')
+            print('>>> Task2 Data Saving Complete. Consumption Time :', detime - dstime)
+            print('')
+        else:
+            self.survival_id_list = loader.survival_id_extractor(cfg.SURVIVAL_CSV_PATH)
 
         # make paths
         *self.train_start_time, _, _, _, _ = time.localtime()
@@ -110,13 +128,14 @@ class Train:
             tc_total_result_list = []
             wt_total_result_list = []
 
-            for idx in range(cfg.SPLITS):
-                split_start = time.time()
-                split_training_time = 0
+            task2_X = np.load(cfg.SAVE_SURVIVAL_DATA_PATH + 'task2_train_image.npy')
+            task2_Y = np.load(cfg.SAVE_SURVIVAL_DATA_PATH + 'task2_train_label.npy')
 
+            for idx in range(cfg.SPLITS):
+                split_training_time = 0
                 train_idx = [i for i in range(cfg.SPLITS) if i != idx]
-                # print('train_idx : ', train_idx)
                 val_idx = idx
+
                 train_X = np.concatenate(
                     [np.load(cfg.SAVE_DATA_PATH + 'brats_image_chunk_{}.npy'.format(i)) for i in train_idx], axis=0)
                 train_Y = np.concatenate(
@@ -147,58 +166,57 @@ class Train:
                     save_yn = (epoch == 0 or epoch + 1 == cfg.EPOCHS or epoch % cfg.SAVING_EPOCH == 0)
 
                     # Make folder in the saving path for qualified epochs
-                    tl.files.exists_or_mkdir('./img/epoch{}/result/'.format(str(epoch + 1)))
-                    tl.files.exists_or_mkdir('./img/epoch{}/mask/'.format(str(epoch + 1)))
-                    tl.files.exists_or_mkdir('./img/epoch{}/original/'.format(str(epoch + 1)))
+
 
 
                     if save_yn:
                         self._make_path(epoch)
 #########################################################
-                    # for batch in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
-                    #                                     batch_size=cfg.BATCH_SIZE, shuffle=True):
-                    #     batch_x, batch_y = batch
-                    #
-                    #     # make_one_hot
-                    #     key = np.array(cfg.TRAIN_LABEL)
-                    #     # [0,1,2,3]
-                    #     _, index = np.unique(batch_y, return_inverse=True)
-                    #     # 4 -> 3
-                    #     seg = key[index].reshape(batch_y.shape)
-                    #
-                    #     batch_y = np.eye(4)[seg]
-                    #
-                    #
-                    #     # step_time = time.time()
-                    #     tr_feed_dict = {self.model.X: batch_x,
-                    #                     self.model.Y: batch_y,
-                    #                     self.model.training: True,
-                    #                     self.model.drop_rate: 0.2}
-                    #
-                    #     # cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
-                    #     cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
-                    #
-                    #     bg, ncr, ed, et = sess.run([self.model.bg_loss, self.model.ncr_loss, self.model.ed_loss, self.model.et_loss],
-                    #                                feed_dict=tr_feed_dict)
-                    #     s = bg + ncr + ed + et
-                    #     print('bg', ( bg/s ) * 100)
-                    #     print('ncr', ( ncr/s ) * 100)
-                    #     print('ed', ( ed/s ) * 100)
-                    #     print('et', ( et/s ) * 100)
-                    #
-                    #     total_cost += cost
-                    #     step += 1
-                    #
-                    #     # print out current epoch, step and batch loss value
-                    #     self.result = 'Cross validation : {0} / {1}, Epoch: {2} / {3}, Step: {4} / {5}, Batch loss: {6}'.format((idx + 1),
-                    #                                                                                                             cfg.SPLITS,
-                    #                                                                                                             epoch + 1,
-                    #                                                                                                             cfg.EPOCHS,
-                    #                                                                                                             step,
-                    #                                                                                                             train_step,
-                    #                                                                                                             cost)
-                    #
-                    #     print(self.result)
+                    ################# train task1 ##################
+                    for batch in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
+                                                        batch_size=cfg.BATCH_SIZE, shuffle=True):
+                        batch_x, batch_y = batch
+
+                        # make_one_hot
+                        key = np.array(cfg.TRAIN_LABEL)
+                        # [0,1,2,3]
+                        _, index = np.unique(batch_y, return_inverse=True)
+                        # 4 -> 3
+                        seg = key[index].reshape(batch_y.shape)
+
+                        batch_y = np.eye(4)[seg]
+
+
+                        # step_time = time.time()
+                        tr_feed_dict = {self.model.X: batch_x,
+                                        self.model.Y: batch_y,
+                                        self.model.training: True,
+                                        self.model.drop_rate: 0.2}
+
+                        # cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
+                        cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
+
+                        bg, ncr, ed, et = sess.run([self.model.bg_loss, self.model.ncr_loss, self.model.ed_loss, self.model.et_loss],
+                                                   feed_dict=tr_feed_dict)
+                        s = bg + ncr + ed + et
+                        print('bg', ( bg/s ) * 100)
+                        print('ncr', ( ncr/s ) * 100)
+                        print('ed', ( ed/s ) * 100)
+                        print('et', ( et/s ) * 100)
+
+                        total_cost += cost
+                        step += 1
+
+                        # print out current epoch, step and batch loss value
+                        self.result = 'Cross validation : {0} / {1}, Epoch: {2} / {3}, Step: {4} / {5}, Batch loss: {6}'.format((idx + 1),
+                                                                                                                                cfg.SPLITS,
+                                                                                                                                epoch + 1,
+                                                                                                                                cfg.EPOCHS,
+                                                                                                                                step,
+                                                                                                                                train_step,
+                                                                                                                                cost)
+
+                        print(self.result)
                         # utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 ###################################################
                     et_one_epoch_result_list = []
@@ -206,6 +224,7 @@ class Train:
                     wt_one_epoch_result_list = []
                     print_img_idx = 0
                     # print_img = 1
+                    ################# validation task1 ##################
                     for batch in tl.iterate.minibatches(inputs=val_X, targets=val_Y,
                                                         batch_size=cfg.BATCH_SIZE, shuffle=False):
                         print_img_idx += 1
@@ -282,40 +301,37 @@ class Train:
                         #     print_img *= -1
                         #     print_img_idx = print_img_idx - 149
                         #################################################
-                        p = 0.00005
-                        for i in range(0, cfg.BATCH_SIZE, cfg.BATCH_SIZE//2):
-                            # et -> ncr
-                            ncr_mask = utils.masking_rgb(pred_print[1][i], color='blue')
-                            # tc -> ed
-                            ed_mask = utils.masking_rgb(pred_print[2][i], color='red')
-                            # wt -> et
-                            et_mask = utils.masking_rgb(pred_print[3][i], color='green')
+                        if save_yn:
+                            for i in range(0, cfg.BATCH_SIZE, cfg.BATCH_SIZE//2):
+                                # et -> ncr
+                                ncr_mask = utils.masking_rgb(pred_print[1][i], color='blue')
+                                # tc -> ed
+                                ed_mask = utils.masking_rgb(pred_print[2][i], color='red')
+                                # wt -> et
+                                et_mask = utils.masking_rgb(pred_print[3][i], color='green')
 
-                            # et_tc_mask = cv2.addWeighted(et_mask, float(50) * p, tc_mask, float(50) * p, 0) * 255
-                            # et_tc_wt_mask = cv2.addWeighted(et_tc_mask, float(50) * p, wt_mask, float(50) * p, 0) * 255
-                            # tc -> wt -> et
+                                et_tc_wt = ed_mask + 2 * ncr_mask + 3 * et_mask
+                                shape = np.shape(et_tc_wt)
+                                # et_tc_wt_mask = et_mask + tc_mask + wt_mask
+                                et_tc_wt_mask = et_tc_wt.reshape([-1,3])
+                                len_mask = len(et_tc_wt_mask)
+                                et_tc_wt_mask = et_tc_wt_mask - (0.9*et_tc_wt_mask.max(1).reshape([len_mask, -1]) - et_tc_wt_mask.min(1).reshape([len_mask, -1]))
+                                et_tc_wt_mask = np.clip(et_tc_wt_mask, 0., 1.) * 255
+                                et_tc_wt_mask = et_tc_wt_mask.reshape(shape)
 
-                            et_tc_wt = ed_mask + 2 * ncr_mask + 3 * et_mask
-                            shape = np.shape(et_tc_wt)
-                            # et_tc_wt_mask = et_mask + tc_mask + wt_mask
-                            et_tc_wt_mask = et_tc_wt.reshape([-1,3])
-                            len_mask = len(et_tc_wt_mask)
-                            et_tc_wt_mask = et_tc_wt_mask - (0.9*et_tc_wt_mask.max(1).reshape([len_mask, -1]) - et_tc_wt_mask.min(1).reshape([len_mask, -1]))
-                            et_tc_wt_mask = np.clip(et_tc_wt_mask, 0., 1.) * 255
-                            et_tc_wt_mask = et_tc_wt_mask.reshape(shape)
+                                ori = np.transpose(batch_x, [-1, 0, 1, 2])
+                                ori = utils.masking_rgb(ori[0][i], color=None)
 
-                            ori = np.transpose(batch_x, [-1, 0, 1, 2])
-                            ori = utils.masking_rgb(ori[0][i], color=None)
+                                # result_image = cv2.addWeighted(ori, 0.0005, et_tc_wt_mask, 0.1, 0) * 255
+                                result_image = 0.5 * (ori + et_tc_wt_mask)
 
-                            result_image = cv2.addWeighted(ori, 0.5, et_tc_wt_mask, 1, 0) * 255
-
-                            cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
-                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_ncr.jpg'.format(epoch+1, print_img_idx, i+1), ncr_mask)
-                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_ed.jpg'.format(epoch+1, print_img_idx, i+1), ed_mask)
-                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_et.jpg'.format(epoch+1, print_img_idx, i+1), et_mask)
-                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_all.jpg'.format(epoch+1, print_img_idx, i+1), et_tc_wt_mask)
-                            if print_img_idx == 1:
-                                cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
+                                cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
+                                cv2.imwrite('./img/epoch{}/mask/batch{}_{}_ncr.jpg'.format(epoch+1, print_img_idx, i+1), ncr_mask)
+                                cv2.imwrite('./img/epoch{}/mask/batch{}_{}_ed.jpg'.format(epoch+1, print_img_idx, i+1), ed_mask)
+                                cv2.imwrite('./img/epoch{}/mask/batch{}_{}_et.jpg'.format(epoch+1, print_img_idx, i+1), et_mask)
+                                cv2.imwrite('./img/epoch{}/mask/batch{}_{}_all.jpg'.format(epoch+1, print_img_idx, i+1), et_tc_wt_mask)
+                                if print_img_idx == 1:
+                                    cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
 
                         ########################################
 
@@ -379,6 +395,57 @@ class Train:
                         print(">>> Model SAVED")
                         print('')
 
+
+
+
+                    ################################################# batch_size = 30 -> cfg.BATCH_SIZE 를 150의 약수로!
+                    # task2_et_list = []
+                    # task2_tc_list = []
+                    # task2_wt_list = []
+                    # img_cnt = 0
+                    # survival_id_idx = 0
+                    # for batch in tl.iterate.minibatches(inputs=task2_X, targets=task2_Y,
+                    #                                     batch_size=30, shuffle=False):
+                    #     print_img_idx += 1
+                    #     batch_x, batch_y = batch
+                    #
+                    #     # make_one_hot
+                    #     key = np.array(cfg.TRAIN_LABEL)
+                    #     _, index = np.unique(batch_y, return_inverse=True)
+                    #     seg = key[index].reshape(batch_y.shape)
+                    #     batch_y = np.eye(len(cfg.TRAIN_LABEL))[seg]
+                    #
+                    #
+                    #
+                    #     val_feed_dict = {self.model.X: batch_x,
+                    #                      self.model.Y: batch_y,
+                    #                      self.model.training: False,
+                    #                      self.model.drop_rate: 0}
+                    #
+                    #
+                    #     pred, label = sess.run([self.model.pred, self.model.Y], feed_dict=val_feed_dict)
+                    #     pred = np.argmax(pred, axis=-1)
+                    #     label = np.argmax(label, axis=-1)
+                    #
+                    #     pred_list, _ = utils.convert_to_subregions(pred, label,
+                    #                                                [cfg.ET_LABEL, cfg.TC_LABEL, cfg.WT_LABEL],
+                    #                                                one_hot=False)
+                    #     img_cnt += 30
+                    #
+                    #     task2_et_list.append(pred_list[0])
+                    #     task2_tc_list.append(pred_list[1])
+                    #     task2_wt_list.append(pred_list[2])
+                    #
+                    #     if img_cnt >= 150:
+                    #         img_cnt = 0
+                    #         # np.array(a).transpose([0, 2, 3, 1])
+                    #         survival_img = np.concatenate([[task2_et_list], [task2_tc_list], [task2_wt_list]], axis=0).transpose([0,2,3,1])
+                    #         task2_et_list = []
+                    #         task2_tc_list = []
+                    #         task2_wt_list = []
+                    #         np.save('./img/epoch{}/survival/{}.npy'.format(epoch+1, self.survival_id_list[survival_id_idx]), survival_img)
+                    ##################################################################################
+
                 et_one_split_mean = np.mean(np.array(et_one_split_result), axis=0)
                 tc_one_split_mean = np.mean(np.array(tc_one_split_result), axis=0)
                 wt_one_split_mean = np.mean(np.array(wt_one_split_result), axis=0)
@@ -388,12 +455,6 @@ class Train:
                 tc_total_result_list.append(tc_one_split_mean)
                 wt_total_result_list.append(wt_one_split_mean)
 
-
-
-
-                            # save validation image results
-                            # if save_yn:
-                            #     self._make_img(predicted_result, x_list, y_list, address, cfg.W, cfg.P)
                 self.result = '################# SPLIT #################\n' \
                               'Cross validation : {} / {}, Epoch: {} / {}, Training time: {:.2f}'  \
                               '\n1) ET >>> ' \
@@ -596,7 +657,10 @@ class Train:
 
         # create if there is no such file in a saving path
         tl.files.exists_or_mkdir(self.model_path + '{0}{1}'.format(cfg.PATH_SLASH, str(epoch + 1)))
-
+        tl.files.exists_or_mkdir('./img/epoch{}/result/'.format(str(epoch + 1)))
+        tl.files.exists_or_mkdir('./img/epoch{}/mask/'.format(str(epoch + 1)))
+        tl.files.exists_or_mkdir('./img/epoch{}/original/'.format(str(epoch + 1)))
+        tl.files.exists_or_mkdir('./img/epoch{}/survival/'.format(str(epoch + 1)))
         ### Save validation image result ###
 
         # val_img_save_path overlaps training image(original image) and predicted image and overlays mask image at affected area

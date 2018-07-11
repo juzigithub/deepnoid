@@ -30,6 +30,7 @@ GPU = '6'
 SAVE_DATA_PATH = './npy/train/'    # train
 # SAVE_DATA_PATH = './npy/validation/' # validation
 # SAVE_DATA_PATH = './npy/test/'       # test
+SAVE_SURVIVAL_DATA_PATH = './npy/task2/'
 HGG_DATA_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/HGG/'
 LGG_DATA_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/LGG/'
 VAL_DATA_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Validation/'
@@ -49,7 +50,8 @@ SURVIVAL_CSV_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_
 
 ###  File setting ###
 DATA_FILE_TYPE = 'npy'
-REBUILD_DATA = False
+REBUILD_TASK1_DATA = False
+REBUILD_TASK2_DATA = False
 TRAIN_YN = True if 'train' in SAVE_DATA_PATH else False
 PATH_SLASH = '/' if MODE == 'linux' else '\\'
 IMG_SIZE = [192, 160]
