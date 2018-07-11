@@ -115,7 +115,7 @@ class Train:
                 split_training_time = 0
 
                 train_idx = [i for i in range(cfg.SPLITS) if i != idx]
-                print('train_idx : ', train_idx)
+                # print('train_idx : ', train_idx)
                 val_idx = idx
                 train_X = np.concatenate(
                     [np.load(cfg.SAVE_DATA_PATH + 'brats_image_chunk_{}.npy'.format(i)) for i in train_idx], axis=0)
@@ -300,7 +300,7 @@ class Train:
                             # et_tc_wt_mask = et_mask + tc_mask + wt_mask
                             et_tc_wt_mask = et_tc_wt.reshape([-1,3])
                             len_mask = len(et_tc_wt_mask)
-                            et_tc_wt_mask = et_tc_wt_mask - (et_tc_wt_mask.max(1).reshape([len_mask, -1]) - 1)
+                            et_tc_wt_mask = et_tc_wt_mask - (0.9*et_tc_wt_mask.max(1).reshape([len_mask, -1]) - et_tc_wt_mask.min(1).reshape([len_mask, -1]))
                             et_tc_wt_mask = np.clip(et_tc_wt_mask, 0., 1.) * 255
                             et_tc_wt_mask = et_tc_wt_mask.reshape(shape)
 
