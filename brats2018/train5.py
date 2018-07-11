@@ -197,7 +197,7 @@ class Train:
                     #                                                                                                             step,
                     #                                                                                                             train_step,
                     #                                                                                                             cost)
-                    # 
+                    #
                     #     print(self.result)
                         # utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 ###################################################

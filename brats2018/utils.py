@@ -216,7 +216,7 @@ def iou_coe(output, target, smooth=1e-5):
     return iou, inse, pre
 
 
-def cal_result(pred, label, one_hot=False):
+def cal_result(pred, label, one_hot=False, e=1e-6):
     # convert one-hot labels to multiple labels
     if one_hot:
         _pred = np.argmax(pred, axis=-1)
@@ -241,11 +241,11 @@ def cal_result(pred, label, one_hot=False):
     print('TP,FP,FN,TN',TP, FP, FN, TN)
 
     # accuracy, sensitivity, specificity, mean iou, dice coefficient, hausdorff
-    acc = (TP + TN) / (TP + FP + FN + TN)
-    sens = TP / (TP + FN)
-    spec = TN / (TN + FP)
-    miou = TP / (FP + FN + TP)
-    dice = (2 * TP) / (2 * TP + FP + FN)
+    acc = (TP + TN) / (TP + FP + FN + TN + e)
+    sens = TP / (TP + FN + e)
+    spec = TN / (TN + FP + e)
+    miou = TP / (FP + FN + TP + e)
+    dice = (2 * TP) / (2 * TP + FP + FN + e)
     hdorff = max(directed_hausdorff(_pred2, _label2)[0], directed_hausdorff(_label2, _pred2)[0])
 
     return [acc, sens, spec, miou, dice, hdorff]
