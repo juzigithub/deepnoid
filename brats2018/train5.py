@@ -295,21 +295,38 @@ class Train:
                             # et_tc_wt_mask = cv2.addWeighted(et_tc_mask, float(50) * p, wt_mask, float(50) * p, 0) * 255
                             # tc -> wt -> et
 
-
+                            et_tc_wt = ed_mask + 2 * ncr_mask + 3 * et_mask
+                            shape = np.shape(et_tc_wt)
                             # et_tc_wt_mask = et_mask + tc_mask + wt_mask
+                            et_tc_wt_mask = et_tc_wt.reshape([-1,3])
+                            len_mask = len(et_tc_wt_mask)
+                            et_tc_wt_mask = et_tc_wt_mask - (et_tc_wt_mask.max(1).reshape([len_mask, -1]) - 1)
+                            et_tc_wt_mask = np.clip(et_tc_wt_mask, 0., 1.) * 255
+                            et_tc_wt_mask = et_tc_wt_mask.reshape(shape)
 
-
+                            # a = np.array([[1, 2, 3],
+                            #               [0, 2, 3],
+                            #               [1, 0, 3],
+                            #               [0, 0, 3],
+                            #               [1, 2, 0]])
+                            # s = len(a)
+                            # print(s)
+                            # b = a - (a.max(1).reshape([s, -1]) - 1)
+                            # b = np.clip(b, 0., 1.)
+                            # print(b * 255)
 
                             ori = np.transpose(batch_x, [-1, 0, 1, 2])
                             ori = utils.masking_rgb(ori[0][i], color=None)
 
-                            # result_image = cv2.addWeighted(ori, float(100 - 60) * p, et_tc_wt_mask, float(60) * p, 0) * 255
 
-                            # cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
+
+                            result_image = cv2.addWeighted(ori, float(100 - 60) * p, et_tc_wt_mask, float(60) * p, 0) * 255
+
+                            cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
                             cv2.imwrite('./img/epoch{}/mask/batch{}_{}_ncr.jpg'.format(epoch+1, print_img_idx, i+1), ncr_mask)
                             cv2.imwrite('./img/epoch{}/mask/batch{}_{}_ed.jpg'.format(epoch+1, print_img_idx, i+1), ed_mask)
                             cv2.imwrite('./img/epoch{}/mask/batch{}_{}_et.jpg'.format(epoch+1, print_img_idx, i+1), et_mask)
-                            # cv2.imwrite('./img/epoch{}/mask/batch{}_{}_all.jpg'.format(epoch+1, print_img_idx, i+1), et_tc_wt_mask)
+                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_all.jpg'.format(epoch+1, print_img_idx, i+1), et_tc_wt_mask)
                             if print_img_idx == 1:
                                 cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
 
@@ -568,8 +585,8 @@ class Train:
         # raw_val_img_save_path is saving path for predicted image and label_val_img_save_path is for label image
         # save image and model at the first epoch, final epoch and multiples of SAVING_EPOCH
 
-        dir_name = ['merged', 'pred', 'label', 'compare']
-        self.path_list = [(self.img_path + '{0}{1}{0}' + name).format(cfg.PATH_SLASH, str(epoch + 1)) for name in dir_name]
+        # dir_name = ['merged', 'pred', 'label', 'compare']
+        # self.path_list = [(self.img_path + '{0}{1}{0}' + name).format(cfg.PATH_SLASH, str(epoch + 1)) for name in dir_name]
 
 if __name__ == "__main__":
     trainer = Train()
