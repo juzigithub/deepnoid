@@ -74,7 +74,7 @@ class Test:
             test_X = np.load(cfg.SAVE_VALID_DATA_PATH + 'brats_val_image.npy')
 
             img_idx = 0
-            img_list = np.array([])
+            img_list = []
             save_idx = 0
             for batch in tl.iterate.minibatches(inputs=test_X, targets=test_X,
                                                 batch_size=50, shuffle=False):
@@ -92,15 +92,18 @@ class Test:
                 pred[pred == 3] = 4
 
                 # data1 = np.pad(data, ((73, 74), (106, 107), (0, 0)), 'constant')
-                zero_padded = np.pad(pred, ((3, 2), (30, 18), (41, 39)), 'constant')
-                img_list = np.append(img_list, zero_padded, axis=0)
+                zero_padded = np.pad(pred, ((3, 2), (30, 18), (41, 39)), 'constant').tolist()
+                img_list.append(zero_padded)
 
                 if img_idx == 3:
-                    # img_list = np.array(img_list).reshape([-1, 240, 240])
+                    img_list = np.array(img_list).reshape([-1, 240, 240])
                     print(np.shape(img_list))
                     img_list.transpose([2,1,0])
                     print(np.shape(img_list))
                     np.save('./img/test/for_nifti/{}.npy'.format(self.patient_id_list[save_idx]), img_list)
+                    img_list = []
+                    img_idx = 0
+                    save_idx += 1
                 # _, index = np.unique(pred, return_inverse=True)
                 # seg = key[index].reshape(pred.shape)
                 # pred_print = np.eye(len(cfg.TRAIN_LABEL))[seg]
