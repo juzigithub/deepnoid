@@ -351,7 +351,7 @@ def data_saver(data_path, save_path, splits, train, shuffle=True):
         #     print(np.shape(train_sets_X))
         ##################################################
         test_sets_X, _ = get_normalized_img(test_sets, train=train)
-        print(np.shape(test_sets_X))
+        print('np.shape(test_sets_X)', np.shape(test_sets_X))
         np.save(save_path + 'brats_val_image.npy', test_sets_X)
         print('saved')
         # with open('./pickle.pkl', 'wb') as f:

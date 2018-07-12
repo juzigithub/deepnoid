@@ -143,6 +143,7 @@ class Test:
                 _, index = np.unique(pred, return_inverse=True)
                 seg = key[index].reshape(pred.shape)
                 pred_print = np.eye(len(cfg.TRAIN_LABEL))[seg]
+                print('pred_print',np.shape(pred_print))
                 pred_print = np.transpose(pred_print, [-1, 0, 1, 2])
 
                 pred_list, _ = utils.convert_to_subregions(pred, pred,
