@@ -96,10 +96,11 @@ class Test:
 
                 if img_idx == 3:
                     img_list = np.array(img_list).reshape([-1, 192, 160])
-                    zero_padded = np.pad(img_list, ((3, 2), (30, 18), (41, 39)), 'constant')
+                    img_list = np.transpose(img_list, [2,1,0])
+                    zero_padded = np.pad(img_list, ((41, 39), (30, 18), (3, 2)), 'constant')
 
                     print('1',np.shape(zero_padded))
-                    zero_padded = np.transpose(zero_padded, [2,1,0])
+                    # zero_padded = np.transpose(zero_padded, [2,1,0])
 
 
                     print('2', np.shape(zero_padded))
