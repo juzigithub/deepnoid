@@ -305,7 +305,7 @@ class Train:
                         #################################################
                         if save_yn:
                             for i in range(0, cfg.BATCH_SIZE, cfg.BATCH_SIZE//2):
-                                ncr_mask = utils.masking_rgb(pred_print[1][i], color='blue')
+                                ncr_mask = utils.masking_rgb(pred_print[1][i], color='red')
                                 ed_mask = utils.masking_rgb(pred_print[2][i], color='yellow')
                                 et_mask = utils.masking_rgb(pred_print[3][i], color='green')
                                 blue_mask = utils.masking_rgb(np.full(pred_print[3][i].shape, 1.), 'blue')
@@ -329,8 +329,7 @@ class Train:
                                 cv2.imwrite('./img/epoch{}/mask/batch{}_{}_ed.jpg'.format(epoch+1, print_img_idx, i+1), ed_mask)
                                 cv2.imwrite('./img/epoch{}/mask/batch{}_{}_et.jpg'.format(epoch+1, print_img_idx, i+1), et_mask)
                                 cv2.imwrite('./img/epoch{}/mask/batch{}_{}_all.jpg'.format(epoch+1, print_img_idx, i+1), et_tc_wt_mask)
-                                if epoch == 0 :
-                                    cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
+                                cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
 
                         ########################################
 
