@@ -576,6 +576,31 @@ def depthwise_separable_convlayer(name, inputs, channel_n, width_mul, group_n, a
 
     return l
 
+def depthwise_separable_convlayer_dr(name, inputs, channel_n, width_mul, group_n, drop_rate, act_fn, norm_type, training, idx,  rate=None):
+    # depthwise
+    depthwise_filter = tf.get_variable(name=name + 'depthwise_filter' + str(idx),
+                                       shape=[3, 3, inputs.get_shape()[-1], width_mul],
+                                       dtype=tf.float32,
+                                       initializer=initializer)
+    l = tf.nn.depthwise_conv2d(inputs, depthwise_filter, [1, 1, 1, 1], 'SAME', rate=rate,
+                               name=name + str(idx) + '_depthwise')
+    l = Normalization(l, norm_type, training, name + str(idx) + '_depthwise_norm', G=group_n)
+    l = activation(name + str(idx) + '_depthwise_act1', l, act_fn)
+    l = dropout(name + str(idx) + '_dropout2', l, drop_rate, training)
+
+    # pointwise
+    l = conv2D(name + str(idx) + '_pointwise', l, channel_n, [1, 1], [1, 1], padding='SAME')
+    l = Normalization(l, norm_type, training, name + str(idx) + '_pointwise_norm1', G=group_n)
+    l = activation(name + str(idx) + '_pointwise_act1', l, act_fn)
+    l = dropout(name + str(idx) + '_dropout2', l, drop_rate, training)
+
+    return l
+
+
+
+
+
+
 # shufflenet  (https://arxiv.org/abs/1707.01083)
 
 def channel_shuffle(name, inputs, group_n):
