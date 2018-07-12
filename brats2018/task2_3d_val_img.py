@@ -39,8 +39,6 @@ class Task2_label_maker:
 
         # make paths
         *self.train_start_time, _, _, _, _ = time.localtime()
-        self.result_txt = '{}_{}_{}_{}_{}.txt'.format(*self.train_start_time)
-        self.model_path = '.{0}model{0}train{0}{1}_{2}_{3}_{4}_{5}'.format(cfg.PATH_SLASH,*self.train_start_time)
         self.ckpt_path = '.{0}best{0}'.format(cfg.PATH_SLASH)
         self.log_path = '.{0}logs{0}{1}_{2}_{3}_{4}_{5}'.format(cfg.PATH_SLASH,*self.train_start_time)
         self._make_path()
