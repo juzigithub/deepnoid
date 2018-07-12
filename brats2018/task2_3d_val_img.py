@@ -100,12 +100,23 @@ class Task2_label_maker:
                     task2_tc_list = np.array(task2_tc_list).transpose([1,0,2,3,4]).reshape([1,-1,192,160])
                     task2_wt_list = np.array(task2_wt_list).transpose([1,0,2,3,4]).reshape([1,-1,192,160])
 
-                    survival_img = np.concatenate([task2_et_list, task2_tc_list, task2_wt_list], axis=0).transpose([0,2,3,1])
+                    ########### 192 160 150 ##########
+                    # survival_img = np.concatenate([task2_et_list, task2_tc_list, task2_wt_list], axis=0).transpose([0,2,3,1])
+                    ##################################
+
+                    ##########  240 240 155 ##########
+                    survival_img = np.concatenate([task2_et_list, task2_tc_list, task2_wt_list], axis=0).transpose([0,3,2,1])
+                    survival_img = np.pad(survival_img, ((0,0), (41, 39), (30, 18), (3, 2)), 'constant')
+                    survival_img = np.flip(survival_img, axis=1)
+                    survival_img = np.flip(survival_img, axis=2)
+                    ##################################
+
                     task2_et_list = []
                     task2_tc_list = []
                     task2_wt_list = []
                     np.save('./npy/gtr/{}.npy'.format(self.survival_id_list[survival_id_idx]), survival_img)
                     survival_id_idx += 1
+
             print("TESTING COMPLETED")
 
     def _make_path(self):
