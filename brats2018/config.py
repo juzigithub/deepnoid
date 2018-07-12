@@ -53,8 +53,8 @@ VAL_SURVIVAL_CSV_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_D
 
 ###  File setting ###
 DATA_FILE_TYPE = 'npy'
-REBUILD_TASK1_DATA = False
-REBUILD_TASK2_DATA = False
+REBUILD_TASK1_DATA = True      # train.py
+REBUILD_TASK2_DATA = True      # train.py
 REBUILD_TASK1_VAL_DATA = True
 REBUILD_TASK2_VAL_DATA = True
 RESTORE = False                # load weights file
