@@ -94,7 +94,7 @@ class Task2_label_maker:
             if self.restore:
                 saver.restore(sess, self.ckpt_path + 'brats.ckpt')
 
-            print("BEGIN TRAINING")
+            print("BEGIN TESTING")
             total_training_time = 0
 
             # et_total_result_list = []

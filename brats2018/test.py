@@ -69,8 +69,7 @@ class Test:
         self.log_path = '.{0}logs{0}{1}_{2}_{3}_{4}_{5}'.format(cfg.PATH_SLASH,*self.train_start_time)
         patient_path_list = tl.files.load_folder_list(cfg.VAL_DATA_PATH)
         self.patient_id_list = [os.path.basename(p) for p in patient_path_list]
-
-        print(self.patient_id_list)
+        # print(self.patient_id_list)
 
         with open('.{}config.py'.format(cfg.PATH_SLASH), 'rt') as f:
             self._make_path()
@@ -98,7 +97,7 @@ class Test:
             if self.restore:
                 saver.restore(sess, self.ckpt_path + 'brats.ckpt')
 
-            print("BEGIN TRAINING")
+            print("BEGIN TESTING")
             total_training_time = 0
 
             et_total_result_list = []
