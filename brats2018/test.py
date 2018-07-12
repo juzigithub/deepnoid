@@ -68,6 +68,8 @@ class Test:
         self.ckpt_path = '.{0}best{0}'.format(cfg.PATH_SLASH)
         # self.img_path = '.{0}imgs{0}{1}_{2}_{3}_{4}_{5}'.format(cfg.PATH_SLASH,*self.train_start_time)
         self.log_path = '.{0}logs{0}{1}_{2}_{3}_{4}_{5}'.format(cfg.PATH_SLASH,*self.train_start_time)
+        self.patient_id_list = tl.files.load_folder_list(cfg.VAL_DATA_PATH)
+        print(self.patient_id_list)
 
         with open('.{}config.py'.format(cfg.PATH_SLASH), 'rt') as f:
             self._make_path()
@@ -183,9 +185,9 @@ class Test:
                     result_image = 0.5 * (ori + et_tc_wt_mask + blue_mask)
 
                     cv2.imwrite('./img/test/result/batch{}_{}.jpg'.format(print_img_idx, i + 1), result_image)
-                    cv2.imwrite('./img/test/mask/batch{}_{}_ncr.jpg'.format(print_img_idx, i + 1), ncr_mask)
-                    cv2.imwrite('./img/test/mask/batch{}_{}_ed.jpg'.format(print_img_idx, i + 1), ed_mask)
-                    cv2.imwrite('./img/test/mask/batch{}_{}_et.jpg'.format(print_img_idx, i + 1), et_mask)
+                    # cv2.imwrite('./img/test/mask/batch{}_{}_ncr.jpg'.format(print_img_idx, i + 1), ncr_mask)
+                    # cv2.imwrite('./img/test/mask/batch{}_{}_ed.jpg'.format(print_img_idx, i + 1), ed_mask)
+                    # cv2.imwrite('./img/test/mask/batch{}_{}_et.jpg'.format(print_img_idx, i + 1), et_mask)
                     cv2.imwrite('./img/test/mask/batch{}_{}_all.jpg'.format(print_img_idx, i + 1), et_tc_wt_mask)
                     cv2.imwrite('./img/test/original/batch{}_{}.jpg'.format(print_img_idx, i + 1), ori)
                 ########################################
