@@ -73,14 +73,14 @@ class Test:
 
             test_X = np.load(cfg.SAVE_VALID_DATA_PATH + 'brats_val_image.npy')
 
-            print_img_idx = 0
-
+            img_idx = 0
+            img_list = []
+            save_idx = 0
             for batch in tl.iterate.minibatches(inputs=test_X, targets=test_X,
-                                                batch_size=cfg.BATCH_SIZE, shuffle=False):
+                                                batch_size=50, shuffle=False):
+                img_idx += 1
                 batch_start = time.time()
                 batch_x, _ = batch
-
-                key = np.array([0, 1, 2, 4])
 
                 test_feed_dict = {self.model.X: batch_x,
                                  self.model.Y: batch_x,
@@ -92,15 +92,15 @@ class Test:
                 pred[pred == 3] = 4
 
                 # data1 = np.pad(data, ((73, 74), (106, 107), (0, 0)), 'constant')
+                zero_padded = np.pad(pred, ((3, 2), (30, 18), (41, 39)), 'constant')
+                img_list.append(zero_padded)
 
-
-
-
-
-
-                zero_padded = np.pad(pred, ((3,2), (30,18), (41,39)), 'constant')
-                print(np.shape(zero_padded))
-
+                if img_idx == 3:
+                    img_list = np.array(img_list).reshape([-1, 240, 240])
+                    print(np.shape(img_list))
+                    img_list.transpose([2,1,0])
+                    print(np.shape(img_list))
+                    np.save('./img/test/for_nifti/{}.npy'.format(self.patient_id_list[save_idx]), img_list)
                 # _, index = np.unique(pred, return_inverse=True)
                 # seg = key[index].reshape(pred.shape)
                 # pred_print = np.eye(len(cfg.TRAIN_LABEL))[seg]
@@ -111,7 +111,6 @@ class Test:
                 #                                                     [cfg.ET_LABEL, cfg.TC_LABEL, cfg.WT_LABEL],
                 #                                                     one_hot=False)
 
-                print_img_idx += 1
 
                 # for i in range(0, cfg.BATCH_SIZE):
                 #     ncr_mask = utils.masking_rgb(pred_print[1][i], color='green')
