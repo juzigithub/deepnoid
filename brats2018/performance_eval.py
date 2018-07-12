@@ -1,11 +1,8 @@
 import tensorflow as tf
-import numpy as np
-
 
 class performance:
     def __init__(self):
         # 텐서보드 스칼라 서머리용 플레이스홀더
-        # self.acc = tf.placeholder(tf.float32)
         self.acc = tf.placeholder(tf.float32)
         self.sens = tf.placeholder(tf.float32)
         self.spec = tf.placeholder(tf.float32)

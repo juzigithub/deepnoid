@@ -1,9 +1,6 @@
 import tensorflow as tf
-
 import utils
 import config as cfg
-# import brats2018.utils as utils
-# import brats2018.config as cfg
 
 
 class Model:
@@ -45,17 +42,16 @@ class Model:
             for i in range(cfg.DEPTH):
                 pool_size_h //= 2
                 pool_size_w //= 2
-                # pool_size_h = pool_size_h if pool_size_h % 2 == 0 else pool_size_h - 1
-                # pool_size_w = pool_size_w if pool_size_w % 2 == 0 else pool_size_w - 1
-                self.down_conv[i] = utils.depthwise_separable_convlayer(name='dsconv' + str(i),
-                                                                        inputs=inputs,
-                                                                        channel_n=channel_n,
-                                                                        width_mul=cfg.WIDTH_MULTIPLIER,
-                                                                        group_n=cfg.GROUP_N,
-                                                                        act_fn=cfg.ACTIVATION_FUNC,
-                                                                        norm_type=cfg.NORMALIZATION_TYPE,
-                                                                        training=self.training,
-                                                                        idx=i)
+                for j in range(cfg.N_LAYERS[i]):
+                    self.down_conv[i] = utils.depthwise_separable_convlayer(name='dsconv_{}_{}_'.format(str(i),str(j)),
+                                                                            inputs=inputs,
+                                                                            channel_n=channel_n,
+                                                                            width_mul=cfg.WIDTH_MULTIPLIER,
+                                                                            group_n=cfg.GROUP_N,
+                                                                            act_fn=cfg.ACTIVATION_FUNC,
+                                                                            norm_type=cfg.NORMALIZATION_TYPE,
+                                                                            training=self.training,
+                                                                            idx=i)
                 print('down_conv', self.down_conv[i])
                 channel_n *= 2
                 self.down_pool[i] = utils.select_downsampling(name=str(i) + '_downsampling',
@@ -77,8 +73,6 @@ class Model:
                                            training=self.training)
 
         with tf.variable_scope('up'):
-            # pool_size_h = pool_size_h + 1 if pool_size_h % 2 == 0 else pool_size_h
-            # pool_size_w = pool_size_w + 1 if pool_size_w % 2 == 0 else pool_size_w
             for i in reversed(range(cfg.DEPTH)):
                 channel_n //= 2
                 pool_size_h *= 2
