@@ -557,7 +557,7 @@ def dense_block_v1(name, inputs, group_n, drop_rate, act_fn, norm_type, growth, 
 
 def depthwise_separable_convlayer(name, inputs, channel_n, width_mul, group_n, act_fn, norm_type, training, idx, rate=None):
     # depthwise
-    depthwise_filter = tf.get_variable(name='depthwise_filter' + str(idx),
+    depthwise_filter = tf.get_variable(name=name+'depthwise_filter' + str(idx),
                                        shape=[3, 3, inputs.get_shape()[-1], width_mul],
                                        dtype=tf.float32,
                                        initializer=initializer)
