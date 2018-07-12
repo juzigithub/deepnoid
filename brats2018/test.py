@@ -43,7 +43,7 @@ class Test:
             print('>>> Task1 Data Saving Complete. Consumption Time :', detime - dstime)
             print('')
 
-        if cfg.REBUILD_TASK1_VAL_DATA:
+        if cfg.REBUILD_TASK2_VAL_DATA:
             print('')
             print('>>> Task2 Data Saving Started')
             print('')
