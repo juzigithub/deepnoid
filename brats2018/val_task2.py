@@ -112,6 +112,7 @@ class Task2_label_maker:
             img_cnt = 0
             survival_id_idx = 0
             print_img_idx = 0
+            print(self.survival_id_list)
             for batch in tl.iterate.minibatches(inputs=task2_X, targets=task2_X,
                                                 batch_size=30, shuffle=False):
                 print_img_idx += 1
@@ -133,7 +134,7 @@ class Task2_label_maker:
                 task2_et_list.append(pred_list[0])
                 task2_tc_list.append(pred_list[1])
                 task2_wt_list.append(pred_list[2])
-
+                print(img_cnt)
                 if img_cnt >= 150:
                     img_cnt = 0
                     task2_et_list = np.array(task2_et_list).transpose([1,0,2,3,4]).reshape([1,-1,192,160])
