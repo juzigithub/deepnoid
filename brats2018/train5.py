@@ -5,17 +5,17 @@ import os
 import time
 import cv2
 
-# import loader
-# import config as cfg
-# import performance_eval as pe
-# from model import Model
-# import utils
-
-import brats2018.utils as utils
-import brats2018.performance_eval as pe
-import brats2018.config as cfg
-import brats2018.loader as loader
-from brats2018.model import Model
+import loader
+import config as cfg
+import performance_eval as pe
+from model import Model
+import utils
+#
+# import brats2018.utils as utils
+# import brats2018.performance_eval as pe
+# import brats2018.config as cfg
+# import brats2018.loader as loader
+# from brats2018.model import Model
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU
