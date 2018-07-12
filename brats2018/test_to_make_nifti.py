@@ -89,9 +89,17 @@ class Test:
 
                 pred = sess.run(self.model.pred, feed_dict=test_feed_dict)
                 pred = np.argmax(pred, axis=-1)
-                print(pred)
                 pred[pred == 3] = 4
 
+                # data1 = np.pad(data, ((73, 74), (106, 107), (0, 0)), 'constant')
+
+
+
+
+
+
+                zero_padded = np.pad(pred, ((3,2), (30,18), (41,39)), 'constant')
+                print(np.shape(zero_padded))
 
                 # _, index = np.unique(pred, return_inverse=True)
                 # seg = key[index].reshape(pred.shape)
