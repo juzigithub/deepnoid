@@ -138,7 +138,7 @@ class Train:
                         tr_feed_dict = {self.model.X: batch_x,
                                         self.model.Y: batch_y,
                                         self.model.training: True,
-                                        self.model.drop_rate: 0.2}
+                                        self.model.drop_rate: cfg.DROPOUT_RATE}
 
                         cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
 
