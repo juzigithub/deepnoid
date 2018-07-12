@@ -109,10 +109,7 @@ class Test:
 
             ##############################################################
             # split_training_time = 0
-            test_idx = [i for i in range(cfg.SPLITS)]
-
-            test_X = np.concatenate(
-                [np.load(cfg.SAVE_VALID_DATA_PATH + 'brats_image_chunk_{}.npy'.format(i)) for i in test_idx], axis=0)
+            test_X = np.load(cfg.SAVE_VALID_DATA_PATH + 'brats_val_image.npy')
 
 
             # test_step = test_X.shape[0] // cfg.BATCH_SIZE

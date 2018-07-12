@@ -306,7 +306,7 @@ def survival_data_saver(data_path, csv_path, save_path, train=True):
 
 def data_saver(data_path, save_path, splits, train, shuffle=True):
     if train :
-        train_sets, test_sets = cv(data_path, splits, shuffle=shuffle)
+        _, test_sets = cv(data_path, splits, shuffle=shuffle)
         # data_length = len(train_sets[1])*splits + len(test_sets[1])*splits*155
         # chunk_length = data_length // splits
         # print('data_length', data_length)
