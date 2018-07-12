@@ -43,22 +43,22 @@ class Test:
             print('>>> Task1 Data Saving Complete. Consumption Time :', detime - dstime)
             print('')
 
-        if cfg.REBUILD_TASK2_VAL_DATA:
-            print('')
-            print('>>> Task2 Data Saving Started')
-            print('')
-
-            dstime = time.time()
-            tl.files.exists_or_mkdir(cfg.SAVE_SURVIVAL_DATA_PATH)
-
-            self.survival_id_list = loader.survival_data_saver(cfg.VAL_DATA_PATH, cfg.VAL_SURVIVAL_CSV_PATH, cfg.SAVE_SURVIVAL_DATA_PATH, train=False)
-            detime = time.time()
-
-            print('')
-            print('>>> Task2 Data Saving Complete. Consumption Time :', detime - dstime)
-            print('')
-        else:
-            self.survival_id_list = loader.survival_id_extractor(cfg.VAL_SURVIVAL_CSV_PATH, train=False)
+        # if cfg.REBUILD_TASK2_VAL_DATA:
+        #     print('')
+        #     print('>>> Task2 Data Saving Started')
+        #     print('')
+        #
+        #     dstime = time.time()
+        #     tl.files.exists_or_mkdir(cfg.SAVE_SURVIVAL_DATA_PATH)
+        #
+        #     self.survival_id_list = loader.survival_data_saver(cfg.VAL_DATA_PATH, cfg.VAL_SURVIVAL_CSV_PATH, cfg.SAVE_SURVIVAL_DATA_PATH, train=False)
+        #     detime = time.time()
+        #
+        #     print('')
+        #     print('>>> Task2 Data Saving Complete. Consumption Time :', detime - dstime)
+        #     print('')
+        # else:
+        #     self.survival_id_list = loader.survival_id_extractor(cfg.VAL_SURVIVAL_CSV_PATH, train=False)
 
         # make paths
         *self.train_start_time, _, _, _, _ = time.localtime()

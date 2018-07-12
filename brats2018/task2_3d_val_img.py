@@ -26,21 +26,21 @@ class Task2_label_maker:
         self.p_eval = pe.performance()
         self.restore = restore
 
-        if cfg.REBUILD_TASK1_VAL_DATA:
-            print('')
-            print('>>> Task1 Data Saving Started')
-            print('')
-
-            dstime = time.time()
-            tl.files.exists_or_mkdir(cfg.SAVE_VALID_DATA_PATH)
-
-            loader.data_saver([cfg.VAL_DATA_PATH], cfg.SAVE_VALID_DATA_PATH, cfg.SPLITS, train=False, shuffle=False)
-
-            detime = time.time()
-
-            print('')
-            print('>>> Task1 Data Saving Complete. Consumption Time :', detime - dstime)
-            print('')
+        # if cfg.REBUILD_TASK1_VAL_DATA:
+        #     print('')
+        #     print('>>> Task1 Data Saving Started')
+        #     print('')
+        #
+        #     dstime = time.time()
+        #     tl.files.exists_or_mkdir(cfg.SAVE_VALID_DATA_PATH)
+        #
+        #     loader.data_saver([cfg.VAL_DATA_PATH], cfg.SAVE_VALID_DATA_PATH, cfg.SPLITS, train=False, shuffle=False)
+        #
+        #     detime = time.time()
+        #
+        #     print('')
+        #     print('>>> Task1 Data Saving Complete. Consumption Time :', detime - dstime)
+        #     print('')
 
         if cfg.REBUILD_TASK2_VAL_DATA:
             print('')
