@@ -3,6 +3,7 @@ import tensorflow as tf
 import numpy as np
 from sklearn.metrics import confusion_matrix
 from scipy.spatial.distance import directed_hausdorff
+import nibabel
 
 #############################################################################################################################
 #                                                    Layer Functions                                                        #
@@ -427,6 +428,9 @@ def result_saver(path, data):
         f.write(data)
         f.write('\n')
 
+def save_array_as_nifty_volume(data, filename):
+   img = nibabel.Nifti1Image(data, affine=np.eye(4))
+   nibabel.save(img, filename)
 
 #############################################################################################################################
 #                                                      CNN Models                                                           #

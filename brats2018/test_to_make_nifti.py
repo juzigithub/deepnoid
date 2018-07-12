@@ -101,12 +101,12 @@ class Test:
                     zero_padded = np.flip(zero_padded,0)
                     zero_padded = np.flip(zero_padded,1)
 
-                    print('1',np.shape(zero_padded))
+                    # print('1',np.shape(zero_padded))
                     # zero_padded = np.transpose(zero_padded, [2,1,0])
 
 
-                    print('2', np.shape(zero_padded))
-                    np.save('./img/test/for_nifti/{}.npy'.format(self.patient_id_list[save_idx]), zero_padded)
+                    # print('2', np.shape(zero_padded))
+                    utils.save_array_as_nifty_volume('./img/test/for_nifti/{}.nii.gz'.format(self.patient_id_list[save_idx]), zero_padded)
                     img_list = []
                     img_idx = 0
                     save_idx += 1
