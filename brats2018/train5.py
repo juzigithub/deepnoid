@@ -305,9 +305,9 @@ class Train:
                         #################################################
                         if save_yn:
                             for i in range(0, cfg.BATCH_SIZE, cfg.BATCH_SIZE//2):
-                                ncr_mask = utils.masking_rgb(pred_print[1][i], color='red')
-                                ed_mask = utils.masking_rgb(pred_print[2][i], color='yellow')
-                                et_mask = utils.masking_rgb(pred_print[3][i], color='green')
+                                ncr_mask = utils.masking_rgb(pred_print[1][i], color='green')
+                                ed_mask = utils.masking_rgb(pred_print[2][i], color='blue')
+                                et_mask = utils.masking_rgb(pred_print[3][i], color='red')
                                 # blue_mask = utils.masking_rgb(np.full(pred_print[3][i].shape, 1.), 'blue')
 
                                 et_tc_wt = ed_mask + 2 * ncr_mask + 3 * et_mask
