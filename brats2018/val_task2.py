@@ -145,7 +145,7 @@ class Task2_label_maker:
                     task2_et_list = []
                     task2_tc_list = []
                     task2_wt_list = []
-                    np.save('./npy/gtr/survival/{}.npy'.format(self.survival_id_list[survival_id_idx]), survival_img)
+                    np.save('./npy/gtr/{}.npy'.format(self.survival_id_list[survival_id_idx]), survival_img)
                     survival_id_idx += 1
 
     def _make_path(self):
