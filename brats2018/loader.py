@@ -103,7 +103,7 @@ def get_normalized_img(data_sets, train):
     X = np.transpose(total_list[0:4], [1, 2, 3, 0])  # [n, img_size, img_size, 4(flair, t1, t1ce, t2)]
     Y = total_list[4] if train else []
 
-    return X, Y     
+    return X, Y
 
 # data_path = HGG_path , save_path = SAVE_SURVIVAL_DATA_PATH
 def survival_id_extractor(csv_path, train=True):

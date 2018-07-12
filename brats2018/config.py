@@ -18,8 +18,8 @@
 # MODE = 'window'
 # GPU = '1'
 # SAVE_TRAIN_DATA_PATH = '.\\npy\\train\\'         # train
-## SAVE_VALID_DATA_PATH = '.\\npy\\validation\\'   # validation
-## SAVE_TEST_DATA_PATH = '.\\npy\\test\\'         # test
+# SAVE_VALID_DATA_PATH = '.\\npy\\validation\\'   # validation
+# SAVE_TEST_DATA_PATH = '.\\npy\\test\\'         # test
 # HGG_DATA_PATH = "C:\\Users\\hshin\\Desktop\\MICCAI_BraTS_2018_Data_Training\\HGG"
 # LGG_DATA_PATH = "C:\\Users\\hshin\\Desktop\\MICCAI_BraTS_2018_Data_Training\\LGG"
 # SURVIVAL_CSV_PATH = "C:\\Users\\hshin\\Desktop\\MICCAI_BraTS_2018_Data_Training\\survival_data.csv"
@@ -61,7 +61,6 @@ RESTORE = False                # load weights file
 PATH_SLASH = '/' if MODE == 'linux' else '\\'
 N_FILES = 5
 
-
 ### Data info ###
 IMG_SIZE = [192, 160]
 RGB_CHANNEL = 1
@@ -71,78 +70,27 @@ ET_LABEL = [0, 0, 0, 1]
 TC_LABEL = [0, 1, 0, 1]
 WT_LABEL = [0, 1, 1, 1]
 
-
 ### Common ###
 EPOCHS = 10                     # epochs
 SPLITS = 5                      # cross validation cnt
-SAVING_EPOCH = 5
+SAVING_EPOCH = 5                # save model/img every SAVING_EPOCH
 BATCH_SIZE = 30
-INIT_N_FILTER = 24
+INIT_N_FILTER = 24              # output n_channel(n_filter) of first conv layer
 ACTIVATION_FUNC = 'elu'         # relu, lrelu, elu, prelu, selu
 LOSS_FUNC = 'dice'              # dice, focal, cross_entropy, dice_sum, huber, weighted_cross_entropy
-LAMBDA = [0.1, 0.2, 0.3, 0.4]   # [bg, ncr, ed, et]
-OPTIMIZER = 'rmsprop'              # adam, rmsprop, sgd
+LAMBDA = [0.1, 0.2, 0.3, 0.4]   # weight of each loss [bg, ncr, ed, et]
+OPTIMIZER = 'rmsprop'           # adam, rmsprop, sgd
 INIT_LEARNING_RATE = 0.0005
 DECAY_RATE = 0.9
 DECAY_STEP = 900
 DECAY_STAIRCASE = True
 NORMALIZATION_TYPE = 'batch'    # batch, group
 N_LAYERS = [1, 1, 1, 1]         # n_layers before each downsampling
-DEPTH = len(N_LAYERS)           # total downsampling cnt
+DEPTH = len(N_LAYERS)           # total downsampling cnt. if 4 then img size(192 -> 96 -> 48 -> 24 -> 12)
 DOWNSAMPLING_TYPE = 'neighbor'  # neighbor, maxpool, avgpool
 UPSAMPLING_TYPE = 'add'         # resize, transpose, add, concat
 GROUP_N = 4                     # group size of group_conv & group_norm
 DROPOUT_RATE = 0.5
 
-
-
-
-### Densenet ###
-GROWTH_RATE = 12
-THETA = 0.5
-
 ### Mobilenet ###
 WIDTH_MULTIPLIER = 1.0          # out_channel = in_channel * width_multiplier
-
-### Shufflenet ###
-UNIT_N = 2                      # number of shuffle unit
-
-### HENet ###
-GROUP_IN = GROUP_N              # number of groups in first group_conv
-GROUP_OUT = 6                   # number of groups in last group_conv
-REPEAT = 2                      # repeat * s1_block
-
-### Result ###
-PRED_MASKING_COLOR = 'red'      # red or green or blue
-LABEL_MASKING_COLOR = 'blue'    # red or green or blue
-W = 40
-P = 0.0001
-
-### Resnet ###
-RES_DEPTH = 3           # 3 for v2, 4 for v1
-MODE = 'bottleneck_v2_with_unet'  # possible block : residual_block_v1, bottleneck_block_v1,residual_block_v2, bottleneck_block_v2
-                        # possible mode :  bottleneck_v1_with_unet, bottleneck_v2_with_unet, residual_v1_with_unet, residual_v2_with_unet
-                        # possible resnet : bottleneck_v1, residual_v1, bottleneck_v2, residual_v2
-bottleneck = True
-v2_depth = 92
-choices = {
-      18: [2, 2, 2, 2],        # recommends residual_block_v1
-      34: [3, 4, 6, 3],        # recommends residual_block_v1
-      50: [3, 4, 6, 3],        # bottleneck_block_v1
-      101: [3, 4, 23, 3],     # bottleneck_block_v1
-      152: [3, 8, 36, 3],     # bottleneck_block_v1
-      200: [3, 24, 36, 3],    # bottleneck_block_v1
-      108: [12, 12, 12],       # v2, n = (depth - 2) / 9, for bottleneck_block_v2
-      164: [18, 18, 18],       # v2
-      1001: [111, 111, 111],   # v2
-      'another': [(v2_depth - 2) / 9, (v2_depth - 2) / 9,(v2_depth - 2) / 9]   #v2
-  }
-n_filter_chunks = choices[108]
-# n_filter_chunks = [3,4,6,3]         # or assign numbers of channels you want
-# n_filters = [16, 32, 64, 128]
-INIT_FILTER = 8
-kernel_size = 1
-stride = [1,1]
-n_blocks = 5
-n_classes = 2
-training = True
