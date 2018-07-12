@@ -343,9 +343,7 @@ class Test:
         tl.files.exists_or_mkdir(self.model_path + '{0}'.format(cfg.PATH_SLASH))
         tl.files.exists_or_mkdir('./img/test/result/')
         tl.files.exists_or_mkdir('./img/test/mask/')
-        tl.files.exists_or_mkdir('./img/test/survival/')
         tl.files.exists_or_mkdir('./img/test/original/')
-        tl.files.exists_or_mkdir('./img/test/task2/survival/')
         tl.files.exists_or_mkdir(self.model_path)
         tl.files.exists_or_mkdir(self.ckpt_path)
 
