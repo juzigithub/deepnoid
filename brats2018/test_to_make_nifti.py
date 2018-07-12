@@ -74,7 +74,7 @@ class Test:
             test_X = np.load(cfg.SAVE_VALID_DATA_PATH + 'brats_val_image.npy')
 
             img_idx = 0
-            img_list = []
+            img_list = np.array([])
             save_idx = 0
             for batch in tl.iterate.minibatches(inputs=test_X, targets=test_X,
                                                 batch_size=50, shuffle=False):
@@ -93,10 +93,10 @@ class Test:
 
                 # data1 = np.pad(data, ((73, 74), (106, 107), (0, 0)), 'constant')
                 zero_padded = np.pad(pred, ((3, 2), (30, 18), (41, 39)), 'constant')
-                img_list.append(zero_padded)
+                img_list = np.append(img_list, zero_padded, axis=0)
 
                 if img_idx == 3:
-                    img_list = np.array(img_list).reshape([-1, 240, 240])
+                    # img_list = np.array(img_list).reshape([-1, 240, 240])
                     print(np.shape(img_list))
                     img_list.transpose([2,1,0])
                     print(np.shape(img_list))
@@ -142,10 +142,7 @@ class Test:
 
     def _make_path(self):
         # create if there is no such file in a saving path
-        tl.files.exists_or_mkdir(self.model_path + '{0}'.format(cfg.PATH_SLASH))
         tl.files.exists_or_mkdir('./img/test/for_nifti/')
-        tl.files.exists_or_mkdir(self.model_path)
-        tl.files.exists_or_mkdir(self.ckpt_path)
 
 if __name__ == "__main__":
     tester = Test(restore=True)
