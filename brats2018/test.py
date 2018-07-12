@@ -161,16 +161,13 @@ class Test:
                 print_img_idx += 1
 
                 for i in range(0, cfg.BATCH_SIZE):
-                    # et -> ncr
-                    ncr_mask = utils.masking_rgb(pred_print[1][i], color='blue')
-                    # tc -> ed
-                    ed_mask = utils.masking_rgb(pred_print[2][i], color='red')
-                    # wt -> et
+                    ncr_mask = utils.masking_rgb(pred_print[1][i], color='red')
+                    ed_mask = utils.masking_rgb(pred_print[2][i], color='yellow')
                     et_mask = utils.masking_rgb(pred_print[3][i], color='green')
+                    blue_mask = utils.masking_rgb(np.full(pred_print[3][i].shape, 1.), 'blue')
 
                     et_tc_wt = ed_mask + 2 * ncr_mask + 3 * et_mask
                     shape = np.shape(et_tc_wt)
-                    # et_tc_wt_mask = et_mask + tc_mask + wt_mask
                     et_tc_wt_mask = et_tc_wt.reshape([-1, 3])
                     len_mask = len(et_tc_wt_mask)
                     et_tc_wt_mask = et_tc_wt_mask - (
@@ -183,7 +180,7 @@ class Test:
                     ori = utils.masking_rgb(ori[0][i], color=None)
 
                     # result_image = cv2.addWeighted(ori, 0.0005, et_tc_wt_mask, 0.1, 0) * 255
-                    result_image = 0.5 * (ori + et_tc_wt_mask)
+                    result_image = 0.5 * (ori + et_tc_wt_mask + blue_mask)
 
                     cv2.imwrite('./img/test/result/batch{}_{}.jpg'.format(print_img_idx, i + 1), result_image)
                     cv2.imwrite('./img/test/mask/batch{}_{}_ncr.jpg'.format(print_img_idx, i + 1), ncr_mask)
