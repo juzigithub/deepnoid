@@ -328,16 +328,16 @@ def data_saver(data_path, save_path, splits, train, shuffle=True):
 
 
     else :
-        train_sets = nii_names(data_path, train=False)
+        test_sets = nii_names(data_path, train=False)
         ##################################################
         # train_data_length = len(train_sets) // splits
         # for idx in range(splits):
         #     train_sets_X, _ = get_normalized_img(train_sets[train_data_length * idx : train_data_length * (idx + 1)], train=train)
         #     print(np.shape(train_sets_X))
         ##################################################
-        train_sets_X, _ = get_normalized_img(train_sets, train=train)
-        print(np.shape(train_sets_X))
-        np.save('./brats_val_image.npy', train_sets_X)
+        test_sets_X, _ = get_normalized_img(test_sets, train=train)
+        print(np.shape(test_sets_X))
+        np.save(save_path + 'brats_val_image.npy', test_sets_X)
         print('saved')
         # with open('./pickle.pkl', 'wb') as f:
         #     cpickle.dump(train_sets_X, f, protocol=4)
