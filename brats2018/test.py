@@ -70,11 +70,12 @@ class Test:
         patient_path_list = tl.files.load_folder_list(cfg.VAL_DATA_PATH)
         self.patient_id_list = [os.path.basename(p) for p in patient_path_list]
         # print(self.patient_id_list)
+        self._make_path()
 
-        with open('.{}config.py'.format(cfg.PATH_SLASH), 'rt') as f:
-            self._make_path()
-            self.result = f.read()
-            utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
+        # with open('.{}config.py'.format(cfg.PATH_SLASH), 'rt') as f:
+        #     self._make_path()
+        #     self.result = f.read()
+        #     utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 
         # TB
         self.merged_summary = tf.summary.merge_all()
@@ -166,7 +167,7 @@ class Test:
                     ncr_mask = utils.masking_rgb(pred_print[1][i], color='red')
                     ed_mask = utils.masking_rgb(pred_print[2][i], color='yellow')
                     et_mask = utils.masking_rgb(pred_print[3][i], color='green')
-                    blue_mask = utils.masking_rgb(np.full(pred_print[3][i].shape, 1.), 'blue')
+                    # blue_mask = utils.masking_rgb(np.full(pred_print[3][i].shape, 1.), 'blue')
 
                     et_tc_wt = ed_mask + 2 * ncr_mask + 3 * et_mask
                     shape = np.shape(et_tc_wt)
@@ -182,7 +183,7 @@ class Test:
                     ori = utils.masking_rgb(ori[0][i], color=None)
 
                     # result_image = cv2.addWeighted(ori, 0.0005, et_tc_wt_mask, 0.1, 0) * 255
-                    result_image = 0.5 * (ori + et_tc_wt_mask + blue_mask)
+                    result_image = 0.7 * (ori + et_tc_wt_mask)
 
                     cv2.imwrite('./img/test/result/batch{}_{}.jpg'.format(print_img_idx, i + 1), result_image)
                     # cv2.imwrite('./img/test/mask/batch{}_{}_ncr.jpg'.format(print_img_idx, i + 1), ncr_mask)
