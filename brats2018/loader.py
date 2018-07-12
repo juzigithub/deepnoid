@@ -233,10 +233,9 @@ def survival_id_extractor(csv_path, train=True):
                     survival_ResectionStatus_list.append(content[3])
         else:
             for idx, content in enumerate(reader):
-                if content[2] == 'GTR':
-                    survival_id_list.append(content[0])
-                    survival_age_list.append(float(content[1]))
-                    survival_ResectionStatus_list.append(content[2])
+                survival_id_list.append(content[0])
+                survival_age_list.append(float(content[1]))
+                survival_ResectionStatus_list.append(content[2])
 
     return survival_id_list
 
@@ -258,10 +257,9 @@ def survival_data_saver(data_path, csv_path, save_path, train=True):
                     survival_ResectionStatus_list.append(content[3])
         else:
             for idx, content in enumerate(reader):
-                if content[2] == 'GTR':
-                    survival_id_list.append(content[0])
-                    survival_age_list.append(float(content[1]))
-                    survival_ResectionStatus_list.append(content[2])
+                survival_id_list.append(content[0])
+                survival_age_list.append(float(content[1]))
+                survival_ResectionStatus_list.append(content[2])
 
     file_list = []
     survival_path_list = [os.path.join(data_path, os.path.basename(p), os.path.basename(p)) for p in survival_id_list]
