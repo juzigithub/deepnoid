@@ -214,7 +214,7 @@ def get_normalized_img(data_sets, train):
     return X, Y     # , seg
 
 # data_path = HGG_path , save_path = SAVE_SURVIVAL_DATA_PATH
-def survival_id_extractor(csv_path):
+def survival_id_extractor(csv_path, train=True):
     survival_id_list = []
     survival_age_list = []
     survival_survival_list = []
@@ -223,12 +223,21 @@ def survival_id_extractor(csv_path):
     with open(csv_path, 'r') as f:
         reader = csv.reader(f)
         next(reader)
-        for idx, content in enumerate(reader):
-            if content[3] == 'GTR':
-                survival_id_list.append(content[0])
-                survival_age_list.append(float(content[1]))
-                survival_survival_list.append(int(content[2]))
-                survival_ResectionStatus_list.append(content[3])
+
+        if train:
+            for idx, content in enumerate(reader):
+                if content[3] == 'GTR':
+                    survival_id_list.append(content[0])
+                    survival_age_list.append(float(content[1]))
+                    survival_survival_list.append(int(content[2]))
+                    survival_ResectionStatus_list.append(content[3])
+        else:
+            for idx, content in enumerate(reader):
+                if content[2] == 'GTR':
+                    survival_id_list.append(content[0])
+                    survival_age_list.append(float(content[1]))
+                    survival_ResectionStatus_list.append(content[2])
+
     return survival_id_list
 
 def survival_data_saver(data_path, csv_path, save_path, train=True):
@@ -240,13 +249,19 @@ def survival_data_saver(data_path, csv_path, save_path, train=True):
     with open(csv_path, 'r') as f:
         reader = csv.reader(f)
         next(reader)
-        for idx, content in enumerate(reader):
-            if content[3] == 'GTR':
-                survival_id_list.append(content[0])
-                survival_age_list.append(float(content[1]))
-                survival_survival_list.append(int(content[2]))
-                if train:
+        if train :
+            for idx, content in enumerate(reader):
+                if content[3] == 'GTR':
+                    survival_id_list.append(content[0])
+                    survival_age_list.append(float(content[1]))
+                    survival_survival_list.append(int(content[2]))
                     survival_ResectionStatus_list.append(content[3])
+        else:
+            for idx, content in enumerate(reader):
+                if content[2] == 'GTR':
+                    survival_id_list.append(content[0])
+                    survival_age_list.append(float(content[1]))
+                    survival_ResectionStatus_list.append(content[2])
 
     file_list = []
     survival_path_list = [os.path.join(data_path, os.path.basename(p), os.path.basename(p)) for p in survival_id_list]

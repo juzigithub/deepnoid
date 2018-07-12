@@ -59,7 +59,7 @@ class Test:
             print('>>> Task2 Data Saving Complete. Consumption Time :', detime - dstime)
             print('')
         else:
-            self.survival_id_list = loader.survival_id_extractor(cfg.VAL_SURVIVAL_CSV_PATH)
+            self.survival_id_list = loader.survival_id_extractor(cfg.VAL_SURVIVAL_CSV_PATH, train=False)
 
         # make paths
         *self.train_start_time, _, _, _, _ = time.localtime()
