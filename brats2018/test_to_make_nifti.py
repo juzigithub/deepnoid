@@ -106,7 +106,7 @@ class Test:
 
 
                     # print('2', np.shape(zero_padded))
-                    utils.save_array_as_nifty_volume('./img/test/for_nifti/{}.nii.gz'.format(self.patient_id_list[save_idx]), zero_padded)
+                    utils.save_array_as_nifty_volume(zero_padded, './img/test/for_nifti/{}.nii.gz'.format(self.patient_id_list[save_idx]))
                     img_list = []
                     img_idx = 0
                     save_idx += 1

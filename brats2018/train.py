@@ -257,7 +257,7 @@ class Train:
                     print('wt_one_epoch_mean', wt_one_epoch_mean)
 
                     # print and save result of each epoch
-                    self.result = ' Cross validation : {} / {}, Epoch: {} / {}, Loss : {}, Training time: {:.2f}' \
+                    self.result = '\nCross validation : {} / {}, Epoch: {} / {}, Loss : {}, Training time: {:.2f}' \
                                   '\n1) ET >>> ' \
                                   '\n\t Accuracy : {:.4f}, Sensitivity : {:.4f}, Specificity : {:.4f}' \
                                   '\n\t mean_IoU : {:.4f}, Dice_score : {:.4f}, Hausdorff : {:.4f}' \
@@ -316,7 +316,7 @@ class Train:
                               '\n3) WT >>> ' \
                               '\n\t Accuracy : {:.4f}, Sensitivity : {:.4f}, Specificity : {:.4f}' \
                               '\n\t mean_IoU : {:.4f}, Dice_score : {:.4f}, Hausdorff : {:.4f}' \
-                              '#########################################'.format((idx + 1),
+                              '#########################################\n'.format((idx + 1),
                                                                                  cfg.SPLITS,
                                                                                  (epoch + 1),
                                                                                  cfg.EPOCHS,
