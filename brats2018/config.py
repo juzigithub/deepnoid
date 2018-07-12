@@ -6,71 +6,79 @@
 # Linux #
 # MODE = 'linux'
 # GPU = '1'
-# SAVE_DATA_PATH = './npy/train/'        # train
-## SAVE_DATA_PATH = './npy/validation/'  # validation
-## SAVE_DATA_PATH = './npy/test/'        # test
+# SAVE_TRAIN_DATA_PATH = './npy/train/'        # train
+# SAVE_VALID_DATA_PATH = './npy/validation/'  # validation
+# SAVE_TEST_DATA_PATH = './npy/test/'        # test
 # HGG_DATA_PATH = "/home/hshin255/MICCAI_BraTS_2018_Data_Training_for_test/HGG/"
 # LGG_DATA_PATH = "/home/hshin255/MICCAI_BraTS_2018_Data_Training_for_test/LGG/"
 # SURVIVAL_CSV_PATH = "/home/hshin255/MICCAI_BraTS_2018_Data_Training_for_test/survival_data.csv"
+# VAL_SURVIVAL_CSV_PATH = '####1231231############PATH_TO/survival_evaluation.csv##############123123########'
 
 # Window #
 # MODE = 'window'
 # GPU = '1'
-# SAVE_DATA_PATH = '.\\npy\\train\\'         # train
-## SAVE_DATA_PATH = '.\\npy\\validation\\'   # validation
-## SAVE_DATA_PATH = '.\\npy\\test\\'         # test
+# SAVE_TRAIN_DATA_PATH = '.\\npy\\train\\'         # train
+## SAVE_VALID_DATA_PATH = '.\\npy\\validation\\'   # validation
+## SAVE_TEST_DATA_PATH = '.\\npy\\test\\'         # test
 # HGG_DATA_PATH = "C:\\Users\\hshin\\Desktop\\MICCAI_BraTS_2018_Data_Training\\HGG"
 # LGG_DATA_PATH = "C:\\Users\\hshin\\Desktop\\MICCAI_BraTS_2018_Data_Training\\LGG"
 # SURVIVAL_CSV_PATH = "C:\\Users\\hshin\\Desktop\\MICCAI_BraTS_2018_Data_Training\\survival_data.csv"
+# VAL_SURVIVAL_CSV_PATH = '#########################PATH_TO\\survival_evaluation.csv#####################3'
 
 ## mspark ##
 # Linux #
 MODE = 'linux'
 GPU = '6'
-SAVE_DATA_PATH = './npy/train/'    # train
-# SAVE_DATA_PATH = './npy/validation/' # validation
-# SAVE_DATA_PATH = './npy/test/'       # test
+SAVE_TRAIN_DATA_PATH = './npy/train/'      # train
+SAVE_VALID_DATA_PATH = './npy/validation/' # validation
+SAVE_TEST_DATA_PATH = './npy/test/'        # test
 SAVE_SURVIVAL_DATA_PATH = './npy/task2/'
 HGG_DATA_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/HGG/'
 LGG_DATA_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/LGG/'
 VAL_DATA_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Validation/'
 SURVIVAL_CSV_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/survival_data.csv'
+VAL_SURVIVAL_CSV_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Validation/survival_evaluation.csv'
 
 # Window #
 # MODE = 'window'
 # GPU = '6'
-# SAVE_DATA_PATH = '.\\npy\\train\\'        # train
-## SAVE_DATA_PATH = '.\\npy\\validation\\'  # validation
-## SAVE_DATA_PATH = '.\\npy\\test\\'        # test
+# SAVE_TRAIN_DATA_PATH = '.\\npy\\train\\'        # train
+# SAVE_VALID_DATA_PATH = '.\\npy\\validation\\'  # validation
+# SAVE_TEST_DATA_PATH = '.\\npy\\test\\'        # test
 # HGG_DATA_PATH = 'D:\\dataset\\BRATS\\2018\\small_data\\HGG\\'
 # LGG_DATA_PATH = 'D:\\dataset\\BRATS\\2018\\small_data\\LGG\\'
 # VAL_DATA_PATH = 'D:\\dataset\\BRATS\\2018\\MICCAI_BraTS_2018_Data_Validation\\'
 # SURVIVAL_CSV_PATH = 'D:\\dataset\BRATS\\2018\\MICCAI_BraTS_2018_Data_Training\\survival_data.csv'
-
+# VAL_SURVIVAL_CSV_PATH = 'D:\\dataset\BRATS\\2018\\MICCAI_BraTS_2018_Data_Validation\\survival_evaluation.csv'
 
 ###  File setting ###
 DATA_FILE_TYPE = 'npy'
 REBUILD_TASK1_DATA = False
 REBUILD_TASK2_DATA = False
-TRAIN_YN = True if 'train' in SAVE_DATA_PATH else False
+REBUILD_TASK1_VAL_DATA = True
+REBUILD_TASK2_VAL_DATA = True
+RESTORE = False                # load weights file
 PATH_SLASH = '/' if MODE == 'linux' else '\\'
+N_FILES = 5
+
+
+### Data info ###
 IMG_SIZE = [192, 160]
-VALIDATION_RATIO = 15
-SPLITS = 5
-N_FILES = 3
 RGB_CHANNEL = 1
 N_CLASS = 4
+TRAIN_LABEL = [0, 1, 2, 3]
+ET_LABEL = [0, 0, 0, 1]
+TC_LABEL = [0, 1, 0, 1]
+WT_LABEL = [0, 1, 1, 1]
 
 
 ### Common ###
-
-FIRST_DOWNSAMPLING = False
-EPOCHS = 100
+EPOCHS = 10                     # epochs
+SPLITS = 5                      # cross validation cnt
 SAVING_EPOCH = 5
-BATCH_SIZE = 28
-BUFFER_SIZE = 3000
+BATCH_SIZE = 30
 INIT_N_FILTER = 24
-ACTIVATION_FUNC = 'elu'        # relu, lrelu, elu, prelu, selu
+ACTIVATION_FUNC = 'elu'         # relu, lrelu, elu, prelu, selu
 LOSS_FUNC = 'dice'              # dice, focal, cross_entropy, dice_sum, huber, weighted_cross_entropy
 LAMBDA = [0.1, 0.2, 0.3, 0.4]   # [bg, ncr, ed, et]
 OPTIMIZER = 'rmsprop'              # adam, rmsprop, sgd
@@ -79,20 +87,14 @@ DECAY_RATE = 0.9
 DECAY_STEP = 900
 DECAY_STAIRCASE = True
 NORMALIZATION_TYPE = 'batch'    # batch, group
+N_LAYERS = [1, 1, 1, 1]         # n_layers before each downsampling
+DEPTH = len(N_LAYERS)           # total downsampling cnt
 DOWNSAMPLING_TYPE = 'neighbor'  # neighbor, maxpool, avgpool
 UPSAMPLING_TYPE = 'add'         # resize, transpose, add, concat
-GROUP_N = 8                     # group size of group_conv & group_norm
+GROUP_N = 4                     # group size of group_conv & group_norm
 DROPOUT_RATE = 0.5
 
-TRAIN_LABEL = [0, 1, 2, 3]
-ET_LABEL = [0, 0, 0, 1]
-TC_LABEL = [0, 1, 0, 1]
-WT_LABEL = [0, 1, 1, 1]
-# et_key = np.array([0, 0, 0, 1], dtype=np.float32)
-# tc_key = np.array([0, 1, 0, 1], dtype=np.float32)
-# wt_key = np.array([0, 1, 1, 1], dtype=np.float32)
-### Unet ###
-DEPTH = 4
+
 
 
 ### Densenet ###
@@ -144,30 +146,3 @@ stride = [1,1]
 n_blocks = 5
 n_classes = 2
 training = True
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-'''
-references
-
-https://github.com/zsdonghao/u-net-brain-tumor/blob/master/prepare_data_with_valid.py#L18
-
-'''

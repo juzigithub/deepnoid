@@ -1,37 +1,33 @@
 import numpy as np
 import tensorflow as tf
 import tensorlayer as tl
-
 import os
-# import loadutils
 import time
-# import resnet
-# import deeplab
-
-# from resnet import Model
-
-import loader
-import config as cfg
-import performance_eval as pe
-from model import Model
-import utils
 import cv2
-# import brats2018.utils as utils
-# import brats2018.performance_eval as pe
-# import brats2018.config as cfg
-# import brats2018.loader as loader
-# from brats2018.model import Model
+
+# import loader
+# import config as cfg
+# import performance_eval as pe
+# from model import Model
+# import utils
+
+import brats2018.utils as utils
+import brats2018.performance_eval as pe
+import brats2018.config as cfg
+import brats2018.loader as loader
+from brats2018.model import Model
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU
 
 class Train:
-    def __init__(self):
+    def __init__(self, restore=False):
 
         # self.data_loader = loader.DataLoader()
         # self.model = resnet.Model()
         self.model = Model()
         self.p_eval = pe.performance()
+        self.restore = restore
 
         if cfg.REBUILD_TASK1_DATA:
             print('')
@@ -39,9 +35,9 @@ class Train:
             print('')
 
             dstime = time.time()
-            tl.files.exists_or_mkdir(cfg.SAVE_DATA_PATH)
+            tl.files.exists_or_mkdir(cfg.SAVE_TRAIN_DATA_PATH)
 
-            loader.data_saver([cfg.HGG_DATA_PATH], cfg.SAVE_DATA_PATH, cfg.SPLITS, train=cfg.TRAIN_YN)
+            loader.data_saver([cfg.HGG_DATA_PATH], cfg.SAVE_TRAIN_DATA_PATH, cfg.SPLITS, train=True)
 
             detime = time.time()
 
@@ -55,9 +51,9 @@ class Train:
             print('')
 
             dstime = time.time()
-            tl.files.exists_or_mkdir(cfg.SAVE_TASK2_DATA_PATH)
+            tl.files.exists_or_mkdir(cfg.SAVE_SURVIVAL_DATA_PATH)
 
-            self.survival_id_list = loader.survival_data_saver(cfg.HGG_DATA_PATH, cfg.SURVIVAL_CSV_PATH, cfg.SAVE_SURVIVAL_DATA_PATH, train=cfg.TRAIN_YN)
+            self.survival_id_list = loader.survival_data_saver(cfg.HGG_DATA_PATH, cfg.SURVIVAL_CSV_PATH, cfg.SAVE_SURVIVAL_DATA_PATH, train=True)
 
             detime = time.time()
 
@@ -70,12 +66,14 @@ class Train:
         # make paths
         *self.train_start_time, _, _, _, _ = time.localtime()
         self.result_txt = '{}_{}_{}_{}_{}.txt'.format(*self.train_start_time)
-        self.model_path = '.{0}model{0}{1}_{2}_{3}_{4}_{5}'.format(cfg.PATH_SLASH,*self.train_start_time)
+        self.model_path = '.{0}model{0}train{0}{1}_{2}_{3}_{4}_{5}'.format(cfg.PATH_SLASH,*self.train_start_time)
+        self.ckpt_path = '.{0}best{0}'.format(cfg.PATH_SLASH)
         self.img_path = '.{0}imgs{0}{1}_{2}_{3}_{4}_{5}'.format(cfg.PATH_SLASH,*self.train_start_time)
         self.log_path = '.{0}logs{0}{1}_{2}_{3}_{4}_{5}'.format(cfg.PATH_SLASH,*self.train_start_time)
 
         with open('.{}config.py'.format(cfg.PATH_SLASH), 'rt') as f:
             tl.files.exists_or_mkdir(self.model_path)
+            tl.files.exists_or_mkdir(self.ckpt_path)
             self.result = f.read()
             utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 
@@ -121,27 +119,31 @@ class Train:
             # initialize global variables from session. Need to assign initial values for each variables
             sess.run(tf.global_variables_initializer())
 
+            if self.restore:
+                saver.restore(sess, self.ckpt_path + 'brats.ckpt')
+
             print("BEGIN TRAINING")
             total_training_time = 0
 
             et_total_result_list = []
             tc_total_result_list = []
             wt_total_result_list = []
-
-            task2_X = np.load(cfg.SAVE_SURVIVAL_DATA_PATH + 'task2_train_image.npy')
-            task2_Y = np.load(cfg.SAVE_SURVIVAL_DATA_PATH + 'task2_train_label.npy')
-
+            ##############################################################
+            ################### for task2 ################################
+            # task2_X = np.load(cfg.SAVE_SURVIVAL_DATA_PATH + 'task2_train_image.npy')
+            # task2_Y = np.load(cfg.SAVE_SURVIVAL_DATA_PATH + 'task2_train_label.npy')
+            ##############################################################
             for idx in range(cfg.SPLITS):
                 split_training_time = 0
                 train_idx = [i for i in range(cfg.SPLITS) if i != idx]
                 val_idx = idx
 
                 train_X = np.concatenate(
-                    [np.load(cfg.SAVE_DATA_PATH + 'brats_image_chunk_{}.npy'.format(i)) for i in train_idx], axis=0)
+                    [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_chunk_{}.npy'.format(i)) for i in train_idx], axis=0)
                 train_Y = np.concatenate(
-                    [np.load(cfg.SAVE_DATA_PATH + 'brats_label_chunk_{}.npy'.format(i)) for i in train_idx], axis=0)
-                val_X = np.load(cfg.SAVE_DATA_PATH + 'brats_image_chunk_{}.npy'.format(val_idx))
-                val_Y = np.load(cfg.SAVE_DATA_PATH + 'brats_label_chunk_{}.npy'.format(val_idx))
+                    [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_chunk_{}.npy'.format(i)) for i in train_idx], axis=0)
+                val_X = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_chunk_{}.npy'.format(val_idx))
+                val_Y = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_chunk_{}.npy'.format(val_idx))
 
 
                 train_step = train_X.shape[0] // cfg.BATCH_SIZE
@@ -303,16 +305,13 @@ class Train:
                         #################################################
                         if save_yn:
                             for i in range(0, cfg.BATCH_SIZE, cfg.BATCH_SIZE//2):
-                                # et -> ncr
                                 ncr_mask = utils.masking_rgb(pred_print[1][i], color='blue')
-                                # tc -> ed
-                                ed_mask = utils.masking_rgb(pred_print[2][i], color='red')
-                                # wt -> et
+                                ed_mask = utils.masking_rgb(pred_print[2][i], color='yellow')
                                 et_mask = utils.masking_rgb(pred_print[3][i], color='green')
+                                blue_mask = utils.masking_rgb(np.full(pred_print[3][i].shape, 1.), 'blue')
 
                                 et_tc_wt = ed_mask + 2 * ncr_mask + 3 * et_mask
                                 shape = np.shape(et_tc_wt)
-                                # et_tc_wt_mask = et_mask + tc_mask + wt_mask
                                 et_tc_wt_mask = et_tc_wt.reshape([-1,3])
                                 len_mask = len(et_tc_wt_mask)
                                 et_tc_wt_mask = et_tc_wt_mask - (0.9*et_tc_wt_mask.max(1).reshape([len_mask, -1]) - et_tc_wt_mask.min(1).reshape([len_mask, -1]))
@@ -323,14 +322,14 @@ class Train:
                                 ori = utils.masking_rgb(ori[0][i], color=None)
 
                                 # result_image = cv2.addWeighted(ori, 0.0005, et_tc_wt_mask, 0.1, 0) * 255
-                                result_image = 0.5 * (ori + et_tc_wt_mask)
+                                result_image = 0.5 * (ori + et_tc_wt_mask + blue_mask)
 
                                 cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
                                 cv2.imwrite('./img/epoch{}/mask/batch{}_{}_ncr.jpg'.format(epoch+1, print_img_idx, i+1), ncr_mask)
                                 cv2.imwrite('./img/epoch{}/mask/batch{}_{}_ed.jpg'.format(epoch+1, print_img_idx, i+1), ed_mask)
                                 cv2.imwrite('./img/epoch{}/mask/batch{}_{}_et.jpg'.format(epoch+1, print_img_idx, i+1), et_mask)
                                 cv2.imwrite('./img/epoch{}/mask/batch{}_{}_all.jpg'.format(epoch+1, print_img_idx, i+1), et_tc_wt_mask)
-                                if print_img_idx == 1:
+                                if epoch == 0 :
                                     cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
 
                         ########################################
@@ -659,8 +658,10 @@ class Train:
         tl.files.exists_or_mkdir(self.model_path + '{0}{1}'.format(cfg.PATH_SLASH, str(epoch + 1)))
         tl.files.exists_or_mkdir('./img/epoch{}/result/'.format(str(epoch + 1)))
         tl.files.exists_or_mkdir('./img/epoch{}/mask/'.format(str(epoch + 1)))
-        tl.files.exists_or_mkdir('./img/epoch{}/original/'.format(str(epoch + 1)))
         tl.files.exists_or_mkdir('./img/epoch{}/survival/'.format(str(epoch + 1)))
+        if epoch == 0:
+            tl.files.exists_or_mkdir('./img/epoch{}/original/'.format(str(epoch + 1)))
+
         ### Save validation image result ###
 
         # val_img_save_path overlaps training image(original image) and predicted image and overlays mask image at affected area
@@ -671,5 +672,5 @@ class Train:
         # self.path_list = [(self.img_path + '{0}{1}{0}' + name).format(cfg.PATH_SLASH, str(epoch + 1)) for name in dir_name]
 
 if __name__ == "__main__":
-    trainer = Train()
+    trainer = Train(cfg.RESTORE)
     trainer.train()

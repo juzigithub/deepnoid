@@ -923,10 +923,15 @@ def masking_rgb(img, color=None):
         _img = np.expand_dims(img, axis=3)
     else:
         _img = img
+    rgb_list = [np.zeros(np.shape(_img)) for _ in range(3)]
 
-    if color != None:
+    if color == 'yellow':
+        rgb_list[1] = _img
+        rgb_list[2] = _img
+        B, G, R = rgb_list
+
+    elif color != None:
         rgb_dic = {'blue': 0, 'green': 1, 'red': 2}
-        rgb_list = [np.zeros(np.shape(_img)) for _ in range(3)]
         rgb_list[rgb_dic[color]] = _img
         B, G, R = rgb_list
     else:

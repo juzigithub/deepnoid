@@ -3,11 +3,10 @@ import os
 from sklearn.model_selection import KFold
 import numpy as np
 import nibabel
-import config as cfg
 from sklearn.preprocessing import scale
 import csv
-import cv2
-from scipy import ndimage
+# import cv2
+# from scipy import ndimage
 
 os.environ["CUDA_VISIBLE_DEVICES"] = '6' # cfg.GPU
 
@@ -264,8 +263,6 @@ def survival_data_saver(data_path, csv_path, save_path, train=True):
             file_list.append([flair_path, t1_path, t1ce_path, t2_path])
 
     if train :
-        ## 루프문 하나 더 만들어서 [idx][ : ] 로 세분화하기
-        # train_sets_X, train_sets_Y = get_normalized_img(train_sets[idx], train=train)
         train_sets_X, train_sets_Y= get_normalized_img(file_list, train=train)
         print('idx, chunk_x.shape, chunk_y.shape', np.shape(train_sets_X),np.shape(train_sets_Y))
 
@@ -277,9 +274,9 @@ def survival_data_saver(data_path, csv_path, save_path, train=True):
         print('saved')
 
     else :
-        train_sets_X, _ = get_normalized_img(file_list, train=train)
-        print(np.shape(train_sets_X))
-        np.save('./task2_val_image.npy', train_sets_X)
+        test_sets_X, _ = get_normalized_img(file_list, train=train)
+        print(np.shape(test_sets_X))
+        np.save(save_path + 'task2_val_image.npy', test_sets_X)
         print('saved')
 
     return survival_id_list
