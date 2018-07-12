@@ -322,7 +322,7 @@ class Train:
                                 ori = utils.masking_rgb(ori[0][i], color=None)
 
                                 # result_image = cv2.addWeighted(ori, 0.0005, et_tc_wt_mask, 0.1, 0) * 255
-                                result_image = 0.5 * (ori + et_tc_wt_mask + blue_mask)
+                                result_image = 0.5 * (ori + et_tc_wt_mask )
 
                                 cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
                                 cv2.imwrite('./img/epoch{}/mask/batch{}_{}_ncr.jpg'.format(epoch+1, print_img_idx, i+1), ncr_mask)
