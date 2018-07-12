@@ -58,7 +58,7 @@ class Task2_label_maker:
             print('>>> Task2 Data Saving Complete. Consumption Time :', detime - dstime)
             print('')
         else:
-            self.survival_id_list = loader.survival_id_extractor(cfg.VAL_SURVIVAL_CSV_PATH)
+            self.survival_id_list = loader.survival_id_extractor(cfg.VAL_SURVIVAL_CSV_PATH, train=False)
 
         # make paths
         *self.train_start_time, _, _, _, _ = time.localtime()
@@ -67,11 +67,12 @@ class Task2_label_maker:
         self.ckpt_path = '.{0}best{0}'.format(cfg.PATH_SLASH)
         # self.img_path = '.{0}imgs{0}{1}_{2}_{3}_{4}_{5}'.format(cfg.PATH_SLASH,*self.train_start_time)
         self.log_path = '.{0}logs{0}{1}_{2}_{3}_{4}_{5}'.format(cfg.PATH_SLASH,*self.train_start_time)
+        self._make_path()
 
-        with open('.{}config.py'.format(cfg.PATH_SLASH), 'rt') as f:
-            self._make_path()
-            self.result = f.read()
-            utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
+        # with open('.{}config.py'.format(cfg.PATH_SLASH), 'rt') as f:
+        #     self._make_path()
+        #     self.result = f.read()
+        #     utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 
         # TB
         self.merged_summary = tf.summary.merge_all()
