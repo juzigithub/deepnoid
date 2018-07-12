@@ -92,15 +92,16 @@ class Test:
                 pred[pred == 3] = 4
 
                 # data1 = np.pad(data, ((73, 74), (106, 107), (0, 0)), 'constant')
-                zero_padded = np.pad(pred, ((3, 2), (30, 18), (41, 39)), 'constant').tolist()
-                img_list.append(zero_padded)
+                img_list.append(pred.tolist())
 
                 if img_idx == 3:
-                    img_list = np.array(img_list).reshape([-1, 240, 240])
-                    print(np.shape(img_list))
-                    img_list.transpose([2,1,0])
-                    print(np.shape(img_list))
-                    np.save('./img/test/for_nifti/{}.npy'.format(self.patient_id_list[save_idx]), img_list)
+                    img_list = np.array(img_list).reshape([-1, 192, 160])
+                    zero_padded = np.pad(img_list, ((3, 2), (30, 18), (41, 39)), 'constant')
+
+                    print(np.shape(zero_padded))
+                    zero_padded.transpose([2,1,0])
+                    print(np.shape(zero_padded))
+                    np.save('./img/test/for_nifti/{}.npy'.format(self.patient_id_list[save_idx]), zero_padded)
                     img_list = []
                     img_idx = 0
                     save_idx += 1
