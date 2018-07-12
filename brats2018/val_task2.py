@@ -134,7 +134,7 @@ class Task2_label_maker:
                 task2_et_list.append(pred_list[0])
                 task2_tc_list.append(pred_list[1])
                 task2_wt_list.append(pred_list[2])
-                
+
                 if img_cnt >= 150:
                     img_cnt = 0
                     task2_et_list = np.array(task2_et_list).transpose([1,0,2,3,4]).reshape([1,-1,192,160])
@@ -145,12 +145,12 @@ class Task2_label_maker:
                     task2_et_list = []
                     task2_tc_list = []
                     task2_wt_list = []
-                    np.save('./img/test/task2/survival/{}.npy'.format(self.survival_id_list[survival_id_idx]), survival_img)
+                    np.save('./npy/gtr/survival/{}.npy'.format(self.survival_id_list[survival_id_idx]), survival_img)
                     survival_id_idx += 1
 
     def _make_path(self):
         # create if there is no such file in a saving path
-        tl.files.exists_or_mkdir('./img/test/task2/survival/')
+        tl.files.exists_or_mkdir('./npy/gtr/')
 
 if __name__ == "__main__":
     tester = Task2_label_maker(restore=True)
