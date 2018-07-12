@@ -136,7 +136,7 @@ class Test:
                                  self.model.training: False,
                                  self.model.drop_rate: 0}
 
-                pred = sess.run([self.model.pred], feed_dict=test_feed_dict)
+                pred = sess.run(self.model.pred, feed_dict=test_feed_dict)
                 pred = np.argmax(pred, axis=-1)
 
                 # label -> pred
