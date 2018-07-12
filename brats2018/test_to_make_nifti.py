@@ -99,7 +99,9 @@ class Test:
                     zero_padded = np.pad(img_list, ((3, 2), (30, 18), (41, 39)), 'constant')
 
                     # print(np.shape(zero_padded))
-                    zero_padded.transpose([2,1,0])
+                    zero_padded = np.transpose(zero_padded, [2,1,0])
+
+
                     print(np.shape(zero_padded))
                     np.save('./img/test/for_nifti/{}.npy'.format(self.patient_id_list[save_idx]), zero_padded)
                     img_list = []
