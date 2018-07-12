@@ -245,7 +245,8 @@ def survival_data_saver(data_path, csv_path, save_path, train=True):
                 survival_id_list.append(content[0])
                 survival_age_list.append(float(content[1]))
                 survival_survival_list.append(int(content[2]))
-                survival_ResectionStatus_list.append(content[3])
+                if train:
+                    survival_ResectionStatus_list.append(content[3])
 
     file_list = []
     survival_path_list = [os.path.join(data_path, os.path.basename(p), os.path.basename(p)) for p in survival_id_list]
