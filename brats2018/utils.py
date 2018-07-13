@@ -292,7 +292,9 @@ def focal_loss(output, target, epsilon=1e-6):
     ndim = len(output.get_shape())
     output /= tf.reduce_sum(output, axis=(ndim - 1), keep_dims=True)
     output = tf.clip_by_value(output, epsilon, 1 - epsilon)
-    focal = -tf.reduce_mean(tf.square(tf.ones_like(output)-output)*target*tf.log(output), axis=tuple(range(ndim-1)))
+    # focal = -tf.reduce_mean(tf.square(tf.ones_like(output)-output)*target*tf.log(output), axis=tuple(range(ndim-1)))
+    focal = -tf.reduce_sum(tf.square(tf.ones_like(output)-output)*target*tf.log(output), axis=tuple(range(ndim-1)))
+
     return tf.reduce_sum(focal)
 
 
