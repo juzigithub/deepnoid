@@ -5,6 +5,7 @@ import utils
 import tensorlayer as tl
 
 if cfg.REBUILD_TASK2_DATA:
+    tl.files.exists_or_mkdir(cfg.SAVE_SURVIVAL_DATA_PATH + 'train/')
     tl.files.exists_or_mkdir(cfg.SAVE_SURVIVAL_DATA_PATH)
     survival_id_list = loader.survival_data_saver(cfg.HGG_DATA_PATH, cfg.SURVIVAL_CSV_PATH, cfg.SAVE_SURVIVAL_DATA_PATH, train=cfg.TRAIN_YN)
 else :
@@ -30,5 +31,5 @@ for idx in range(length):
     survival_img = np.flip(survival_img, axis=1)
     survival_img = np.flip(survival_img, axis=2)
     print(np.shape(survival_img))
-    np.save(cfg.SAVE_SURVIVAL_DATA_PATH + '{}.npy'.format(survival_id_list[idx]), survival_img)
+    np.save(cfg.SAVE_SURVIVAL_DATA_PATH + 'train/{}.npy'.format(survival_id_list[idx]), survival_img)
 
