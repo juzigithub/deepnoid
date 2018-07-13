@@ -25,7 +25,10 @@ label = np.array(label)
 _, length, _, _ = np.shape(label)
 length //= 150
 for idx in range(length):
-    survival_img = label[:,150*idx:150*(idx+1),:,:].transpose([0, 2, 3, 1])
+    survival_img = label[:,150*idx:150*(idx+1),:,:].transpose([0, 3, 2, 1])
+    survival_img = np.pad(survival_img, ((0, 0), (41, 39), (30, 18), (3, 2)), 'constant')
+    survival_img = np.flip(survival_img, axis=1)
+    survival_img = np.flip(survival_img, axis=2)
     print(np.shape(survival_img))
     np.save(cfg.SAVE_SURVIVAL_DATA_PATH + '{}.npy'.format(survival_id_list[idx]), survival_img)
 
