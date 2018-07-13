@@ -9,6 +9,7 @@ if cfg.REBUILD_TASK2_DATA:
     tl.files.exists_or_mkdir(cfg.SAVE_SURVIVAL_DATA_PATH)
     survival_id_list = loader.survival_data_saver(cfg.HGG_DATA_PATH, cfg.SURVIVAL_CSV_PATH, cfg.SAVE_SURVIVAL_DATA_PATH, train=cfg.TRAIN_YN)
 else :
+    tl.files.exists_or_mkdir(cfg.SAVE_SURVIVAL_DATA_PATH + 'train/')
     survival_id_list = loader.survival_id_extractor(cfg.SURVIVAL_CSV_PATH)
 
 task2_Y = np.load(cfg.SAVE_SURVIVAL_DATA_PATH + 'task2_train_label.npy')
