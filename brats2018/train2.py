@@ -121,7 +121,7 @@ class Train:
 
                     if save_yn:
                         # Make folder in the saving path for qualified epochs
-                        self._make_path(epoch + idx * cfg.SPLITS)
+                        self._make_path(epoch + idx * cfg.EPOCHS)
 
 
                     # train
