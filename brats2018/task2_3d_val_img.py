@@ -73,7 +73,7 @@ class Task2_label_maker:
             print_img_idx = 0
 
             for batch in tl.iterate.minibatches(inputs=task2_X, targets=task2_X,
-                                                batch_size=30, shuffle=False):
+                                                batch_size=75, shuffle=False):
                 print_img_idx += 1
                 batch_x, _ = batch
 
@@ -88,7 +88,7 @@ class Task2_label_maker:
                 pred_list, _ = utils.convert_to_subregions(pred, pred,
                                                            [cfg.ET_LABEL, cfg.TC_LABEL, cfg.WT_LABEL],
                                                            one_hot=False)
-                img_cnt += 30
+                img_cnt += 75
 
                 task2_et_list.append(pred_list[0])
                 task2_tc_list.append(pred_list[1])
