@@ -124,46 +124,46 @@ class Train:
                         self._make_path(epoch + idx * cfg.EPOCHS)
 
 
-                    # train
-                    for batch in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
-                                                        batch_size=cfg.BATCH_SIZE, shuffle=True):
-                        batch_x, batch_y = batch
-
-                        # make_one_hot
-                        key = np.array(cfg.TRAIN_LABEL)
-                        _, index = np.unique(batch_y, return_inverse=True)
-                        seg = key[index].reshape(batch_y.shape)
-                        batch_y = np.eye(4)[seg]
-
-                        tr_feed_dict = {self.model.X: batch_x,
-                                        self.model.Y: batch_y,
-                                        self.model.training: True,
-                                        self.model.drop_rate: cfg.DROPOUT_RATE}
-
-                        cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
-
-                        bg, ncr, ed, et = sess.run([self.model.bg_loss, self.model.ncr_loss, self.model.ed_loss, self.model.et_loss],
-                                                   feed_dict=tr_feed_dict)
-                        s = bg + ncr + ed + et
-                        print('bg loss ratio : ', (bg/s) * 100)
-                        print('ncr loss ratio : ', ( ncr/s ) * 100)
-                        print('ed loss ratio : ', ( ed/s ) * 100)
-                        print('et loss ratio : ', ( et/s ) * 100)
-
-                        total_cost += cost
-                        step += 1
-
-                        # print out current epoch, step and batch loss value
-                        self.result = 'Cross validation : {0} / {1}, Epoch: {2} / {3}, ' \
-                                      'Step: {4} / {5}, Batch loss: {6}'.format((idx + 1),
-                                                                                cfg.SPLITS,
-                                                                                epoch + 1,
-                                                                                cfg.EPOCHS,
-                                                                                step,
-                                                                                train_step,
-                                                                                cost)
-
-                        print(self.result)
+                    # # train
+                    # for batch in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
+                    #                                     batch_size=cfg.BATCH_SIZE, shuffle=True):
+                    #     batch_x, batch_y = batch
+                    #
+                    #     # make_one_hot
+                    #     key = np.array(cfg.TRAIN_LABEL)
+                    #     _, index = np.unique(batch_y, return_inverse=True)
+                    #     seg = key[index].reshape(batch_y.shape)
+                    #     batch_y = np.eye(4)[seg]
+                    #
+                    #     tr_feed_dict = {self.model.X: batch_x,
+                    #                     self.model.Y: batch_y,
+                    #                     self.model.training: True,
+                    #                     self.model.drop_rate: cfg.DROPOUT_RATE}
+                    #
+                    #     cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
+                    #
+                    #     bg, ncr, ed, et = sess.run([self.model.bg_loss, self.model.ncr_loss, self.model.ed_loss, self.model.et_loss],
+                    #                                feed_dict=tr_feed_dict)
+                    #     s = bg + ncr + ed + et
+                    #     print('bg loss ratio : ', (bg/s) * 100)
+                    #     print('ncr loss ratio : ', ( ncr/s ) * 100)
+                    #     print('ed loss ratio : ', ( ed/s ) * 100)
+                    #     print('et loss ratio : ', ( et/s ) * 100)
+                    #
+                    #     total_cost += cost
+                    #     step += 1
+                    #
+                    #     # print out current epoch, step and batch loss value
+                    #     self.result = 'Cross validation : {0} / {1}, Epoch: {2} / {3}, ' \
+                    #                   'Step: {4} / {5}, Batch loss: {6}'.format((idx + 1),
+                    #                                                             cfg.SPLITS,
+                    #                                                             epoch + 1,
+                    #                                                             cfg.EPOCHS,
+                    #                                                             step,
+                    #                                                             train_step,
+                    #                                                             cost)
+                    # 
+                    #     print(self.result)
 
                     et_one_epoch_result_list = []
                     tc_one_epoch_result_list = []
@@ -192,10 +192,10 @@ class Train:
                         label = np.argmax(label, axis=-1)
 
                         # change label value : [bg, ncr, ed, et] = [0, 1, 2, 4] -> [0, 1, 2, 3]
-                        # _, index = np.unique(pred, return_inverse=True)
-                        # seg = key[index].reshape(pred.shape)
-                        # pred_print = np.eye(len(cfg.TRAIN_LABEL))[seg]
-                        # pred_print = np.transpose(pred_print, [-1, 0, 1, 2])
+                        _, index = np.unique(pred, return_inverse=True)
+                        seg = key[index].reshape(pred.shape)
+                        pred_print = np.eye(len(cfg.TRAIN_LABEL))[seg]
+                        pred_print = np.transpose(pred_print, [-1, 0, 1, 2])
 
                         # change label : ncr, ed, et -> et, tc, wt
                         pred_list, label_list = utils.convert_to_subregions(pred, label,
@@ -210,32 +210,32 @@ class Train:
                         tc_one_epoch_result_list.append(tc_one_batch_result)
                         wt_one_epoch_result_list.append(wt_one_batch_result)
 
-                        # if save_yn:
-                        #     # make img
-                        #     for i in range(0, cfg.BATCH_SIZE, cfg.BATCH_SIZE//2):
-                        #         ncr_mask = utils.masking_rgb(pred_print[1][i], color='green')
-                        #         ed_mask = utils.masking_rgb(pred_print[2][i], color='blue')
-                        #         et_mask = utils.masking_rgb(pred_print[3][i], color='red')
-                        #
-                        #         et_tc_wt = ed_mask + 2 * ncr_mask + 3 * et_mask
-                        #         shape = np.shape(et_tc_wt)
-                        #         et_tc_wt_mask = et_tc_wt.reshape([-1,3])
-                        #         len_mask = len(et_tc_wt_mask)
-                        #         et_tc_wt_mask = et_tc_wt_mask - (0.9*et_tc_wt_mask.max(1).reshape([len_mask, -1]) - et_tc_wt_mask.min(1).reshape([len_mask, -1]))
-                        #         et_tc_wt_mask = np.clip(et_tc_wt_mask, 0., 1.) * 255
-                        #         et_tc_wt_mask = et_tc_wt_mask.reshape(shape)
-                        #
-                        #         ori = np.transpose(batch_x, [-1, 0, 1, 2])
-                        #         ori = utils.masking_rgb(ori[0][i], color=None)
-                        #
-                        #         result_image = 0.7 * (ori + et_tc_wt_mask)
-                        #
-                        #         cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
-                        #         cv2.imwrite('./img/epoch{}/mask/batch{}_{}_ncr.jpg'.format(epoch+1, print_img_idx, i+1), ncr_mask)
-                        #         cv2.imwrite('./img/epoch{}/mask/batch{}_{}_ed.jpg'.format(epoch+1, print_img_idx, i+1), ed_mask)
-                        #         cv2.imwrite('./img/epoch{}/mask/batch{}_{}_et.jpg'.format(epoch+1, print_img_idx, i+1), et_mask)
-                        #         cv2.imwrite('./img/epoch{}/mask/batch{}_{}_all.jpg'.format(epoch+1, print_img_idx, i+1), et_tc_wt_mask)
-                        #         cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
+                        if save_yn:
+                            # make img
+                            for i in range(0, cfg.BATCH_SIZE, cfg.BATCH_SIZE//2):
+                                ncr_mask = utils.masking_rgb(pred_print[1][i], color='green')
+                                ed_mask = utils.masking_rgb(pred_print[2][i], color='blue')
+                                et_mask = utils.masking_rgb(pred_print[3][i], color='red')
+
+                                et_tc_wt = ed_mask + 2 * ncr_mask + 3 * et_mask
+                                shape = np.shape(et_tc_wt)
+                                et_tc_wt_mask = et_tc_wt.reshape([-1,3])
+                                len_mask = len(et_tc_wt_mask)
+                                et_tc_wt_mask = et_tc_wt_mask - (0.9*et_tc_wt_mask.max(1).reshape([len_mask, -1]) - et_tc_wt_mask.min(1).reshape([len_mask, -1]))
+                                et_tc_wt_mask = np.clip(et_tc_wt_mask, 0., 1.) * 255
+                                et_tc_wt_mask = et_tc_wt_mask.reshape(shape)
+
+                                ori = np.transpose(batch_x, [-1, 0, 1, 2])
+                                ori = utils.masking_rgb(ori[0][i], color=None)
+
+                                result_image = 0.7 * (ori + et_tc_wt_mask)
+
+                                cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
+                                cv2.imwrite('./img/epoch{}/mask/batch{}_{}_ncr.jpg'.format(epoch+1, print_img_idx, i+1), ncr_mask)
+                                cv2.imwrite('./img/epoch{}/mask/batch{}_{}_ed.jpg'.format(epoch+1, print_img_idx, i+1), ed_mask)
+                                cv2.imwrite('./img/epoch{}/mask/batch{}_{}_et.jpg'.format(epoch+1, print_img_idx, i+1), et_mask)
+                                cv2.imwrite('./img/epoch{}/mask/batch{}_{}_all.jpg'.format(epoch+1, print_img_idx, i+1), et_tc_wt_mask)
+                                cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
 
                     et_one_epoch_mean = np.mean(np.array(et_one_epoch_result_list), axis=0)
                     tc_one_epoch_mean = np.mean(np.array(tc_one_epoch_result_list), axis=0)
