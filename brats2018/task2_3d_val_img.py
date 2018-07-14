@@ -107,8 +107,8 @@ class Task2_label_maker:
                     ##########  240 240 155 ##########
                     survival_img = np.concatenate([task2_et_list, task2_tc_list, task2_wt_list], axis=0).transpose([0,3,2,1])
                     survival_img = np.pad(survival_img, ((0,0), (41, 39), (30, 18), (3, 2)), 'constant')
-                    survival_img = np.flip(survival_img, axis=1)
-                    survival_img = np.flip(survival_img, axis=2)
+                    # survival_img = np.flip(survival_img, axis=1)
+                    # survival_img = np.flip(survival_img, axis=2)
                     ##################################
 
                     task2_et_list = []

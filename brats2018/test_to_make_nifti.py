@@ -84,7 +84,8 @@ class Test:
 
                 pred = sess.run(self.model.pred, feed_dict=test_feed_dict)
                 pred = np.argmax(pred, axis=-1)
-                pred[pred == 3] = 4
+                pred[pred == 3] = 4.
+                pred.astype(np.float32)
 
                 img_list.append(pred.tolist())
 
