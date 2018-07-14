@@ -92,8 +92,8 @@ class Test:
                     img_list = np.array(img_list).reshape([-1, 192, 160])
                     img_list = np.transpose(img_list, [2,1,0])
                     zero_padded = np.pad(img_list, ((41, 39), (30, 18), (3, 2)), 'constant')
-                    zero_padded = np.flip(zero_padded,0)
-                    zero_padded = np.flip(zero_padded,1)
+                    # zero_padded = np.flip(zero_padded,0)
+                    # zero_padded = np.flip(zero_padded,1)
 
                     # utils.save_array_as_nifty_volume(zero_padded, './img/test/for_nifti/{}.nii.gz'.format(self.patient_id_list[save_idx]))
                     np.save('./img/test/for_nifti/{}.npy'.format(self.patient_id_list[save_idx]), zero_padded)
