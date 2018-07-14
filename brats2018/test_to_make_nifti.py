@@ -95,7 +95,8 @@ class Test:
                     zero_padded = np.flip(zero_padded,0)
                     zero_padded = np.flip(zero_padded,1)
 
-                    utils.save_array_as_nifty_volume(zero_padded, './img/test/for_nifti/{}.nii.gz'.format(self.patient_id_list[save_idx]))
+                    # utils.save_array_as_nifty_volume(zero_padded, './img/test/for_nifti/{}.nii.gz'.format(self.patient_id_list[save_idx]))
+                    np.save(zero_padded, './img/test/for_nifti/{}.npy'.format(self.patient_id_list[save_idx]))
                     img_list = []
                     img_idx = 0
                     save_idx += 1
