@@ -522,6 +522,11 @@ def unet_up_block(inputs, downconv_list, upconv_list, pool_list, channel_n, grou
 
 # resnet  (https://arxiv.org/abs/1512.03385)
 def residual_block_v1(inputs, channel_n, group_n, act_fn, norm_type, training, idx, shortcut=True):
+    # input
+    il = conv2D(str(idx) + '_input', inputs, channel_n, [1, 1], [1, 1], padding='SAME')
+    il = Normalization(il, norm_type, training, str(idx) + '_input_norm', G=group_n)
+    il = activation(str(idx) + '_input_act', il, act_fn)
+
     # bottleneck1
     hl = conv2D(str(idx) + '_bottleneck1', inputs, int(channel_n/4), [1, 1], [1, 1], padding='SAME')
     hl = Normalization(hl, norm_type, training, str(idx) + '_bottleneck_norm1', G=group_n)
@@ -533,11 +538,11 @@ def residual_block_v1(inputs, channel_n, group_n, act_fn, norm_type, training, i
     hl = activation(str(idx) + '_conv_act', hl, act_fn)
 
     # bottleneck2
-    hl = conv2D(str(idx) + '_bottleneck2', inputs, channel_n, [1, 1], [1, 1], padding='SAME')
+    hl = conv2D(str(idx) + '_bottleneck2', hl, channel_n, [1, 1], [1, 1], padding='SAME')
     hl = Normalization(hl, norm_type, training, str(idx) + '_bottleneck_norm2', G=group_n)
     hl = activation(str(idx) + '_bottleneck_act2', hl, act_fn)
 
-    hl = inputs + hl if shortcut else hl
+    hl = il + hl if shortcut else hl
 
     return hl
 
