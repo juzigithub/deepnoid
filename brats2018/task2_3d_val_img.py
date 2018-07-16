@@ -73,7 +73,7 @@ class Task2_label_maker:
             print_img_idx = 0
 
             for batch in tl.iterate.minibatches(inputs=task2_X, targets=task2_X,
-                                                batch_size=75, shuffle=False):
+                                                batch_size=cfg.BATCH_SIZE, shuffle=False):
                 print_img_idx += 1
                 batch_x, _ = batch
 
@@ -88,13 +88,13 @@ class Task2_label_maker:
                 pred_list, _ = utils.convert_to_subregions(pred, pred,
                                                            [cfg.ET_LABEL, cfg.TC_LABEL, cfg.WT_LABEL],
                                                            one_hot=False)
-                img_cnt += 75
+                img_cnt += cfg.BATCH_SIZE
 
                 task2_et_list.append(pred_list[0])
                 task2_tc_list.append(pred_list[1])
                 task2_wt_list.append(pred_list[2])
 
-                if img_cnt >= 150:
+                if img_cnt == 150:
                     img_cnt = 0
                     task2_et_list = np.array(task2_et_list).transpose([1,0,2,3,4]).reshape([1,-1,192,160])
                     task2_tc_list = np.array(task2_tc_list).transpose([1,0,2,3,4]).reshape([1,-1,192,160])
@@ -114,14 +114,14 @@ class Task2_label_maker:
                     task2_et_list = []
                     task2_tc_list = []
                     task2_wt_list = []
-                    np.save('./npy/gtr/{}.npy'.format(self.survival_id_list[survival_id_idx]), survival_img)
+                    np.save((cfg.SAVE_SURVIVAL_DATA_PATH + 'validation/{}.npy').format(self.survival_id_list[survival_id_idx]), survival_img)
                     survival_id_idx += 1
 
             print("TESTING COMPLETED")
 
     def _make_path(self):
         # create if there is no such file in a saving path
-        tl.files.exists_or_mkdir('./npy/gtr/')
+        tl.files.exists_or_mkdir(cfg.SAVE_SURVIVAL_DATA_PATH + 'validation/')
 
 if __name__ == "__main__":
     tester = Task2_label_maker(restore=True)

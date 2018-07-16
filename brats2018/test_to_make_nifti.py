@@ -73,7 +73,7 @@ class Test:
             img_list = []
             save_idx = 0
             for batch in tl.iterate.minibatches(inputs=test_X, targets=test_X,
-                                                batch_size=75, shuffle=False):
+                                                batch_size=cfg.BATCH_SIZE, shuffle=False):
                 img_idx += 1
                 batch_x, _ = batch
 
@@ -89,7 +89,7 @@ class Test:
 
                 img_list.append(pred.tolist())
 
-                if img_idx == 2:
+                if img_idx == (150 // cfg.BATCH_SIZE) :
                     img_list = np.array(img_list).reshape([-1, 192, 160])
                     img_list = np.transpose(img_list, [2,1,0])
                     zero_padded = np.pad(img_list, ((41, 39), (30, 18), (3, 2)), 'constant')

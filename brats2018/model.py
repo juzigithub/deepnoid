@@ -43,15 +43,16 @@ class Model:
                 pool_size_h //= 2
                 pool_size_w //= 2
                 for j in range(cfg.N_LAYERS[i]):
-                    self.down_conv[i] = utils.depthwise_separable_convlayer(name='dsconv_{}_{}_'.format(str(i),str(j)),
-                                                                            inputs=inputs,
-                                                                            channel_n=channel_n,
-                                                                            width_mul=cfg.WIDTH_MULTIPLIER,
-                                                                            group_n=cfg.GROUP_N,
-                                                                            act_fn=cfg.ACTIVATION_FUNC,
-                                                                            norm_type=cfg.NORMALIZATION_TYPE,
-                                                                            training=self.training,
-                                                                            idx=i)
+                    self.down_conv[i] = utils.depthwise_separable_convlayer_dr(name='dsconv_{}_{}_'.format(str(i),str(j)),
+                                                                               inputs=inputs,
+                                                                               channel_n=channel_n,
+                                                                               width_mul=cfg.WIDTH_MULTIPLIER,
+                                                                               group_n=cfg.GROUP_N,
+                                                                               drop_rate=self.drop_rate,
+                                                                               act_fn=cfg.ACTIVATION_FUNC,
+                                                                               norm_type=cfg.NORMALIZATION_TYPE,
+                                                                               training=self.training,
+                                                                               idx=i)
                 print('down_conv', self.down_conv[i])
                 channel_n *= 2
                 self.down_pool[i] = utils.select_downsampling(name=str(i) + '_downsampling',
