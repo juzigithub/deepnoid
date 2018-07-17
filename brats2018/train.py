@@ -8,7 +8,7 @@ import cv2
 import loader
 import config as cfg
 import performance_eval as pe
-from model2 import Model
+from model import Model
 import utils
 
 os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU
