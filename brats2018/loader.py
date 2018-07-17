@@ -76,10 +76,10 @@ def cv(data_path, splits, shuffle):
 
 def get_normalized_img(data_sets, train):
     total_list = [[] for _ in range(np.shape(data_sets)[-1])] # [ [flair], [t1], [t1ce], [t2], [seg] ]
-    b_min, b_max = [41, 30, 3], [200, 221, 152]
     for data in data_sets:
         for idx in range(len(total_list)):
             vol = nibabel.load(data[idx]).get_fdata()
+            b_min, b_max = [41, 30, 3] , [200, 221, 152]
             vol = crop_volume_with_bounding_box(vol,b_min,b_max)
             total_list[idx].append(vol)
 
