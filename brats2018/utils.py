@@ -472,24 +472,34 @@ def select_upsampling2(name, up_conv, channel_n, pool_size_h, pool_size_w, mode)
       up_pool = re_conv2D(name + '_reconv', up_conv, shape)
 
     elif mode == 'transpose':
-        up_pool = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n * 2], shape, [1,2,2,1], 'SAME')
+        up_pool = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n], shape, [1,2,2,1], 'SAME')
         up_pool = tf.reshape(up_pool, shape)
 
     elif mode == 'add':
         up_pool1 = re_conv2D(name + '_reconv', up_conv, shape)
-        up_pool2 = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n * 2], shape, [1,2,2,1], 'SAME')
+        up_pool2 = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n], shape, [1,2,2,1], 'SAME')
         up_pool2 = tf.reshape(up_pool2, shape)
         up_pool = up_pool1 + up_pool2
 
     elif mode == 'concat':
         up_pool1 = re_conv2D(name + '_reconv', up_conv, shape)
-        up_pool2 = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n * 2], shape, [1, 2, 2, 1], 'SAME')
+        up_pool2 = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n], shape, [1, 2, 2, 1], 'SAME')
         up_pool2 = tf.reshape(up_pool2, shape)
         up_pool = concat(name + '_upsampling_concat', [up_pool1, up_pool2], axis=3)
         up_pool = conv2D(name + '_bottleneck', up_pool, channel_n, [1,1], [1,1], padding='SAME')
 
     elif mode == 'avgpool' :
-        up_pool = tf.nn.conv2d_transpose(up_conv, filter, shape, [1, 2, 2, 1], 'SAME')
+        batch_size = tf.shape(up_conv)[0]
+        shape2 = [batch_size, pool_size_h, pool_size_w, channel_n]
+        up_pool = tf.nn.conv2d_transpose(up_conv, filter, shape2, [1, 2, 2, 1], 'SAME')
+
+    # def deconv2D(name, inputs, filter_shape, output_shape, strides, padding='valid'):
+    #     W = tf.get_variable(name + 'W', filter_shape, initializer=initializer, regularizer=regularizer)
+    #     shape = tf.shape(inputs)
+    #     batch_size = shape[0]
+    #     output_shape2 = [batch_size, output_shape[1], output_shape[2], output_shape[3]]
+    #     layer = tf.nn.conv2d_transpose(inputs, filter=W, output_shape=output_shape2, strides=strides, padding=padding)
+    #     return layer
 
     return up_pool
 #############################################################################################################################
