@@ -10,7 +10,7 @@ from tensorflow.python.ops import array_ops
 #############################################################################################################################
 
 initializer = tf.contrib.layers.variance_scaling_initializer()
-regularizer = None # tf.contrib.layers.l2_regularizer(0.00001)
+regularizer = tf.contrib.layers.l2_regularizer(0.0001)
 
 
 def conv2D(name, inputs, filters, kernel_size, strides, padding='valid', dilation_rate=(1,1)):
