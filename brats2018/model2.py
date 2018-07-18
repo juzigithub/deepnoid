@@ -176,10 +176,11 @@ class Model:
 
             print('up_pool3', self.up_pool3)
 
+            del self.down_pool3, self.same_conv
 
             self.up_conv3 = utils.concat('up_conv3', [self.down_conv3, self.up_pool3], axis=-1)
 
-            del self.down_pool3, self.same_conv, self.down_conv3, self.up_pool3 ###########################
+            del self.down_conv3, self.up_pool3 ###########################
 
             channel_n //= 2
             for i in range(2):
@@ -205,9 +206,11 @@ class Model:
                                                      mode=cfg.UPSAMPLING_TYPE)
             print('up_pool2', self.up_pool2)
 
+            del self.down_pool2, self.up_conv3
+
             self.up_conv2 = utils.concat('up_conv2', [self.down_conv2, self.up_pool2], axis=-1)
 
-            del self.down_pool2, self.up_conv3, self.down_conv2, self.up_pool2 ###########################
+            del self.down_conv2, self.up_pool2 ###########################
 
             channel_n //= 2
             for i in range(2):
@@ -234,10 +237,11 @@ class Model:
                                                      mode=cfg.UPSAMPLING_TYPE)
             print('up_pool1', self.up_pool1)
 
+            del self.down_pool1, self.up_conv2
 
             self.up_conv1 = utils.concat('up_conv1', [self.down_conv1, self.up_pool1], axis=-1)
 
-            del self.down_pool1, self.up_conv2, self.down_conv1, self.up_pool1 ###########################
+            del self.down_conv1, self.up_pool1 ###########################
 
             channel_n //= 2
             for i in range(2):
@@ -263,9 +267,11 @@ class Model:
                                                      mode=cfg.UPSAMPLING_TYPE)
             print('up_pool0', self.up_pool0)
 
+            del self.down_pool0, self.up_conv1
+
             self.up_conv0 = utils.concat('up_conv0', [self.down_conv0, self.up_pool0], axis=-1)
 
-            del self.down_pool0, self.up_conv1, self.down_conv0, self.up_pool0 ###########################
+            del self.down_conv0, self.up_pool0 ###########################
 
 
             for i in range(2):
