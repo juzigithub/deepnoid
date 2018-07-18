@@ -466,7 +466,7 @@ def select_upsampling(name, up_conv, up_pool, channel_n, pool_size_h, pool_size_
 
 def select_upsampling2(name, up_conv, channel_n, pool_size_h, pool_size_w, mode):
     shape = [-1, pool_size_h, pool_size_w, channel_n]
-    filter = tf.ones([2, 2, 1, 1])  # [rows, cols, depth_in, depth_output]
+    filter = tf.ones([2, 2, channel_n, channel_n])  # [rows, cols, depth_in, depth_output]
 
     if mode == 'resize':
       up_pool = re_conv2D(name + '_reconv', up_conv, shape)
