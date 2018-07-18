@@ -170,7 +170,7 @@ class Model:
 
             self.up_conv3 = utils.concat('up_conv3', [self.down_conv3, self.up_pool3], axis=-1)
             channel_n //= 2
-            for i in range(cfg.N_LAYERS[3]):
+            for i in range(2):
                 self.up_conv3 = utils.residual_block_v1_dr(name='upres_3_{}'.format(str(i)),
                                                              inputs=self.up_conv3,
                                                              channel_n=channel_n,
@@ -194,7 +194,7 @@ class Model:
 
             self.up_conv2 = utils.concat('up_conv2', [self.down_conv2, self.up_pool2], axis=-1)
             channel_n //= 2
-            for i in range(cfg.N_LAYERS[2]):
+            for i in range(2):
                 self.up_conv2 = utils.residual_block_v1_dr(name='upres_2_{}'.format(str(i)),
                                                              inputs=self.up_conv2,
                                                              channel_n=channel_n,
@@ -220,7 +220,7 @@ class Model:
 
             self.up_conv1 = utils.concat('up_conv1', [self.down_conv1, self.up_pool1], axis=-1)
             channel_n //= 2
-            for i in range(cfg.N_LAYERS[1]):
+            for i in range(2):
                 self.up_conv1 = utils.residual_block_v1_dr(name='upres_1_{}'.format(str(i)),
                                                              inputs=self.up_conv1,
                                                              channel_n=channel_n,
@@ -244,7 +244,7 @@ class Model:
 
             self.up_conv0 = utils.concat('up_conv0', [self.down_conv0, self.up_pool0], axis=-1)
 
-            for i in range(cfg.N_LAYERS[0]):
+            for i in range(2):
                 self.up_conv0 = utils.residual_block_v1_dr(name='upres_0_{}'.format(str(i)),
                                                              inputs=self.up_conv0,
                                                              channel_n=channel_n,
