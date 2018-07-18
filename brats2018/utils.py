@@ -637,9 +637,9 @@ def residual_block_dw_dr(name, inputs, channel_n, width_mul, group_n, drop_rate,
 
     # depthwise
     depthwise_filter = tf.get_variable(name=name+'depthwise_filter' + str(idx),
-                                       shape=[3, 3, inputs.get_shape()[-1], width_mul],
+                                       shape=[3, 3, int(channel_n/4), width_mul],
                                        dtype=tf.float32,
-                                       initializer=initializer)
+                                       initializer=initializer)  # [filter_height, filter_width, in_channels, channel_multiplier]
     hl = tf.nn.depthwise_conv2d(hl, depthwise_filter, [1, 1, 1, 1], 'SAME', rate=rate, name = name + str(idx) + '_depthwise')
     hl = Normalization(hl, norm_type, training, name + str(idx) + '_depthwise_norm', G=group_n)
     hl = activation(name + str(idx) + '_depthwise_act', hl, act_fn)
