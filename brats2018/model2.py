@@ -27,12 +27,6 @@ class Model:
 
 
     def mobilenet(self):
-        # start down sampling by depth n.
-        self.down_conv = [0] * cfg.DEPTH
-        self.down_pool = [0] * cfg.DEPTH
-        self.up_conv = [0] * cfg.DEPTH
-        self.up_pool = [0] * cfg.DEPTH
-
         with tf.variable_scope('down'):
 
             inputs = self.X  # iterator 변수 self.features 를 이용해 inputs 생성
@@ -167,25 +161,25 @@ class Model:
             pool_size_h *= 2
             pool_size_w *= 2
 
-            self.up_pool3 = utils.select_upsampling2(name='upsampling3',
+            self.inputs = utils.select_upsampling2(name='upsampling3',
                                                      up_conv=utils.concat('uppool_3', [self.down_pool3, self.same_conv], axis=-1),
                                                      channel_n=channel_n,
                                                      pool_size_h=pool_size_h,
                                                      pool_size_w=pool_size_w,
                                                      mode=cfg.UPSAMPLING_TYPE)
 
-            print('up_pool3', self.up_pool3)
+            print('up_pool3', self.inputs)
 
             del self.down_pool3, self.same_conv
 
-            self.up_conv3 = utils.concat('up_conv3', [self.down_conv3, self.up_pool3], axis=-1)
+            self.inputs = utils.concat('up_conv3', [self.down_conv3, self.inputs], axis=-1)
 
-            del self.down_conv3, self.up_pool3 ###########################
+            del self.down_conv3
 
             channel_n //= 2
             for i in range(1):
-                self.up_conv3 = utils.residual_block_dw_dr(name='upres_3_{}'.format(str(i)),
-                                                             inputs=self.up_conv3,
+                self.inputs = utils.residual_block_dw_dr(name='upres_3_{}'.format(str(i)),
+                                                             inputs=self.inputs,
                                                              channel_n=channel_n,
                                                            width_mul=cfg.WIDTH_MULTIPLIER,
                                                            group_n=cfg.GROUP_N,
@@ -194,28 +188,28 @@ class Model:
                                                              norm_type=cfg.NORMALIZATION_TYPE,
                                                              training=self.training,
                                                              idx=i)
-            print('up_conv3', self.up_conv3)
+            print('up_conv3', self.inputs)
             pool_size_h *= 2
             pool_size_w *= 2
 
-            self.up_pool2 = utils.select_upsampling2(name='upsampling2',
-                                                     up_conv=utils.concat('uppool_2', [self.down_pool2, self.up_conv3], axis=-1),
+            self.inputs = utils.select_upsampling2(name='upsampling2',
+                                                     up_conv=utils.concat('uppool_2', [self.down_pool2, self.inputs], axis=-1),
                                                      channel_n=channel_n,
                                                      pool_size_h=pool_size_h,
                                                      pool_size_w=pool_size_w,
                                                      mode=cfg.UPSAMPLING_TYPE)
-            print('up_pool2', self.up_pool2)
+            print('up_pool2', self.inputs)
 
-            del self.down_pool2, self.up_conv3
+            del self.down_pool2
 
-            self.up_conv2 = utils.concat('up_conv2', [self.down_conv2, self.up_pool2], axis=-1)
+            self.inputs = utils.concat('up_conv2', [self.down_conv2, self.inputs], axis=-1)
 
-            del self.down_conv2, self.up_pool2 ###########################
+            del self.down_conv2
 
             channel_n //= 2
             for i in range(1):
-                self.up_conv2 = utils.residual_block_dw_dr(name='upres_2_{}'.format(str(i)),
-                                                             inputs=self.up_conv2,
+                self.inputs = utils.residual_block_dw_dr(name='upres_2_{}'.format(str(i)),
+                                                             inputs=self.inputs,
                                                              channel_n=channel_n,
                                                            width_mul=cfg.WIDTH_MULTIPLIER,
                                                            group_n=cfg.GROUP_N,
@@ -224,29 +218,29 @@ class Model:
                                                              norm_type=cfg.NORMALIZATION_TYPE,
                                                              training=self.training,
                                                              idx=i)
-            print('up_conv2', self.up_conv2)
+            print('up_conv2', self.inputs)
 
             pool_size_h *= 2
             pool_size_w *= 2
 
-            self.up_pool1 = utils.select_upsampling2(name='upsampling1',
-                                                     up_conv=utils.concat('uppool_1', [self.down_pool1, self.up_conv2], axis=-1),
+            self.inputs = utils.select_upsampling2(name='upsampling1',
+                                                     up_conv=utils.concat('uppool_1', [self.down_pool1, self.inputs], axis=-1),
                                                      channel_n=channel_n,
                                                      pool_size_h=pool_size_h,
                                                      pool_size_w=pool_size_w,
                                                      mode=cfg.UPSAMPLING_TYPE)
-            print('up_pool1', self.up_pool1)
+            print('up_pool1', self.inputs)
 
-            del self.down_pool1, self.up_conv2
+            del self.down_pool1
 
-            self.up_conv1 = utils.concat('up_conv1', [self.down_conv1, self.up_pool1], axis=-1)
+            self.inputs = utils.concat('up_conv1', [self.down_conv1, self.inputs], axis=-1)
 
-            del self.down_conv1, self.up_pool1 ###########################
+            del self.down_conv1
 
             channel_n //= 2
             for i in range(1):
-                self.up_conv1 = utils.residual_block_dw_dr(name='upres_1_{}'.format(str(i)),
-                                                             inputs=self.up_conv1,
+                self.inputs = utils.residual_block_dw_dr(name='upres_1_{}'.format(str(i)),
+                                                             inputs=self.inputs,
                                                              channel_n=channel_n,
                                                            width_mul=cfg.WIDTH_MULTIPLIER,
                                                            group_n=cfg.GROUP_N,
@@ -255,28 +249,28 @@ class Model:
                                                              norm_type=cfg.NORMALIZATION_TYPE,
                                                              training=self.training,
                                                              idx=i)
-            print('up_conv1', self.up_conv1)
+            print('up_conv1', self.inputs)
             pool_size_h *= 2
             pool_size_w *= 2
 
-            self.up_pool0 = utils.select_upsampling2(name='upsampling0',
-                                                     up_conv=utils.concat('uppool_0', [self.down_pool0, self.up_conv1], axis=-1),
+            self.inputs= utils.select_upsampling2(name='upsampling0',
+                                                     up_conv=utils.concat('uppool_0', [self.down_pool0, self.inputs], axis=-1),
                                                      channel_n=channel_n,
                                                      pool_size_h=pool_size_h,
                                                      pool_size_w=pool_size_w,
                                                      mode=cfg.UPSAMPLING_TYPE)
-            print('up_pool0', self.up_pool0)
+            print('up_pool0', self.inputs)
 
-            del self.down_pool0, self.up_conv1
+            del self.down_pool0
 
-            self.up_conv0 = utils.concat('up_conv0', [self.down_conv0, self.up_pool0], axis=-1)
+            self.inputs = utils.concat('up_conv0', [self.down_conv0, self.inputs], axis=-1)
 
-            del self.down_conv0, self.up_pool0 ###########################
+            del self.down_conv0
 
 
             for i in range(1):
-                self.up_conv0 = utils.residual_block_dw_dr(name='upres_0_{}'.format(str(i)),
-                                                             inputs=self.up_conv0,
+                self.inputs = utils.residual_block_dw_dr(name='upres_0_{}'.format(str(i)),
+                                                             inputs=self.inputs,
                                                              channel_n=channel_n,
                                                            width_mul=cfg.WIDTH_MULTIPLIER,
                                                            group_n=cfg.GROUP_N,
@@ -285,11 +279,9 @@ class Model:
                                                              norm_type=cfg.NORMALIZATION_TYPE,
                                                              training=self.training,
                                                              idx=i)
-            print('up_conv0', self.up_conv0)
-            up_conv_f = utils.conv2D('final_upconv', self.up_conv0, cfg.N_CLASS, [1, 1], [1, 1], 'SAME')
+            print('up_conv0', self.inputs)
+            self.inputs = utils.conv2D('final_upconv', self.inputs, cfg.N_CLASS, [1, 1], [1, 1], 'SAME')
 
-            del self.up_conv0
+            print('final_conv', self.inputs)
 
-            print('final_conv', up_conv_f)
-
-        return up_conv_f
+        return self.inputs
