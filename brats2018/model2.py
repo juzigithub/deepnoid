@@ -155,7 +155,7 @@ class Model:
                                                             norm_type=cfg.NORMALIZATION_TYPE,
                                                             training=self.training,
                                                             idx=i)
-
+            print('same_conv', self.same_conv)
             pool_size_h *= 2
             pool_size_w *= 2
 
@@ -167,7 +167,7 @@ class Model:
                                                      mode=cfg.UPSAMPLING_TYPE)
 
             self.up_conv3 = utils.concat('up_conv3', [self.down_conv3, self.up_pool3], axis=0)
-
+            channel_n //= 2
             for i in range(cfg.N_LAYERS[3]):
                 self.up_conv3 = utils.residual_block_v1_dr(name='upres_3_{}'.format(str(i)),
                                                              inputs=self.up_conv3,
@@ -188,9 +188,9 @@ class Model:
                                                      pool_size_h=pool_size_h,
                                                      pool_size_w=pool_size_w,
                                                      mode=cfg.UPSAMPLING_TYPE)
-            channel_n //= 2
-            self.up_conv2 = utils.concat('up_conv2', [self.down_conv2, self.up_pool2], axis=0)
 
+            self.up_conv2 = utils.concat('up_conv2', [self.down_conv2, self.up_pool2], axis=0)
+            channel_n //= 2
             for i in range(cfg.N_LAYERS[2]):
                 self.up_conv2 = utils.residual_block_v1_dr(name='upres_2_{}'.format(str(i)),
                                                              inputs=self.up_conv2,
@@ -210,9 +210,9 @@ class Model:
                                                      pool_size_h=pool_size_h,
                                                      pool_size_w=pool_size_w,
                                                      mode=cfg.UPSAMPLING_TYPE)
-            channel_n //= 2
-            self.up_conv1 = utils.concat('up_conv1', [self.down_conv1, self.up_pool1], axis=0)
 
+            self.up_conv1 = utils.concat('up_conv1', [self.down_conv1, self.up_pool1], axis=0)
+            channel_n //= 2
             for i in range(cfg.N_LAYERS[1]):
                 self.up_conv1 = utils.residual_block_v1_dr(name='upres_1_{}'.format(str(i)),
                                                              inputs=self.up_conv1,
@@ -232,7 +232,7 @@ class Model:
                                                      pool_size_h=pool_size_h,
                                                      pool_size_w=pool_size_w,
                                                      mode=cfg.UPSAMPLING_TYPE)
-            channel_n //= 2
+
 
             self.up_conv0 = utils.concat('up_conv0', [self.down_conv0, self.up_pool0], axis=0)
 
