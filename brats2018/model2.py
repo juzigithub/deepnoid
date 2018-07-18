@@ -1,6 +1,6 @@
 import tensorflow as tf
-# import utils
-import brats2018.utils as utils
+import utils
+# import brats2018.utils as utils
 import config as cfg
 
 

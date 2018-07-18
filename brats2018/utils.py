@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 import tensorflow as tf
+import tensorlayer as tl
 import numpy as np
 from sklearn.metrics import confusion_matrix
 from scipy.spatial.distance import directed_hausdorff
 import nibabel
 from tensorflow.python.ops import array_ops
+from skimage.feature import greycomatrix, greycoprops
+import os
+import SimpleITK as sitk
 #############################################################################################################################
 #                                                    Layer Functions                                                        #
 #############################################################################################################################
@@ -619,6 +623,38 @@ def residual_block_v1_dr(name, inputs, channel_n, group_n, drop_rate, act_fn, no
 
     return hl
 
+def residual_block_dw_dr(name, inputs, channel_n, width_mul, group_n, drop_rate, act_fn, norm_type, training, idx, rate=None, shortcut=True):
+    # input
+    il = conv2D(name + str(idx) + '_input', inputs, channel_n, [1, 1], [1, 1], padding='SAME')
+    il = Normalization(il, norm_type, training, name + str(idx) + '_input_norm', G=group_n)
+    il = activation(name + str(idx) + '_input_act', il, act_fn)
+
+    # bottleneck1
+    hl = conv2D(name + str(idx) + '_bottleneck1', inputs, int(channel_n/4), [1, 1], [1, 1], padding='SAME')
+    hl = Normalization(hl, norm_type, training, name + str(idx) + '_bottleneck_norm1', G=group_n)
+    hl = activation(name + str(idx) + '_bottleneck_act1', hl, act_fn)
+    hl = dropout(name + str(idx) + '_dropout1', hl, drop_rate, training)
+
+    # depthwise
+    depthwise_filter = tf.get_variable(name=name+'depthwise_filter' + str(idx),
+                                       shape=[3, 3, inputs.get_shape()[-1], width_mul],
+                                       dtype=tf.float32,
+                                       initializer=initializer)
+    hl = tf.nn.depthwise_conv2d(hl, depthwise_filter, [1, 1, 1, 1], 'SAME', rate=rate, name = name + str(idx) + '_depthwise')
+    hl = Normalization(hl, norm_type, training, name + str(idx) + '_depthwise_norm', G=group_n)
+    hl = activation(name + str(idx) + '_depthwise_act', hl, act_fn)
+    hl = dropout(name + str(idx) + '_dropout2', hl, drop_rate, training)
+
+    # bottleneck2
+    hl = conv2D(name + str(idx) + '_bottleneck2', hl, channel_n, [1, 1], [1, 1], padding='SAME')
+    hl = Normalization(hl, norm_type, training, name + str(idx) + '_bottleneck_norm2', G=group_n)
+    hl = activation(name + str(idx) + '_bottleneck_act2', hl, act_fn)
+    hl = dropout(name + str(idx) + '_dropout3', hl, drop_rate, training)
+
+    hl = il + hl if shortcut else hl
+
+    return hl
+
 # densenet  (https://arxiv.org/abs/1608.06993)
 def dense_layer(name, inputs, group_n, drop_rate, act_fn, norm_type, growth, training, idx):
     # bottleneck
@@ -1080,3 +1116,126 @@ def masking_rgb(img, color=None):
     out_img = concat_img * 255
 
     return out_img
+
+#############################################################################################################################
+#                                        Feature Extraction Function                                                        #
+#############################################################################################################################
+
+
+def rgb2gray(rgb):
+    '''
+    Change rgb to grayscale image
+    '''
+    return np.dot(rgb[...,:3], [0.299, 0.587, 0.114])
+
+def get_ND_bounding_box(input, margin):
+    '''
+    get bounding box excluding background
+    :return: min, max indexes, and width, length, height of bounding box
+    '''
+    input_shape = input.shape
+    if(type(margin) is int ):
+        margin = [margin]*len(input_shape)
+    assert(len(input_shape) == len(margin))
+    indices = np.nonzero(input)
+    idx_min = []
+    idx_max = []
+    for i in range(len(input_shape)):
+        idx_min.append(indices[i].min())
+        idx_max.append(indices[i].max())
+    for i in range(len(input_shape)):
+        idx_min[i] = max(idx_min[i] - margin[i], 0)
+        idx_max[i] = min(idx_max[i] + margin[i], input_shape[i] - 1)
+    width = idx_max[0] - idx_min[0]
+    length = idx_max[1] - idx_min[1]
+    height = idx_max[2] - idx_min[2]
+    return idx_min, idx_max, width, length, height
+
+def crop_volume_with_bounding_box(volume, min_idx, max_idx):
+    output = volume[np.ix_(range(min_idx[0], max_idx[0] + 1),
+                               range(min_idx[1], max_idx[1] + 1),
+                               range(min_idx[2], max_idx[2] + 1))]
+    return output
+
+def get_area(label):
+    indices = np.nonzero(label)
+    area = len(indices[0])
+    return area
+
+def get_volume(label):
+    indices = np.nonzero(label)
+    vol = len(indices[0])
+    return vol
+
+def get_glcm(input):
+    '''
+    get gray level co-occurrence matrix and then it's features
+    '''
+    glcm = greycomatrix(input, [1], [0], 256, normed=True)
+    cont = greycoprops(glcm, 'contrast')
+    diss = greycoprops(glcm, 'dissimilarity')
+    homo = greycoprops(glcm, 'homogeneity')
+    eng = greycoprops(glcm, 'energy')
+    corr = greycoprops(glcm, 'correlation')
+    ASM = greycoprops(glcm, 'ASM')
+    return [cont, diss, homo, eng, corr, ASM]
+
+def save_array_as_nifty_volume(data, filename, reference_name = None):
+    '''
+    :param data: np array
+    :param filename: path + filename want to save
+    '''
+    if data.ndim == 3:
+        transposed_data = np.transpose(data, [2,1,0])
+    if data.ndim == 2:
+        transposed_data = np.transpose(data, [1,0])
+    img = sitk.GetImageFromArray(transposed_data)
+    if(reference_name is not None):
+        img_ref = sitk.ReadImage(reference_name)
+        img.CopyInformation(img_ref)
+    sitk.WriteImage(img, filename)
+
+def save_array_as_nifty_volume2(data, filename):
+    '''
+    :param data: np array
+    :param filename: path + filename want to save
+    '''
+    img = nibabel.Nifti1Image(data, affine=np.eye(4))
+    nibabel.save(img, filename)
+
+def get_array_as_nifty_volume(data):
+    nii = nibabel.Nifti1Image(data, affine=np.eye(4))
+    return nii
+
+def add_values_to_key(target_list):
+    '''
+    marge several dictionaries with same key in list to one dictionaries
+    :return:
+    '''
+    subdict = {}
+    for i in range(len(target_list)):
+        for k,v in target_list[i].items():
+            subdict.setdefault(k, [])
+            subdict[k].append(v)
+    for k,v in subdict.items():
+        subdict[k] = tuple(subdict[k])
+    return subdict
+
+def drop_col_contains_sth(dataframe,sth):
+    '''
+    drop columns contains certain strings(sth) in the dataframe
+    :param sth:  str 'sth'
+    :return:
+    '''
+    dropped_df = dataframe[dataframe.columns.drop(list(dataframe.filter(regex=sth)))]
+    return dropped_df
+
+def get_path_list(data_path):
+    '''
+    :return: all folder(or file list)
+    '''
+    id_list = []
+    for path in data_path:
+        path_list = tl.files.load_folder_list(path)
+        id_list += [os.path.join(path, os.path.basename(p), os.path.basename(p)) for p in path_list]
+    return id_list
