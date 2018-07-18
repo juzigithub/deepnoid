@@ -282,6 +282,8 @@ class Model:
             print('up_conv0', self.up_conv0)
             up_conv_f = utils.conv2D('final_upconv', self.up_conv0, cfg.N_CLASS, [1, 1], [1, 1], 'SAME')
 
+            del self.up_conv0
+
             print('final_conv', up_conv_f)
 
         return up_conv_f
