@@ -601,7 +601,7 @@ def residual_block_v1_dr(name, inputs, channel_n, group_n, drop_rate, act_fn, no
     hl = conv2D(name + str(idx) + '_bottleneck1', inputs, int(channel_n/4), [1, 1], [1, 1], padding='SAME')
     hl = Normalization(hl, norm_type, training, name + str(idx) + '_bottleneck_norm1', G=group_n)
     hl = activation(name + str(idx) + '_bottleneck_act1', hl, act_fn)
-    hl = dropout(name + str(idx) + '_dropout1', hl, drop_rate, training)
+    # hl = dropout(name + str(idx) + '_dropout1', hl, drop_rate, training)
 
     # conv
     hl = conv2D(name + str(idx) + '_conv', hl, int(channel_n / 4), [3, 3], [1, 1], padding='SAME')
@@ -613,7 +613,7 @@ def residual_block_v1_dr(name, inputs, channel_n, group_n, drop_rate, act_fn, no
     hl = conv2D(name + str(idx) + '_bottleneck2', hl, channel_n, [1, 1], [1, 1], padding='SAME')
     hl = Normalization(hl, norm_type, training, name + str(idx) + '_bottleneck_norm2', G=group_n)
     hl = activation(name + str(idx) + '_bottleneck_act2', hl, act_fn)
-    hl = dropout(name + str(idx) + '_dropout3', hl, drop_rate, training)
+    # hl = dropout(name + str(idx) + '_dropout3', hl, drop_rate, training)
 
     hl = il + hl if shortcut else hl
 
