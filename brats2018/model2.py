@@ -1,6 +1,6 @@
 import tensorflow as tf
-# import utils
-import brats2018.utils as utils
+import utils
+# import brats2018.utils as utils
 import config as cfg
 
 
@@ -165,6 +165,8 @@ class Model:
                                                      pool_size_h=pool_size_h,
                                                      pool_size_w=pool_size_w,
                                                      mode=cfg.UPSAMPLING_TYPE)
+            print('up_pool3', self.up_pool3)
+
 
             self.up_conv3 = utils.concat('up_conv3', [self.down_conv3, self.up_pool3], axis=0)
             channel_n //= 2
@@ -178,7 +180,7 @@ class Model:
                                                              norm_type=cfg.NORMALIZATION_TYPE,
                                                              training=self.training,
                                                              idx=i)
-
+            print('up_conv3', self.up_conv3)
             pool_size_h *= 2
             pool_size_w *= 2
 
@@ -188,6 +190,7 @@ class Model:
                                                      pool_size_h=pool_size_h,
                                                      pool_size_w=pool_size_w,
                                                      mode=cfg.UPSAMPLING_TYPE)
+            print('up_pool2', self.up_pool2)
 
             self.up_conv2 = utils.concat('up_conv2', [self.down_conv2, self.up_pool2], axis=0)
             channel_n //= 2
@@ -201,6 +204,8 @@ class Model:
                                                              norm_type=cfg.NORMALIZATION_TYPE,
                                                              training=self.training,
                                                              idx=i)
+            print('up_conv2', self.up_conv2)
+
             pool_size_h *= 2
             pool_size_w *= 2
 
@@ -210,6 +215,8 @@ class Model:
                                                      pool_size_h=pool_size_h,
                                                      pool_size_w=pool_size_w,
                                                      mode=cfg.UPSAMPLING_TYPE)
+            print('up_pool1', self.up_pool1)
+
 
             self.up_conv1 = utils.concat('up_conv1', [self.down_conv1, self.up_pool1], axis=0)
             channel_n //= 2
@@ -223,6 +230,7 @@ class Model:
                                                              norm_type=cfg.NORMALIZATION_TYPE,
                                                              training=self.training,
                                                              idx=i)
+            print('up_conv1', self.up_conv1)
             pool_size_h *= 2
             pool_size_w *= 2
 
@@ -232,7 +240,7 @@ class Model:
                                                      pool_size_h=pool_size_h,
                                                      pool_size_w=pool_size_w,
                                                      mode=cfg.UPSAMPLING_TYPE)
-
+            print('up_pool0', self.up_pool0)
 
             self.up_conv0 = utils.concat('up_conv0', [self.down_conv0, self.up_pool0], axis=0)
 
@@ -246,7 +254,9 @@ class Model:
                                                              norm_type=cfg.NORMALIZATION_TYPE,
                                                              training=self.training,
                                                              idx=i)
-
+            print('up_conv0', self.up_conv0)
             up_conv_f = utils.conv2D('final_upconv', self.up_conv0, cfg.N_CLASS, [1, 1], [1, 1], 'SAME')
+
+            print('final_conv', up_conv_f)
 
         return up_conv_f
