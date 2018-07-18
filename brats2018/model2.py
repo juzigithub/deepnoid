@@ -1,6 +1,6 @@
 import tensorflow as tf
-import utils
-# import brats2018.utils as utils
+# import utils
+import brats2018.utils as utils
 import config as cfg
 
 
@@ -46,9 +46,10 @@ class Model:
             self.down_conv0 = tf.identity(inputs)
 
             for i in range(cfg.N_LAYERS[0]):
-                self.down_conv0 = utils.residual_block_v1_dr(name='downres_0_{}'.format(str(i)),
+                self.down_conv0 = utils.residual_block_dw_dr(name='downres_0_{}'.format(str(i)),
                                                              inputs=self.down_conv0,
                                                              channel_n=channel_n,
+                                                             width_mul=cfg.WIDTH_MULTIPLIER,
                                                              group_n=cfg.GROUP_N,
                                                              drop_rate=cfg.DROPOUT_RATE,
                                                              act_fn=cfg.ACTIVATION_FUNC,
@@ -71,10 +72,14 @@ class Model:
 
             self.down_conv1 = tf.identity(self.down_pool0)
 
+            # def residual_block_dw_dr(name, inputs, channel_n, width_mul, group_n, drop_rate, act_fn, norm_type,
+            #                          training, idx, rate=None, shortcut=True):
+
             for i in range(cfg.N_LAYERS[1]):
-                self.down_conv1 = utils.residual_block_v1_dr(name='downres_1_{}'.format(str(i)),
+                self.down_conv1 = utils.residual_block_dw_dr(name='downres_1_{}'.format(str(i)),
                                                              inputs=self.down_conv1,
                                                              channel_n=channel_n,
+                                                             width_mul=cfg.WIDTH_MULTIPLIER,
                                                              group_n=cfg.GROUP_N,
                                                              drop_rate=cfg.DROPOUT_RATE,
                                                              act_fn=cfg.ACTIVATION_FUNC,
@@ -98,9 +103,10 @@ class Model:
             self.down_conv2 = tf.identity(self.down_pool1)
 
             for i in range(cfg.N_LAYERS[2]):
-                self.down_conv2 = utils.residual_block_v1_dr(name='downres_2_{}'.format(str(i)),
+                self.down_conv2 = utils.residual_block_dw_dr(name='downres_2_{}'.format(str(i)),
                                                              inputs=self.down_conv2,
                                                              channel_n=channel_n,
+                                                             width_mul=cfg.WIDTH_MULTIPLIER,
                                                              group_n=cfg.GROUP_N,
                                                              drop_rate=cfg.DROPOUT_RATE,
                                                              act_fn=cfg.ACTIVATION_FUNC,
@@ -124,9 +130,10 @@ class Model:
             self.down_conv3 = tf.identity(self.down_pool2)
 
             for i in range(cfg.N_LAYERS[3]):
-                self.down_conv3 = utils.residual_block_v1_dr(name='downres_3_{}'.format(str(i)),
+                self.down_conv3 = utils.residual_block_dw_dr(name='downres_3_{}'.format(str(i)),
                                                              inputs=self.down_conv3,
                                                              channel_n=channel_n,
+                                                             width_mul=cfg.WIDTH_MULTIPLIER,
                                                              group_n=cfg.GROUP_N,
                                                              drop_rate=cfg.DROPOUT_RATE,
                                                              act_fn=cfg.ACTIVATION_FUNC,
@@ -146,9 +153,10 @@ class Model:
             self.same_conv = tf.identity(self.down_pool3)
 
             for i in range(2):
-                self.same_conv = utils.residual_block_v1_dr(name='sameres_{}'.format(str(i)),
+                self.same_conv = utils.residual_block_dw_dr(name='sameres_{}'.format(str(i)),
                                                             inputs=self.same_conv,
                                                             channel_n=channel_n,
+                                                            width_mul=cfg.WIDTH_MULTIPLIER,
                                                             group_n=cfg.GROUP_N,
                                                             drop_rate=cfg.DROPOUT_RATE,
                                                             act_fn=cfg.ACTIVATION_FUNC,
@@ -165,16 +173,21 @@ class Model:
                                                      pool_size_h=pool_size_h,
                                                      pool_size_w=pool_size_w,
                                                      mode=cfg.UPSAMPLING_TYPE)
+
             print('up_pool3', self.up_pool3)
 
 
             self.up_conv3 = utils.concat('up_conv3', [self.down_conv3, self.up_pool3], axis=-1)
+
+            del self.down_pool3, self.same_conv, self.down_conv3, self.up_pool3 ###########################
+
             channel_n //= 2
             for i in range(2):
-                self.up_conv3 = utils.residual_block_v1_dr(name='upres_3_{}'.format(str(i)),
+                self.up_conv3 = utils.residual_block_dw_dr(name='upres_3_{}'.format(str(i)),
                                                              inputs=self.up_conv3,
                                                              channel_n=channel_n,
-                                                             group_n=cfg.GROUP_N,
+                                                           width_mul=cfg.WIDTH_MULTIPLIER,
+                                                           group_n=cfg.GROUP_N,
                                                              drop_rate=cfg.DROPOUT_RATE,
                                                              act_fn=cfg.ACTIVATION_FUNC,
                                                              norm_type=cfg.NORMALIZATION_TYPE,
@@ -193,12 +206,16 @@ class Model:
             print('up_pool2', self.up_pool2)
 
             self.up_conv2 = utils.concat('up_conv2', [self.down_conv2, self.up_pool2], axis=-1)
+
+            del self.down_pool2, self.up_conv3, self.down_conv2, self.up_pool2 ###########################
+
             channel_n //= 2
             for i in range(2):
-                self.up_conv2 = utils.residual_block_v1_dr(name='upres_2_{}'.format(str(i)),
+                self.up_conv2 = utils.residual_block_dw_dr(name='upres_2_{}'.format(str(i)),
                                                              inputs=self.up_conv2,
                                                              channel_n=channel_n,
-                                                             group_n=cfg.GROUP_N,
+                                                           width_mul=cfg.WIDTH_MULTIPLIER,
+                                                           group_n=cfg.GROUP_N,
                                                              drop_rate=cfg.DROPOUT_RATE,
                                                              act_fn=cfg.ACTIVATION_FUNC,
                                                              norm_type=cfg.NORMALIZATION_TYPE,
@@ -219,12 +236,16 @@ class Model:
 
 
             self.up_conv1 = utils.concat('up_conv1', [self.down_conv1, self.up_pool1], axis=-1)
+
+            del self.down_pool1, self.up_conv2, self.down_conv1, self.up_pool1 ###########################
+
             channel_n //= 2
             for i in range(2):
-                self.up_conv1 = utils.residual_block_v1_dr(name='upres_1_{}'.format(str(i)),
+                self.up_conv1 = utils.residual_block_dw_dr(name='upres_1_{}'.format(str(i)),
                                                              inputs=self.up_conv1,
                                                              channel_n=channel_n,
-                                                             group_n=cfg.GROUP_N,
+                                                           width_mul=cfg.WIDTH_MULTIPLIER,
+                                                           group_n=cfg.GROUP_N,
                                                              drop_rate=cfg.DROPOUT_RATE,
                                                              act_fn=cfg.ACTIVATION_FUNC,
                                                              norm_type=cfg.NORMALIZATION_TYPE,
@@ -244,11 +265,15 @@ class Model:
 
             self.up_conv0 = utils.concat('up_conv0', [self.down_conv0, self.up_pool0], axis=-1)
 
+            del self.down_pool0, self.up_conv1, self.down_conv0, self.up_pool0 ###########################
+
+
             for i in range(2):
-                self.up_conv0 = utils.residual_block_v1_dr(name='upres_0_{}'.format(str(i)),
+                self.up_conv0 = utils.residual_block_dw_dr(name='upres_0_{}'.format(str(i)),
                                                              inputs=self.up_conv0,
                                                              channel_n=channel_n,
-                                                             group_n=cfg.GROUP_N,
+                                                           width_mul=cfg.WIDTH_MULTIPLIER,
+                                                           group_n=cfg.GROUP_N,
                                                              drop_rate=cfg.DROPOUT_RATE,
                                                              act_fn=cfg.ACTIVATION_FUNC,
                                                              norm_type=cfg.NORMALIZATION_TYPE,
