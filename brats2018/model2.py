@@ -160,7 +160,7 @@ class Model:
             pool_size_w *= 2
 
             self.up_pool3 = utils.select_upsampling2(name='upsampling3',
-                                                     up_conv=utils.concat('uppool_3', [self.down_pool3, self.same_conv], axis=0),
+                                                     up_conv=utils.concat('uppool_3', [self.down_pool3, self.same_conv], axis=-1),
                                                      channel_n=channel_n,
                                                      pool_size_h=pool_size_h,
                                                      pool_size_w=pool_size_w,
@@ -168,7 +168,7 @@ class Model:
             print('up_pool3', self.up_pool3)
 
 
-            self.up_conv3 = utils.concat('up_conv3', [self.down_conv3, self.up_pool3], axis=0)
+            self.up_conv3 = utils.concat('up_conv3', [self.down_conv3, self.up_pool3], axis=-1)
             channel_n //= 2
             for i in range(cfg.N_LAYERS[3]):
                 self.up_conv3 = utils.residual_block_v1_dr(name='upres_3_{}'.format(str(i)),
@@ -185,14 +185,14 @@ class Model:
             pool_size_w *= 2
 
             self.up_pool2 = utils.select_upsampling2(name='upsampling2',
-                                                     up_conv=utils.concat('uppool_2', [self.down_pool2, self.up_conv3], axis=0),
+                                                     up_conv=utils.concat('uppool_2', [self.down_pool2, self.up_conv3], axis=-1),
                                                      channel_n=channel_n,
                                                      pool_size_h=pool_size_h,
                                                      pool_size_w=pool_size_w,
                                                      mode=cfg.UPSAMPLING_TYPE)
             print('up_pool2', self.up_pool2)
 
-            self.up_conv2 = utils.concat('up_conv2', [self.down_conv2, self.up_pool2], axis=0)
+            self.up_conv2 = utils.concat('up_conv2', [self.down_conv2, self.up_pool2], axis=-1)
             channel_n //= 2
             for i in range(cfg.N_LAYERS[2]):
                 self.up_conv2 = utils.residual_block_v1_dr(name='upres_2_{}'.format(str(i)),
@@ -210,7 +210,7 @@ class Model:
             pool_size_w *= 2
 
             self.up_pool1 = utils.select_upsampling2(name='upsampling1',
-                                                     up_conv=utils.concat('uppool_1', [self.down_pool1, self.up_conv2], axis=0),
+                                                     up_conv=utils.concat('uppool_1', [self.down_pool1, self.up_conv2], axis=-1),
                                                      channel_n=channel_n,
                                                      pool_size_h=pool_size_h,
                                                      pool_size_w=pool_size_w,
@@ -218,7 +218,7 @@ class Model:
             print('up_pool1', self.up_pool1)
 
 
-            self.up_conv1 = utils.concat('up_conv1', [self.down_conv1, self.up_pool1], axis=0)
+            self.up_conv1 = utils.concat('up_conv1', [self.down_conv1, self.up_pool1], axis=-1)
             channel_n //= 2
             for i in range(cfg.N_LAYERS[1]):
                 self.up_conv1 = utils.residual_block_v1_dr(name='upres_1_{}'.format(str(i)),
@@ -235,14 +235,14 @@ class Model:
             pool_size_w *= 2
 
             self.up_pool0 = utils.select_upsampling2(name='upsampling0',
-                                                     up_conv=utils.concat('uppool_0', [self.down_pool0, self.up_conv1], axis=0),
+                                                     up_conv=utils.concat('uppool_0', [self.down_pool0, self.up_conv1], axis=-1),
                                                      channel_n=channel_n,
                                                      pool_size_h=pool_size_h,
                                                      pool_size_w=pool_size_w,
                                                      mode=cfg.UPSAMPLING_TYPE)
             print('up_pool0', self.up_pool0)
 
-            self.up_conv0 = utils.concat('up_conv0', [self.down_conv0, self.up_pool0], axis=0)
+            self.up_conv0 = utils.concat('up_conv0', [self.down_conv0, self.up_pool0], axis=-1)
 
             for i in range(cfg.N_LAYERS[0]):
                 self.up_conv0 = utils.residual_block_v1_dr(name='upres_0_{}'.format(str(i)),
