@@ -1,5 +1,6 @@
 import tensorflow as tf
-import utils
+# import utils
+import brats2018.utils as utils
 import config as cfg
 
 
@@ -39,66 +40,213 @@ class Model:
             pool_size_h = cfg.IMG_SIZE[0]
             pool_size_w = cfg.IMG_SIZE[1]
 
-            for i in range(cfg.DEPTH):
-                pool_size_h //= 2
-                pool_size_w //= 2
-                for j in range(cfg.N_LAYERS[i]):
-                    self.down_conv[i] = utils.depthwise_separable_convlayer_dr(name='dsconv_{}_{}_'.format(str(i),str(j)),
-                                                                               inputs=inputs,
-                                                                               channel_n=channel_n,
-                                                                               width_mul=cfg.WIDTH_MULTIPLIER,
-                                                                               group_n=cfg.GROUP_N,
-                                                                               drop_rate=self.drop_rate,
-                                                                               act_fn=cfg.ACTIVATION_FUNC,
-                                                                               norm_type=cfg.NORMALIZATION_TYPE,
-                                                                               training=self.training,
-                                                                               idx=i)
-                print('down_conv', self.down_conv[i])
-                channel_n *= 2
-                self.down_pool[i] = utils.select_downsampling(name=str(i) + '_downsampling',
-                                                              down_conv=self.down_conv[i],
-                                                              down_pool=self.down_pool[i],
-                                                              channel_n=channel_n,
-                                                              pool_size_h=pool_size_h,
-                                                              pool_size_w=pool_size_w,
-                                                              mode=cfg.DOWNSAMPLING_TYPE)
+            pool_size_h //= 2
+            pool_size_w //= 2
 
-                inputs = tf.identity(self.down_pool[i])
-                print('down_pool', inputs)
+            self.down_conv0 = tf.identity(inputs)
 
-            inputs = utils.unet_same_block(inputs=inputs,
-                                           channel_n=channel_n,
-                                           group_n=cfg.GROUP_N,
-                                           act_fn=cfg.ACTIVATION_FUNC,
-                                           norm_type=cfg.NORMALIZATION_TYPE,
-                                           training=self.training)
+            for i in range(cfg.N_LAYERS[0]):
+                self.down_conv0 = utils.residual_block_v1_dr(name='downres_0_{}'.format(str(i)),
+                                                             inputs=self.down_conv0,
+                                                             channel_n=channel_n,
+                                                             group_n=cfg.GROUP_N,
+                                                             drop_rate=cfg.DROPOUT_RATE,
+                                                             act_fn=cfg.ACTIVATION_FUNC,
+                                                             norm_type=cfg.NORMALIZATION_TYPE,
+                                                             training=self.training,
+                                                             idx=i)
+            print('down_conv0', self.down_conv0)
 
-        with tf.variable_scope('up'):
-            for i in reversed(range(cfg.DEPTH)):
-                channel_n //= 2
-                pool_size_h *= 2
-                pool_size_w *= 2
-                inputs = utils.select_upsampling(name=str(i) + '_upsampling',
-                                                 up_conv=inputs,
-                                                 up_pool=self.up_pool[i],
-                                                 channel_n=channel_n,
-                                                 pool_size_h=pool_size_h,
-                                                 pool_size_w=pool_size_w,
-                                                 mode=cfg.UPSAMPLING_TYPE)
-                print('up_pool', inputs)
+            self.down_pool0 = utils.select_downsampling2(name='downsampling0',
+                                                         down_conv=self.down_conv0,
+                                                         channel_n=channel_n,
+                                                         pool_size_h=pool_size_h,
+                                                         pool_size_w=pool_size_w,
+                                                         mode=cfg.DOWNSAMPLING_TYPE)
+            print('down_pool0', self.down_pool0)
 
-                inputs = utils.unet_up_block(inputs=inputs,
-                                             downconv_list=self.down_conv,
-                                             upconv_list=self.up_conv,
-                                             pool_list=self.up_pool,
-                                             channel_n=channel_n,
-                                             group_n=cfg.GROUP_N,
-                                             act_fn=cfg.ACTIVATION_FUNC,
-                                             norm_type=cfg.NORMALIZATION_TYPE,
-                                             training=self.training,
-                                             idx=i)
-                print('up_conv', inputs)
+            channel_n *= 2
+            pool_size_h //= 2
+            pool_size_w //= 2
 
-            up_conv_f = utils.conv2D('final_upconv', inputs, cfg.N_CLASS, [1, 1], [1, 1], 'SAME')
+            self.down_conv1 = tf.identity(self.down_pool0)
+
+            for i in range(cfg.N_LAYERS[1]):
+                self.down_conv1 = utils.residual_block_v1_dr(name='downres_1_{}'.format(str(i)),
+                                                             inputs=self.down_conv1,
+                                                             channel_n=channel_n,
+                                                             group_n=cfg.GROUP_N,
+                                                             drop_rate=cfg.DROPOUT_RATE,
+                                                             act_fn=cfg.ACTIVATION_FUNC,
+                                                             norm_type=cfg.NORMALIZATION_TYPE,
+                                                             training=self.training,
+                                                             idx=i)
+            print('down_conv1', self.down_conv1)
+
+            self.down_pool1 = utils.select_downsampling2(name='downsampling1',
+                                                         down_conv=self.down_conv1,
+                                                         channel_n=channel_n,
+                                                         pool_size_h=pool_size_h,
+                                                         pool_size_w=pool_size_w,
+                                                         mode=cfg.DOWNSAMPLING_TYPE)
+            print('down_pool1', self.down_pool1)
+
+            channel_n *= 2
+            pool_size_h //= 2
+            pool_size_w //= 2
+
+            self.down_conv2 = tf.identity(self.down_pool1)
+
+            for i in range(cfg.N_LAYERS[2]):
+                self.down_conv2 = utils.residual_block_v1_dr(name='downres_2_{}'.format(str(i)),
+                                                             inputs=self.down_conv2,
+                                                             channel_n=channel_n,
+                                                             group_n=cfg.GROUP_N,
+                                                             drop_rate=cfg.DROPOUT_RATE,
+                                                             act_fn=cfg.ACTIVATION_FUNC,
+                                                             norm_type=cfg.NORMALIZATION_TYPE,
+                                                             training=self.training,
+                                                             idx=i)
+            print('down_conv2', self.down_conv2)
+
+            self.down_pool2 = utils.select_downsampling2(name='downsampling2',
+                                                         down_conv=self.down_conv2,
+                                                         channel_n=channel_n,
+                                                         pool_size_h=pool_size_h,
+                                                         pool_size_w=pool_size_w,
+                                                         mode=cfg.DOWNSAMPLING_TYPE)
+            print('down_pool2', self.down_pool2)
+
+            channel_n *= 2
+            pool_size_h //= 2
+            pool_size_w //= 2
+
+            self.down_conv3 = tf.identity(self.down_pool2)
+
+            for i in range(cfg.N_LAYERS[3]):
+                self.down_conv3 = utils.residual_block_v1_dr(name='downres_3_{}'.format(str(i)),
+                                                             inputs=self.down_conv3,
+                                                             channel_n=channel_n,
+                                                             group_n=cfg.GROUP_N,
+                                                             drop_rate=cfg.DROPOUT_RATE,
+                                                             act_fn=cfg.ACTIVATION_FUNC,
+                                                             norm_type=cfg.NORMALIZATION_TYPE,
+                                                             training=self.training,
+                                                             idx=i)
+            print('down_conv3', self.down_conv3)
+
+            self.down_pool3 = utils.select_downsampling2(name='downsampling3',
+                                                         down_conv=self.down_conv3,
+                                                         channel_n=channel_n,
+                                                         pool_size_h=pool_size_h,
+                                                         pool_size_w=pool_size_w,
+                                                         mode=cfg.DOWNSAMPLING_TYPE)
+            print('down_pool3', self.down_pool3)
+
+            self.same_conv = tf.identity(self.down_pool3)
+
+            for i in range(2):
+                self.same_conv = utils.residual_block_v1_dr(name='sameres_{}'.format(str(i)),
+                                                            inputs=self.same_conv,
+                                                            channel_n=channel_n,
+                                                            group_n=cfg.GROUP_N,
+                                                            drop_rate=cfg.DROPOUT_RATE,
+                                                            act_fn=cfg.ACTIVATION_FUNC,
+                                                            norm_type=cfg.NORMALIZATION_TYPE,
+                                                            training=self.training,
+                                                            idx=i)
+
+            pool_size_h *= 2
+            pool_size_w *= 2
+
+            self.up_pool3 = utils.select_upsampling2(name='upsampling3',
+                                                     up_conv=utils.concat('uppool_3', [self.down_pool3, self.same_conv], axis=0),
+                                                     channel_n=channel_n,
+                                                     pool_size_h=pool_size_h,
+                                                     pool_size_w=pool_size_w,
+                                                     mode=cfg.UPSAMPLING_TYPE)
+
+            self.up_conv3 = utils.concat('up_conv3', [self.down_conv3, self.up_pool3], axis=0)
+
+            for i in range(cfg.N_LAYERS[3]):
+                self.up_conv3 = utils.residual_block_v1_dr(name='upres_3_{}'.format(str(i)),
+                                                             inputs=self.up_conv3,
+                                                             channel_n=channel_n,
+                                                             group_n=cfg.GROUP_N,
+                                                             drop_rate=cfg.DROPOUT_RATE,
+                                                             act_fn=cfg.ACTIVATION_FUNC,
+                                                             norm_type=cfg.NORMALIZATION_TYPE,
+                                                             training=self.training,
+                                                             idx=i)
+
+            pool_size_h *= 2
+            pool_size_w *= 2
+
+            self.up_pool2 = utils.select_upsampling2(name='upsampling2',
+                                                     up_conv=utils.concat('uppool_2', [self.down_pool2, self.up_conv3], axis=0),
+                                                     channel_n=channel_n,
+                                                     pool_size_h=pool_size_h,
+                                                     pool_size_w=pool_size_w,
+                                                     mode=cfg.UPSAMPLING_TYPE)
+            channel_n //= 2
+            self.up_conv2 = utils.concat('up_conv2', [self.down_conv2, self.up_pool2], axis=0)
+
+            for i in range(cfg.N_LAYERS[2]):
+                self.up_conv2 = utils.residual_block_v1_dr(name='upres_2_{}'.format(str(i)),
+                                                             inputs=self.up_conv2,
+                                                             channel_n=channel_n,
+                                                             group_n=cfg.GROUP_N,
+                                                             drop_rate=cfg.DROPOUT_RATE,
+                                                             act_fn=cfg.ACTIVATION_FUNC,
+                                                             norm_type=cfg.NORMALIZATION_TYPE,
+                                                             training=self.training,
+                                                             idx=i)
+            pool_size_h *= 2
+            pool_size_w *= 2
+
+            self.up_pool1 = utils.select_upsampling2(name='upsampling1',
+                                                     up_conv=utils.concat('uppool_1', [self.down_pool1, self.up_conv2], axis=0),
+                                                     channel_n=channel_n,
+                                                     pool_size_h=pool_size_h,
+                                                     pool_size_w=pool_size_w,
+                                                     mode=cfg.UPSAMPLING_TYPE)
+            channel_n //= 2
+            self.up_conv1 = utils.concat('up_conv1', [self.down_conv1, self.up_pool1], axis=0)
+
+            for i in range(cfg.N_LAYERS[1]):
+                self.up_conv1 = utils.residual_block_v1_dr(name='upres_1_{}'.format(str(i)),
+                                                             inputs=self.up_conv1,
+                                                             channel_n=channel_n,
+                                                             group_n=cfg.GROUP_N,
+                                                             drop_rate=cfg.DROPOUT_RATE,
+                                                             act_fn=cfg.ACTIVATION_FUNC,
+                                                             norm_type=cfg.NORMALIZATION_TYPE,
+                                                             training=self.training,
+                                                             idx=i)
+            pool_size_h *= 2
+            pool_size_w *= 2
+
+            self.up_pool0 = utils.select_upsampling2(name='upsampling0',
+                                                     up_conv=utils.concat('uppool_0', [self.down_pool0, self.up_conv1], axis=0),
+                                                     channel_n=channel_n,
+                                                     pool_size_h=pool_size_h,
+                                                     pool_size_w=pool_size_w,
+                                                     mode=cfg.UPSAMPLING_TYPE)
+            channel_n //= 2
+
+            self.up_conv0 = utils.concat('up_conv0', [self.down_conv0, self.up_pool0], axis=0)
+
+            for i in range(cfg.N_LAYERS[0]):
+                self.up_conv0 = utils.residual_block_v1_dr(name='upres_0_{}'.format(str(i)),
+                                                             inputs=self.up_conv0,
+                                                             channel_n=channel_n,
+                                                             group_n=cfg.GROUP_N,
+                                                             drop_rate=cfg.DROPOUT_RATE,
+                                                             act_fn=cfg.ACTIVATION_FUNC,
+                                                             norm_type=cfg.NORMALIZATION_TYPE,
+                                                             training=self.training,
+                                                             idx=i)
+
+            up_conv_f = utils.conv2D('final_upconv', self.up_conv0, cfg.N_CLASS, [1, 1], [1, 1], 'SAME')
 
         return up_conv_f

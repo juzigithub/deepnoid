@@ -424,6 +424,19 @@ def select_downsampling(name, down_conv, down_pool, channel_n, pool_size_h, pool
 
     return down_pool
 
+def select_downsampling2(name, down_conv, channel_n, pool_size_h, pool_size_w, mode):
+    if mode == 'neighbor':
+        shape = [-1, pool_size_h, pool_size_w, channel_n]
+        down_pool = re_conv2D(name + '_neighbor', down_conv, shape)
+
+    elif mode == 'maxpool':
+        down_pool = maxpool(name + '_maxpool', down_conv, [2,2], [2,2], 'SAME')
+
+    elif mode == 'avgpool':
+        down_pool = averagepool(name + '_avgpool', down_conv, [2,2], [2,2], 'SAME')
+
+    return down_pool
+
 
 def select_upsampling(name, up_conv, up_pool, channel_n, pool_size_h, pool_size_w, mode):
     shape = [-1, pool_size_h, pool_size_w, channel_n]
@@ -451,6 +464,34 @@ def select_upsampling(name, up_conv, up_pool, channel_n, pool_size_h, pool_size_
     return up_pool
 
 
+def select_upsampling2(name, up_conv, channel_n, pool_size_h, pool_size_w, mode):
+    shape = [-1, pool_size_h, pool_size_w, channel_n]
+    filter = tf.ones([2, 2, 1, 1])  # [rows, cols, depth_in, depth_output]
+
+    if mode == 'resize':
+      up_pool = re_conv2D(name + '_reconv', up_conv, shape)
+
+    elif mode == 'transpose':
+        up_pool = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n * 2], shape, [1,2,2,1], 'SAME')
+        up_pool = tf.reshape(up_pool, shape)
+
+    elif mode == 'add':
+        up_pool1 = re_conv2D(name + '_reconv', up_conv, shape)
+        up_pool2 = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n * 2], shape, [1,2,2,1], 'SAME')
+        up_pool2 = tf.reshape(up_pool2, shape)
+        up_pool = up_pool1 + up_pool2
+
+    elif mode == 'concat':
+        up_pool1 = re_conv2D(name + '_reconv', up_conv, shape)
+        up_pool2 = deconv2D(name + 'deconv', up_conv, [3, 3, channel_n, channel_n * 2], shape, [1, 2, 2, 1], 'SAME')
+        up_pool2 = tf.reshape(up_pool2, shape)
+        up_pool = concat(name + '_upsampling_concat', [up_pool1, up_pool2], axis=3)
+        up_pool = conv2D(name + '_bottleneck', up_pool, channel_n, [1,1], [1,1], padding='SAME')
+
+    elif mode == 'avgpool' :
+        up_pool = tf.nn.conv2d_transpose(up_conv, filter, shape, [1, 2, 2, 1], 'SAME')
+
+    return up_pool
 #############################################################################################################################
 #                                                    Save Functions                                                         #
 #############################################################################################################################
@@ -469,7 +510,7 @@ def save_array_as_nifty_volume(data, filename):
 #############################################################################################################################
 
 # Unet  (https://arxiv.org/abs/1505.04597)
-def unet_down_block(inputs, conv_list, pool_list, channel_n, pool_size, group_n, act_fn, norm_type, down_type, training, idx):
+def unet_down_block(inputs, conv_list, pool_list, channel_n, pool_size_h, pool_size_w, group_n, act_fn, norm_type, down_type, training, idx):
     conv_list[idx] = conv2D(str(idx) + '_downconv1', inputs, channel_n, [3, 3], [1, 1], padding='SAME')
     conv_list[idx] = Normalization(conv_list[idx], norm_type, training, str(idx) + '_downnorm1', G=group_n)
     conv_list[idx] = activation(str(idx) + '_downact1', conv_list[idx], act_fn)
@@ -482,7 +523,8 @@ def unet_down_block(inputs, conv_list, pool_list, channel_n, pool_size, group_n,
                                          conv_list[idx],
                                          pool_list[idx],
                                          channel_n,
-                                         pool_size,
+                                         pool_size_h,
+                                         pool_size_w,
                                          down_type)
     print('down' + str(idx + 1) + 'pool', pool_list[idx])
 
@@ -513,6 +555,7 @@ def unet_up_block(inputs, downconv_list, upconv_list, pool_list, channel_n, grou
     upconv_list[idx] = conv2D(str(idx) + '_upconv1', pool_list[idx], channel_n, [3, 3], [1, 1], padding='SAME')
     upconv_list[idx] = Normalization(upconv_list[idx], norm_type, training, str(idx) + '_upnorm1', G=group_n)
     upconv_list[idx] = activation(str(idx) + '_upact1', upconv_list[idx], act_fn)
+
     upconv_list[idx] = conv2D(str(idx) + '_upconv2', upconv_list[idx], channel_n, [3, 3], [1, 1], padding='SAME')
     upconv_list[idx] = Normalization(upconv_list[idx], norm_type, training, str(idx) + '_upnorm2', G=group_n)
     upconv_list[idx] = activation(str(idx) + '_upact2', upconv_list[idx], act_fn)
@@ -541,6 +584,34 @@ def residual_block_v1(inputs, channel_n, group_n, act_fn, norm_type, training, i
     hl = conv2D(str(idx) + '_bottleneck2', hl, channel_n, [1, 1], [1, 1], padding='SAME')
     hl = Normalization(hl, norm_type, training, str(idx) + '_bottleneck_norm2', G=group_n)
     hl = activation(str(idx) + '_bottleneck_act2', hl, act_fn)
+
+    hl = il + hl if shortcut else hl
+
+    return hl
+
+def residual_block_v1_dr(name, inputs, channel_n, group_n, drop_rate, act_fn, norm_type, training, idx, shortcut=True):
+    # input
+    il = conv2D(name + str(idx) + '_input', inputs, channel_n, [1, 1], [1, 1], padding='SAME')
+    il = Normalization(il, norm_type, training, name + str(idx) + '_input_norm', G=group_n)
+    il = activation(name + str(idx) + '_input_act', il, act_fn)
+
+    # bottleneck1
+    hl = conv2D(name + str(idx) + '_bottleneck1', inputs, int(channel_n/4), [1, 1], [1, 1], padding='SAME')
+    hl = Normalization(hl, norm_type, training, name + str(idx) + '_bottleneck_norm1', G=group_n)
+    hl = activation(name + str(idx) + '_bottleneck_act1', hl, act_fn)
+    hl = dropout(name + str(idx) + '_dropout1', hl, drop_rate, training)
+
+    # conv
+    hl = conv2D(name + str(idx) + '_conv', hl, int(channel_n / 4), [3, 3], [1, 1], padding='SAME')
+    hl = Normalization(hl, norm_type, training, name + str(idx) + '_conv_norm', G=group_n)
+    hl = activation(name + str(idx) + '_conv_act', hl, act_fn)
+    hl = dropout(name + str(idx) + '_dropout2', hl, drop_rate, training)
+
+    # bottleneck2
+    hl = conv2D(name + str(idx) + '_bottleneck2', hl, channel_n, [1, 1], [1, 1], padding='SAME')
+    hl = Normalization(hl, norm_type, training, name + str(idx) + '_bottleneck_norm2', G=group_n)
+    hl = activation(name + str(idx) + '_bottleneck_act2', hl, act_fn)
+    hl = dropout(name + str(idx) + '_dropout3', hl, drop_rate, training)
 
     hl = il + hl if shortcut else hl
 
