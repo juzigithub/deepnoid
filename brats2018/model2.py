@@ -10,7 +10,7 @@ class Model:
         self.training = tf.placeholder(tf.bool, name='training')
         self.X = tf.placeholder(tf.float32, [None, 192, 160, 4], name='X')
         self.Y = tf.placeholder(tf.float32, [None, 192, 160, 4], name='Y')
-        self.logit = self.mobilenet()
+        self.logit = self.dual_framelets_resnet()
 
         self.pred = tf.nn.softmax(logits=self.logit)
 
@@ -26,7 +26,7 @@ class Model:
 
 
 
-    def mobilenet(self):
+    def dual_framelets_resnet(self):
         with tf.variable_scope('down'):
 
             inputs = self.X  # iterator 변수 self.features 를 이용해 inputs 생성
