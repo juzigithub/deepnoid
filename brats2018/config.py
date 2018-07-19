@@ -88,7 +88,7 @@ NORMALIZATION_TYPE = 'batch'    # batch, group
 N_LAYERS = [1, 1, 1, 1]         # n_layers before each downsampling
 DEPTH = len(N_LAYERS)           # total downsampling cnt. if 4 then img size(192 -> 96 -> 48 -> 24 -> 12)
 DOWNSAMPLING_TYPE = 'neighbor'  # neighbor, maxpool, avgpool
-UPSAMPLING_TYPE = 'add'         # resize, transpose, add, concat
+UPSAMPLING_TYPE = 'add'         # resize, transpose, add, concat, avgpool
 GROUP_N = 4                     # group size of group_conv & group_norm
 DROPOUT_RATE = 0.5
 
