@@ -3,7 +3,7 @@ import os
 from sklearn.model_selection import KFold
 import numpy as np
 import nibabel
-from sklearn.preprocessing import scale
+from sklearn.preprocessing import scale, minmax_scale
 import csv
 import config as cfg
 
@@ -95,8 +95,9 @@ def get_normalized_img(data_sets, train):
         if idx < 4:
             shape = np.shape(imgset)
             imgset = imgset.reshape([len(imgset), -1])
-            scale(imgset, axis=1, copy=False)
-            imgset = imgset / (np.max(imgset, axis=1) + 1e-6).reshape([-1,1])
+            minmax_scale(imgset, axis=1, copy=False)
+            # scale(imgset, axis=1, copy=False)
+            # imgset = imgset / (np.max(imgset, axis=1) + 1e-6).reshape([-1,1])
             imgset = imgset.reshape(shape)
             total_list[idx] = imgset
 
