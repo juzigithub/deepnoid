@@ -176,14 +176,14 @@ def survival_data_saver(data_path, csv_path, save_path, train=True):
         print('self.chunk_x.shape : ', train_sets_X.shape)  # shape :  (n, 240, 240, 4)
         print('self.chunk_y.shape : ', train_sets_Y.shape)  # shape :  (n, 240, 240, 4)
 
-        np.save(save_path + 'task2_train_image.npy', train_sets_X)
-        np.save(save_path + 'task2_train_label.npy', train_sets_Y)
+        np.savez(save_path + 'task2_train_image.npz', train_sets_X)
+        np.savez(save_path + 'task2_train_label.npz', train_sets_Y)
         print('saved')
 
     else :
         test_sets_X, _ = get_normalized_img(file_list, train=train)
         print(np.shape(test_sets_X))
-        np.save(save_path + 'task2_val_image.npy', test_sets_X)
+        np.savez(save_path + 'task2_val_image.npz', test_sets_X)
         print('saved')
 
     return survival_id_list
@@ -201,12 +201,12 @@ def data_saver(data_path, save_path, splits, train, shuffle=True):
             print('self.chunk_x.shape : ', chunk_X.shape)  # shape :  (n, 240, 240, 4)
             print('self.chunk_y.shape : ', chunk_Y.shape)  # shape :  (n, 240, 240, 4)
 
-            np.save(save_path + 'brats_image_chunk_{}.npy'.format(idx), chunk_X)
-            np.save(save_path + 'brats_label_chunk_{}.npy'.format(idx), chunk_Y)
+            np.savez(save_path + 'brats_image_chunk_{}.npz'.format(idx), chunk_X)
+            np.savez(save_path + 'brats_label_chunk_{}.npz'.format(idx), chunk_Y)
             print('{}.saved'.format(idx))
     else :
         test_sets = nii_names(data_path, train=False)
         test_sets_X, _ = get_normalized_img(test_sets, train=train)
         print('np.shape(test_sets_X)', np.shape(test_sets_X))
-        np.save(save_path + 'brats_val_image.npy', test_sets_X)
+        np.savez(save_path + 'brats_val_image.npz', test_sets_X)
         print('saved')
