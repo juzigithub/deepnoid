@@ -82,6 +82,7 @@ def cv(data_path, splits, shuffle):
 
 def get_normalized_img(data_sets, train):
     total_list = [[] for _ in range(np.shape(data_sets)[-1])] # [ [flair], [t1], [t1ce], [t2], [seg] ]
+    total_norm_list = [[] for _ in range(np.shape(data_sets)[-1])]
     for data in data_sets:
         for idx in range(len(total_list)):
             vol = nibabel.load(data[idx]).get_fdata()
@@ -109,12 +110,12 @@ def get_normalized_img(data_sets, train):
             # scale(imgset, axis=1, copy=False)
             # imgset = imgset / (np.max(imgset, axis=1) + 1e-6).reshape([-1,1])
             imgset = imgset.reshape(shape)
-            total_list[idx] = imgset
+            total_norm_list[idx] = imgset
         elif idx == cfg.N_INPUT_CHANNEL:
-            total_list[idx] = imgset
+            total_norm_list[idx] = imgset
 
-    X = np.transpose(total_list[0:cfg.N_INPUT_CHANNEL], [1, 2, 3, 0])  # [n, img_size, img_size, 4(flair, t1, t1ce, t2)]
-    Y = total_list[cfg.N_INPUT_CHANNEL] if train else []
+    X = np.transpose(total_norm_list[0:cfg.N_INPUT_CHANNEL], [1, 2, 3, 0])  # [n, img_size, img_size, 4(flair, t1, t1ce, t2)]
+    Y = total_norm_list[cfg.N_INPUT_CHANNEL] if train else []
 
     return X, Y
 
