@@ -80,7 +80,7 @@ def cv(data_path, splits, shuffle):
         val_sets.append(sub_val_set)
     return np.array(train_sets), np.array(val_sets)
 
-def get_normalized_img(data_sets, train):
+def get_normalized_img(data_sets, train, task1=True):
     total_list = [[] for _ in range(np.shape(data_sets)[-1])] # [ [flair], [t1], [t1ce], [t2], [seg] ]
     total_norm_list = [[] for _ in range(np.shape(data_sets)[-1])]
     for data in data_sets:
@@ -97,7 +97,7 @@ def get_normalized_img(data_sets, train):
     total_list = np.reshape(total_list, [m, -1, w, h])          # (5, 6300, 190, 160)
     print('np.shape(total_list) : ' , np.shape(total_list))
 
-    nonzero_idx = np.where(total_list[cfg.N_INPUT_CHANNEL].sum(axis=(1, 2)) != 0.)
+    nonzero_idx = np.where(total_list[cfg.N_INPUT_CHANNEL].sum(axis=(1, 2)) != 0.) if task1 else np.arange(len(total_list[0]), dtype=np.int32)
 
     for idx, imgset in enumerate(total_list):
         if train:
@@ -176,17 +176,19 @@ def survival_data_saver(data_path, csv_path, save_path, train=True):
         t1ce_path = flair_path.replace('flair', 't1ce')
         t2_path = flair_path.replace('flair', 't2')
         seg_path = flair_path.replace('flair', 'seg')
+        path_dic = {'flair' : flair_path, 't1' : t1_path, 't1ce' : t1ce_path, 't2' : t2_path}
 
         if train :
             # file_list.append([flair_path, t1_path, t1ce_path, t2_path, seg_path] )
-            file_list.append([eval(modal + '_path') for modal in cfg.USED_MODALITY] + [seg_path])
-
+            # file_list.append([eval(modal + '_path') for modal in cfg.USED_MODALITY] + [seg_path])
+            file_list.append([path_dic[modal] for modal in cfg.USED_MODALITY] + [seg_path])
         else :
             # file_list.append([flair_path, t1_path, t1ce_path, t2_path])
-            file_list.append([eval(modal + '_path') for modal in cfg.USED_MODALITY])
+            # file_list.append([eval(modal + '_path') for modal in cfg.USED_MODALITY])
+            file_list.append([path_dic[modal] for modal in cfg.USED_MODALITY])
 
     if train :
-        train_sets_X, train_sets_Y= get_normalized_img(file_list, train=train)
+        train_sets_X, train_sets_Y= get_normalized_img(file_list, train=train, task1=False)
         print('idx, chunk_x.shape, chunk_y.shape', np.shape(train_sets_X),np.shape(train_sets_Y))
 
         print('self.chunk_x.shape : ', train_sets_X.shape)  # shape :  (n, 240, 240, 4)
@@ -197,7 +199,7 @@ def survival_data_saver(data_path, csv_path, save_path, train=True):
         print('saved')
 
     else :
-        test_sets_X, _ = get_normalized_img(file_list, train=train)
+        test_sets_X, _ = get_normalized_img(file_list, train=train, task1=False)
         print(np.shape(test_sets_X))
         np.save(save_path + 'task2_val_image.npy', test_sets_X)
         print('saved')
