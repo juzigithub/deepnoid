@@ -63,13 +63,8 @@ N_FILES = 5
 
 ### Data info ###
 IMG_SIZE = [192, 160]
-
-
-
 USED_MODALITY = ['flair', 't1', 't1ce', 't2']
 N_INPUT_CHANNEL = len(USED_MODALITY)
-
-
 RGB_CHANNEL = 1
 N_CLASS = 4
 TRAIN_LABEL = [0, 1, 2, 3]

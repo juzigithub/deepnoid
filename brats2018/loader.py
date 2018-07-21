@@ -38,13 +38,14 @@ def nii_names(data_path, train):
         t1ce_path = flair_path.replace('flair', 't1ce')
         t2_path = flair_path.replace('flair', 't2')
         seg_path = flair_path.replace('flair', 'seg')
+        path_dic = {'flair' : flair_path, 't1' : t1_path, 't1ce' : t1ce_path, 't2' : t2_path}
 
         if train :
             # file_list.append([flair_path, t1_path, t1ce_path, t2_path, seg_path] )
-            file_list.append([eval(modal + '_path') for modal in cfg.USED_MODALITY] + [seg_path])
+            file_list.append([path_dic[modal] for modal in cfg.USED_MODALITY] + [seg_path])
         else :
             # file_list.append([flair_path, t1_path, t1ce_path, t2_path])
-            file_list.append([eval(modal + '_path') for modal in cfg.USED_MODALITY])
+            file_list.append([path_dic[modal] for modal in cfg.USED_MODALITY])
 
     return file_list
 
