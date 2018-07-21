@@ -6,6 +6,8 @@ import nibabel
 from sklearn.preprocessing import scale, minmax_scale
 import csv
 import config as cfg
+# import brats2018.config as cfg
+
 
 os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU
 
@@ -38,9 +40,12 @@ def nii_names(data_path, train):
         seg_path = flair_path.replace('flair', 'seg')
 
         if train :
-            file_list.append([flair_path, t1_path, t1ce_path, t2_path, seg_path] )
+            # file_list.append([flair_path, t1_path, t1ce_path, t2_path, seg_path] )
+            file_list.append([eval(modal + '_path') for modal in cfg.USED_MODALITY] + [seg_path])
         else :
-            file_list.append([flair_path, t1_path, t1ce_path, t2_path])
+            # file_list.append([flair_path, t1_path, t1ce_path, t2_path])
+            file_list.append([eval(modal + '_path') for modal in cfg.USED_MODALITY])
+
     return file_list
 
 def cv(data_path, splits, shuffle):
@@ -90,9 +95,13 @@ def get_normalized_img(data_sets, train):
     total_list = np.reshape(total_list, [m, -1, w, h])          # (5, 6300, 190, 160)
     print('np.shape(total_list) : ' , np.shape(total_list))
 
+    nonzero_idx = np.where(total_list[cfg.N_INPUT_CHANNEL].sum(axis=(1, 2)) != 0.)
+
     for idx, imgset in enumerate(total_list):
+        if train:
+            imgset = imgset[nonzero_idx]
         # to avoid normalizing seg
-        if idx < 4:
+        if idx < cfg.N_INPUT_CHANNEL:
             shape = np.shape(imgset)
             imgset = imgset.reshape([len(imgset), -1])
             minmax_scale(imgset, axis=1, copy=False)
@@ -100,9 +109,11 @@ def get_normalized_img(data_sets, train):
             # imgset = imgset / (np.max(imgset, axis=1) + 1e-6).reshape([-1,1])
             imgset = imgset.reshape(shape)
             total_list[idx] = imgset
+        elif idx == cfg.N_INPUT_CHANNEL:
+            total_list[idx] = imgset
 
-    X = np.transpose(total_list[0:4], [1, 2, 3, 0])  # [n, img_size, img_size, 4(flair, t1, t1ce, t2)]
-    Y = total_list[4] if train else []
+    X = np.transpose(total_list[0:cfg.N_INPUT_CHANNEL], [1, 2, 3, 0])  # [n, img_size, img_size, 4(flair, t1, t1ce, t2)]
+    Y = total_list[cfg.N_INPUT_CHANNEL] if train else []
 
     return X, Y
 
@@ -165,9 +176,12 @@ def survival_data_saver(data_path, csv_path, save_path, train=True):
         seg_path = flair_path.replace('flair', 'seg')
 
         if train :
-            file_list.append([flair_path, t1_path, t1ce_path, t2_path, seg_path] )
+            # file_list.append([flair_path, t1_path, t1ce_path, t2_path, seg_path] )
+            file_list.append([eval(modal + '_path') for modal in cfg.USED_MODALITY] + [seg_path])
+
         else :
-            file_list.append([flair_path, t1_path, t1ce_path, t2_path])
+            # file_list.append([flair_path, t1_path, t1ce_path, t2_path])
+            file_list.append([eval(modal + '_path') for modal in cfg.USED_MODALITY])
 
     if train :
         train_sets_X, train_sets_Y= get_normalized_img(file_list, train=train)
