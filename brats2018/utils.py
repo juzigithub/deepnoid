@@ -14,7 +14,7 @@ import SimpleITK as sitk
 #############################################################################################################################
 
 initializer = tf.contrib.layers.variance_scaling_initializer()
-regularizer = tf.contrib.layers.l2_regularizer(0.0001)
+regularizer = None #tf.contrib.layers.l2_regularizer(0.0001)
 
 
 def conv2D(name, inputs, filters, kernel_size, strides, padding='valid', dilation_rate=(1,1)):
