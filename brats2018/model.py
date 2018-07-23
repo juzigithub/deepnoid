@@ -6,7 +6,7 @@ import config as cfg
 class Model:
     def __init__(self):
         self.drop_rate = tf.placeholder(tf.float32, name='drop_rate')
-        self.training = tf.placeholder(tf.aaaaaaaabool, name='training')
+        self.training = tf.placeholder(tf.bool, name='training')
         self.X = tf.placeholder(tf.float32, [None, None, None, cfg.N_INPUT_CHANNEL], name='X')
         self.Y = tf.placeholder(tf.float32, [None, None, None, cfg.N_CLASS], name='Y')
         self.logit = self.mobilenet()
