@@ -98,11 +98,11 @@ class Train:
                 val_idx = idx
 
                 train_X = np.concatenate(
-                    [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_chunk_{}.npy'.format(i)) for i in train_idx], axis=0)
+                    [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_selected_{}.npy'.format(i)) for i in train_idx], axis=0)
                 train_Y = np.concatenate(
-                    [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_chunk_{}.npy'.format(i)) for i in train_idx], axis=0)
-                val_X = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_chunk_{}.npy'.format(val_idx))
-                val_Y = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_chunk_{}.npy'.format(val_idx))
+                    [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_selected_{}.npy'.format(i)) for i in train_idx], axis=0)
+                val_X = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_whole_{}.npy'.format(val_idx))
+                val_Y = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_whole_{}.npy'.format(val_idx))
 
 
                 train_step = train_X.shape[0] // cfg.BATCH_SIZE

@@ -3,11 +3,12 @@ import os
 from sklearn.model_selection import KFold
 import numpy as np
 import nibabel
-from sklearn.preprocessing import scale, minmax_scale
+from sklearn.preprocessing import scale
 import csv
 import config as cfg
+import utils
 # import brats2018.config as cfg
-
+# import brats2018.utils as utils
 
 os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU
 
@@ -216,15 +217,33 @@ def data_saver(data_path, save_path, splits, train, shuffle=True):
             chunk_X, chunk_Y = get_normalized_img(test_sets[idx], train=train)
             print('idx, chunk_x.shape, chunk_y.shape', idx ,np.shape(chunk_X),np.shape(chunk_Y))
 
-            print('self.chunk_x.shape : ', chunk_X.shape)  # shape :  (n, 240, 240, 4)
-            print('self.chunk_y.shape : ', chunk_Y.shape)  # shape :  (n, 240, 240, 4)
+            # def extract_patches_from_batch(imgs, patch_shape, stride):
+            # def reconstruct_from_patches_nd(patches, image_shape, stride):
+            # def discard_patch_idx(input, cut_line):
+            #############
+            chunk_X = utils.extract_patches_from_batch(chunk_X, (cfg.PATCH_SIZE, cfg.PATCH_SIZE, cfg.N_INPUT_CHANNEL), cfg.PATCH_STRIDE)
+            chunk_Y = utils.extract_patches_from_batch(chunk_Y, (cfg.PATCH_SIZE, cfg.PATCH_SIZE), cfg.PATCH_STRIDE)
 
-            np.save(save_path + 'brats_image_chunk_{}.npy'.format(idx), chunk_X)
-            np.save(save_path + 'brats_label_chunk_{}.npy'.format(idx), chunk_Y)
-            print('{}.saved'.format(idx))
+            print('self.chunk_x.shape : ', chunk_X.shape)  # shape :  (n, 192, 160, 4)
+            print('self.chunk_y.shape : ', chunk_Y.shape)  # shape :  (n, 192, 160)
+
+            np.save(save_path + 'brats_image_whole_{}.npy'.format(idx), chunk_X)
+            np.save(save_path + 'brats_label_whole_{}.npy'.format(idx), chunk_Y)
+
+            print('whole_patch{}.saved'.format(idx))
+
+            passed_idx = utils.discard_patch_idx(chunk_Y, cfg.PATCH_CUTLINE)
+
+            print('passed', len(passed_idx))
+
+            np.save(save_path + 'brats_image_selected_{}.npy'.format(idx), chunk_X[passed_idx])
+            np.save(save_path + 'brats_label_selected_{}.npy'.format(idx), chunk_Y[passed_idx])
+            #########################
+            print('selected_patch{}.saved'.format(idx))
     else :
         test_sets = nii_names(data_path, train=False)
         test_sets_X, _ = get_normalized_img(test_sets, train=train)
+
         print('np.shape(test_sets_X)', np.shape(test_sets_X))
         np.save(save_path + 'brats_val_image.npy', test_sets_X)
         print('saved')

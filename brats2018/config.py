@@ -63,6 +63,13 @@ N_FILES = 5
 
 ### Data info ###
 IMG_SIZE = [192, 160]
+
+#
+PATCH_SIZE = 64
+PATCH_STRIDE = 8
+PATCH_CUTLINE = 0.5
+#
+
 USED_MODALITY = ['flair', 't1', 't1ce', 't2']
 N_INPUT_CHANNEL = len(USED_MODALITY)
 RGB_CHANNEL = 1

@@ -36,8 +36,8 @@ class Model:
 
             inputs = self.X  # iterator 변수 self.features 를 이용해 inputs 생성
             channel_n = cfg.INIT_N_FILTER
-            pool_size_h = cfg.IMG_SIZE[0]
-            pool_size_w = cfg.IMG_SIZE[1]
+            pool_size_h = cfg.PATCH_SIZE
+            pool_size_w = cfg.PATCH_SIZE
 
             for i in range(cfg.DEPTH):
                 pool_size_h //= 2

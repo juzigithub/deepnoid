@@ -7,8 +7,10 @@ from scipy.spatial.distance import directed_hausdorff
 import nibabel
 from tensorflow.python.ops import array_ops
 from skimage.feature import greycomatrix, greycoprops
+from sklearn.feature_extraction import image
 import os
 import SimpleITK as sitk
+from itertools import product
 #############################################################################################################################
 #                                                    Layer Functions                                                        #
 #############################################################################################################################
@@ -1239,3 +1241,44 @@ def get_path_list(data_path):
         path_list = tl.files.load_folder_list(path)
         id_list += [os.path.join(path, os.path.basename(p), os.path.basename(p)) for p in path_list]
     return id_list
+
+def extract_patches_from_batch(imgs, patch_shape, stride):
+    # simple version of sklearn.feature_extraction.image.extract_patches
+
+    # if input imgs are not multiple imgs(just one img), then add axis=0 to make shape like [batch_size, w, h, ...]
+    if imgs.ndim == 2 or (imgs.ndim == 3 and len(patch_shape) == 3):
+        imgs = np.expand_dims(imgs, axis=0)
+
+    patch_shape = (len(imgs),) + patch_shape
+    patch_transpose = (3,0,1,2,4,5) if len(patch_shape) == 3 else (4,0,1,2,3,5,6,7)
+    patch_reshape = (-1,) + patch_shape[1:]
+    patch = image.extract_patches(imgs, patch_shape, extraction_step=stride)
+
+    return patch.transpose(patch_transpose).reshape(patch_reshape)
+
+def reconstruct_from_patches_nd(patches, image_shape, stride):
+    # modified version of sklearn.feature_extraction.image.reconstruct_from_patches_2d
+    # It can make only one image
+    i_h, i_w = image_shape[:2]
+    p_h, p_w = patches.shape[1:3]
+    img = np.zeros(image_shape)
+    img_overlapped = np.zeros(image_shape)
+
+    n_h = i_h - p_h + 1
+    n_w = i_w - p_w + 1
+
+    for p, (i, j) in zip(patches, product(range(0,n_h,stride), range(0,n_w,stride))):
+        if patches.ndim == 3:
+            img[i:i + p_h, j:j + p_w] += p
+            img_overlapped[i:i + p_h, j:j + p_w] += 1
+        elif patches.ndim == 4:
+            print(np.shape(img))
+            img[i:i + p_h, j:j + p_w,:] += p
+            img_overlapped[i:i + p_h, j:j + p_w,:] += 1
+    img /= img_overlapped
+
+    return img
+
+def discard_patch_idx(input, cut_line):
+    n_non_zero = np.count_nonzero(input, axis=tuple(i for i in range(input.ndim) if not i == 0)) / np.prod(input.shape[1:])
+    return np.where(n_non_zero >= cut_line)
