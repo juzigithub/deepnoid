@@ -103,7 +103,9 @@ class Train:
                     [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_chunk_{}.npy'.format(i)) for i in train_idx], axis=0)
                 val_X = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_chunk_{}.npy'.format(val_idx))
                 val_Y = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_chunk_{}.npy'.format(val_idx))
-
+                val_selected_idx = np.random.randint(len(val_Y), size=int(cfg.VAL_PATCH_RATIO * len(val_Y)))
+                val_X = val_X[val_selected_idx]
+                val_Y = val_Y[val_selected_idx]
 
                 train_step = train_X.shape[0] // cfg.BATCH_SIZE
 
@@ -169,6 +171,7 @@ class Train:
                     tc_one_epoch_result_list = []
                     wt_one_epoch_result_list = []
                     print_img_idx = 0
+
 
                     # validation test
                     for batch in tl.iterate.minibatches(inputs=val_X, targets=val_Y,

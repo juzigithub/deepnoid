@@ -103,6 +103,9 @@ class Train:
                     [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_selected_{}.npy'.format(i)) for i in train_idx], axis=0)
                 val_X = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_whole_{}.npy'.format(val_idx))
                 val_Y = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_whole_{}.npy'.format(val_idx))
+                val_selected_idx = np.random.randint(len(val_Y), size=int(cfg.VAL_PATCH_RATIO * len(val_Y)))
+                val_X = val_X[val_selected_idx]
+                val_Y = val_Y[val_selected_idx]
 
 
                 train_step = train_X.shape[0] // cfg.BATCH_SIZE
