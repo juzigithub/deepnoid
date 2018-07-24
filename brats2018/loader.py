@@ -224,8 +224,8 @@ def data_saver(data_path, save_path, splits, train, shuffle=True):
             chunk_X = utils.extract_patches_from_batch(chunk_X, (cfg.PATCH_SIZE, cfg.PATCH_SIZE, cfg.N_INPUT_CHANNEL), cfg.PATCH_STRIDE)
             chunk_Y = utils.extract_patches_from_batch(chunk_Y, (cfg.PATCH_SIZE, cfg.PATCH_SIZE), cfg.PATCH_STRIDE)
 
-            print('self.chunk_x.shape : ', chunk_X.shape)  # shape :  (n, 192, 160, 4)
-            print('self.chunk_y.shape : ', chunk_Y.shape)  # shape :  (n, 192, 160)
+            print('self.chunk_x.shape : ', chunk_X.shape)  # shape :  (n, patch size, patch size, n input channel)
+            print('self.chunk_y.shape : ', chunk_Y.shape)  # shape :  (n, patch size, patch size)
 
             np.save(save_path + 'brats_image_whole_{}.npy'.format(idx), chunk_X)
             np.save(save_path + 'brats_label_whole_{}.npy'.format(idx), chunk_Y)
@@ -234,7 +234,7 @@ def data_saver(data_path, save_path, splits, train, shuffle=True):
 
             passed_idx = utils.discard_patch_idx(chunk_Y, cfg.PATCH_CUTLINE)
 
-            print('passed', len(passed_idx))
+            print('passed', passed_idx)
 
             np.save(save_path + 'brats_image_selected_{}.npy'.format(idx), chunk_X[passed_idx])
             np.save(save_path + 'brats_label_selected_{}.npy'.format(idx), chunk_Y[passed_idx])
@@ -243,7 +243,7 @@ def data_saver(data_path, save_path, splits, train, shuffle=True):
     else :
         test_sets = nii_names(data_path, train=False)
         test_sets_X, _ = get_normalized_img(test_sets, train=train)
-
+        test_sets_X = utils.extract_patches_from_batch(test_sets_X, (cfg.PATCH_SIZE, cfg.PATCH_SIZE, cfg.N_INPUT_CHANNEL), cfg.PATCH_STRIDE)
         print('np.shape(test_sets_X)', np.shape(test_sets_X))
         np.save(save_path + 'brats_val_image.npy', test_sets_X)
         print('saved')

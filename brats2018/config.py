@@ -29,15 +29,15 @@
 # Linux #
 MODE = 'linux'
 GPU = '6'
-SAVE_TRAIN_DATA_PATH = './npy/train/'      # train
-SAVE_VALID_DATA_PATH = './npy/validation/' # validation
-SAVE_TEST_DATA_PATH = './npy/test/'        # test
-SAVE_SURVIVAL_DATA_PATH = './npy/task2/'
-HGG_DATA_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/HGG/'
-LGG_DATA_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/LGG/'
-VAL_DATA_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Validation/'
-SURVIVAL_CSV_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Training/survival_data.csv'
-VAL_SURVIVAL_CSV_PATH = '/home/mspark/project/data/brats2018/MICCAI_BraTS_2018_Data_Validation/survival_evaluation.csv'
+SAVE_TRAIN_DATA_PATH = '/mnt/sdb/mspark/data/brats2018/npy/train/'      # train
+SAVE_VALID_DATA_PATH = '/mnt/sdb/mspark/data/brats2018/npy/validation/' # validation
+SAVE_TEST_DATA_PATH = '/mnt/sdb/mspark/data/brats2018/npy/test/'        # test
+SAVE_SURVIVAL_DATA_PATH = '/mnt/sdb/mspark/data/brats2018/npy/task2/'
+HGG_DATA_PATH = '/mnt/sdb/mspark/data/brats2018/MICCAI_BraTS_2018_Data_Training/HGG/'
+LGG_DATA_PATH = '/mnt/sdb/mspark/data/brats2018/MICCAI_BraTS_2018_Data_Training/LGG/'
+VAL_DATA_PATH = '/mnt/sdb/mspark/data/brats2018/MICCAI_BraTS_2018_Data_Validation/'
+SURVIVAL_CSV_PATH = '/mnt/sdb/mspark/data/brats2018/MICCAI_BraTS_2018_Data_Training/survival_data.csv'
+VAL_SURVIVAL_CSV_PATH = '/mnt/sdb/mspark/data/brats2018/MICCAI_BraTS_2018_Data_Validation/survival_evaluation.csv'
 
 # Window #
 # MODE = 'window'
@@ -63,13 +63,9 @@ N_FILES = 5
 
 ### Data info ###
 IMG_SIZE = [192, 160]
-
-#
 PATCH_SIZE = 64
 PATCH_STRIDE = 8
 PATCH_CUTLINE = 0.5
-#
-
 USED_MODALITY = ['flair', 't1', 't1ce', 't2']
 N_INPUT_CHANNEL = len(USED_MODALITY)
 RGB_CHANNEL = 1
