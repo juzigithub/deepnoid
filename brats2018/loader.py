@@ -224,17 +224,23 @@ def data_saver(data_path, save_path, splits, train, shuffle=True):
             chunk_X = utils.extract_patches_from_batch(chunk_X, (cfg.PATCH_SIZE, cfg.PATCH_SIZE, cfg.N_INPUT_CHANNEL), cfg.PATCH_STRIDE)
             chunk_Y = utils.extract_patches_from_batch(chunk_Y, (cfg.PATCH_SIZE, cfg.PATCH_SIZE), cfg.PATCH_STRIDE)
 
-            print('self.chunk_x.shape : ', chunk_X.shape)  # shape :  (n, patch size, patch size, n input channel)
-            print('self.chunk_y.shape : ', chunk_Y.shape)  # shape :  (n, patch size, patch size)
+            print('chunk_x.shape : ', chunk_X.shape)  # shape :  (n, patch size, patch size, n input channel)
+            print('chunk_y.shape : ', chunk_Y.shape)  # shape :  (n, patch size, patch size)
 
             np.save(save_path + 'brats_image_whole_{}.npy'.format(idx), chunk_X)
             np.save(save_path + 'brats_label_whole_{}.npy'.format(idx), chunk_Y)
 
             print('whole_patch{}.saved'.format(idx))
 
-            passed_idx = utils.discard_patch_idx(chunk_Y, cfg.PATCH_CUTLINE)
+            n_ncr = np.count_nonzero(chunk_Y==1, axis=tuple(i for i in range(chunk_Y.ndim) if not i == 0)) / np.prod(chunk_Y.shape[1:])
+            n_non_zero = np.count_nonzero(chunk_Y, axis=tuple(i for i in range(chunk_Y.ndim) if not i == 0)) / np.prod(chunk_Y.shape[1:])
 
-            print('passed', passed_idx)
+            passed_idx = np.where((n_ncr >= cfg.PATCH_NCR_CUTLINE) and (n_non_zero >= cfg.PATCH_WT_CUTLINE))
+
+            # passed_idx = utils.discard_patch_idx(chunk_Y, cfg.PATCH_CUTLINE)
+            # print('passed', passed_idx)
+            print('passed_chunk_x.shape', chunk_X[passed_idx].shape)
+            print('passed_chunk_y.shape', chunk_Y[passed_idx].shape)
 
             np.save(save_path + 'brats_image_selected_{}.npy'.format(idx), chunk_X[passed_idx])
             np.save(save_path + 'brats_label_selected_{}.npy'.format(idx), chunk_Y[passed_idx])
