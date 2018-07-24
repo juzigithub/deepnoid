@@ -64,7 +64,7 @@ class Test:
 
             if self.restore:
                 # saver.restore(sess, self.ckpt_path + 'brats.ckpt')
-                saver.restore(sess, tf.train.latest_checkpoint(self.ckpt_path))
+                saver.restore(sess, tf.train.get_checkpoint_state(self.ckpt_path))
 
 
             print("BEGIN TESTING")
