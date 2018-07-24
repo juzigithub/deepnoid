@@ -63,8 +63,8 @@ class Test:
             sess.run(tf.global_variables_initializer())
 
             if self.restore:
-                # saver.restore(sess, self.ckpt_path + 'brats.ckpt')
-                saver.restore(sess, tf.train.get_checkpoint_state(self.ckpt_path))
+                saver.restore(sess, self.ckpt_path + 'brats.ckpt')
+                # saver.restore(sess, tf.train.get_checkpoint_state(self.ckpt_path))
 
 
             print("BEGIN TESTING")
