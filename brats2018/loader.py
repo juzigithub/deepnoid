@@ -98,7 +98,8 @@ def get_normalized_img(data_sets, train, task1=True):
     total_list = np.reshape(total_list, [m, -1, w, h])          # (5, 6300, 190, 160)
     print('np.shape(total_list) : ' , np.shape(total_list))
 
-    nonzero_idx = np.where(total_list[cfg.N_INPUT_CHANNEL].sum(axis=(1, 2)) != 0.) if task1 else np.arange(len(total_list[0]), dtype=np.int32)
+    if train:
+        nonzero_idx = np.where(total_list[cfg.N_INPUT_CHANNEL].sum(axis=(1, 2)) != 0.) if task1 else np.arange(len(total_list[0]), dtype=np.int32)
 
     for idx, imgset in enumerate(total_list):
         if train:
