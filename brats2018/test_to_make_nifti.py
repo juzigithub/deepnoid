@@ -93,7 +93,7 @@ class Test:
 
                 if img_idx == ((cfg.N_PATCH_TO_IMG * 150) // cfg.BATCH_SIZE) :
                     img_list = np.array(img_list).reshape([-1, 192, 160])
-                    img_list = utils.reconstruct_from_patches_nd(img_list, (cfg.IMG_SIZE, cfg.IMG_SIZE), cfg.PATCH_STRIDE)
+                    img_list = utils.reconstruct_from_patches_nd(img_list, [cfg.IMG_SIZE, cfg.IMG_SIZE], cfg.PATCH_STRIDE)
                     img_list = np.transpose(img_list, [2,1,0])
                     zero_padded = np.pad(img_list, ((41, 39), (30, 18), (3, 2)), 'constant')
                     # zero_padded = np.flip(zero_padded,0)
