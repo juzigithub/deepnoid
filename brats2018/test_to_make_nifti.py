@@ -100,7 +100,7 @@ class Test:
                     img_list = np.array(img_list).reshape([-1, 192, 160,4])
 
                     img_list = np.argmax(img_list, axis=-1)
-                    img_list[img_list == 3] = 4.
+                    img_list[img_list == 3] = 4
                     img_list.astype(np.float32)
 
                     img_list = np.transpose(img_list, [2,1,0])
