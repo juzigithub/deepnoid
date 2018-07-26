@@ -97,7 +97,7 @@ class Test:
                 # patch_list = []
 
 
-                if img_idx == ((cfg.N_PATCH_TO_IMG * 150) // cfg.BATCH_SIZE) :
+                if img_idx == 150:
                     img_list = np.array(img_list).reshape([-1, 192, 160])
                     img_list = np.transpose(img_list, [2,1,0])
                     zero_padded = np.pad(img_list, ((41, 39), (30, 18), (3, 2)), 'constant')
