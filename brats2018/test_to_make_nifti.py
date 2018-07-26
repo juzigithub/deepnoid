@@ -90,11 +90,11 @@ class Test:
                 pred[pred == 3] = 4.
                 pred.astype(np.float32)
                 print(np.shape(pred))
-                patch_list.append(pred.tolist())
-                patch_list = np.array(patch_list)
-                patch_list = utils.reconstruct_from_patches_nd(patch_list, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), cfg.PATCH_STRIDE)
+                # patch_list.append(pred.tolist())
+                # patch_list = np.array(patch_list)
+                patch_list = utils.reconstruct_from_patches_nd(pred, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), cfg.PATCH_STRIDE)
                 img_list.append(patch_list.tolist())
-                patch_list = []
+                # patch_list = []
 
 
                 if img_idx == ((cfg.N_PATCH_TO_IMG * 150) // cfg.BATCH_SIZE) :
