@@ -1279,10 +1279,10 @@ def reconstruct_from_patches_nd(patches, image_shape, stride):
 
         n_h = i_h - p_h + 1
         n_w = i_w - p_w + 1
-        n_c = i_c - p_c + 1
-        for p, (i, j, k) in zip(patches, product(range(0, n_h, stride), range(0, n_w, stride), range(0, n_c, stride))):
-            img[i:i + p_h, j:j + p_w, k:k + p_c] += p
-            img_overlapped[i:i + p_h, j:j + p_w, k:k + p_c] += 1
+
+        for p, (i, j, k) in zip(patches, product(range(0, n_h, stride), range(0, n_w, stride), range(i_c))):
+            img[i:i + p_h, j:j + p_w, k] += p
+            img_overlapped[i:i + p_h, j:j + p_w, k] += 1
 
     img /= img_overlapped
 
