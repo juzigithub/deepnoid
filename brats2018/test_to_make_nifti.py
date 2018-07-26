@@ -86,19 +86,22 @@ class Test:
                                  self.model.drop_rate: 0}
 
                 pred = sess.run(self.model.pred, feed_dict=test_feed_dict)
-                pred = np.argmax(pred, axis=-1)
-                pred[pred == 3] = 4.
-                pred.astype(np.float32)
-                print(np.shape(pred))
+
+                # print(np.shape(pred))
                 # patch_list.append(pred.tolist())
                 # patch_list = np.array(patch_list)
-                patch_list = utils.reconstruct_from_patches_nd(pred, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), cfg.PATCH_STRIDE)
+                patch_list = utils.reconstruct_from_patches_nd(pred, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], cfg.N_CLASS), cfg.PATCH_STRIDE)
                 img_list.append(patch_list.tolist())
                 # patch_list = []
 
 
                 if img_idx == 150:
-                    img_list = np.array(img_list).reshape([-1, 192, 160])
+                    img_list = np.array(img_list).reshape([-1, 192, 160,4])
+
+                    img_list = np.argmax(img_list, axis=-1)
+                    img_list[img_list == 3] = 4.
+                    img_list.astype(np.float32)
+
                     img_list = np.transpose(img_list, [2,1,0])
                     zero_padded = np.pad(img_list, ((41, 39), (30, 18), (3, 2)), 'constant')
                     # zero_padded = np.flip(zero_padded,0)
