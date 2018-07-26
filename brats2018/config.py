@@ -69,6 +69,7 @@ PATCH_NCR_CUTLINE = 0.05
 PATCH_WT_CUTLINE = 0.25
 VAL_PATCH_RATIO = 0.1
 N_PATCH_TO_IMG = (((IMG_SIZE[0] - PATCH_SIZE) // PATCH_STRIDE) + 1) * (((IMG_SIZE[1] - PATCH_SIZE) // PATCH_STRIDE) + 1)
+print(N_PATCH_TO_IMG)
 USED_MODALITY = ['flair', 't1', 't1ce', 't2']
 N_INPUT_CHANNEL = len(USED_MODALITY)
 RGB_CHANNEL = 1
@@ -81,7 +82,7 @@ WT_LABEL = [0, 1, 1, 1]
 ### Common ###
 EPOCHS = 10                     # epochs
 SPLITS = 5                      # cross validation cnt
-SAVING_EPOCH = 5                # save model/img every SAVING_EPOCH
+SAVING_EPOCH = 1                # save model/img every SAVING_EPOCH
 BATCH_SIZE = 100
 INIT_N_FILTER = 48              # output n_channel(n_filter) of first conv layer
 ACTIVATION_FUNC = 'elu'         # relu, lrelu, elu, prelu, selu

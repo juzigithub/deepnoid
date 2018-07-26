@@ -73,9 +73,10 @@ class Test:
 
             img_idx = 0
             img_list = []
+            patch_list = []
             save_idx = 0
             for batch in tl.iterate.minibatches(inputs=test_X, targets=test_X,
-                                                batch_size=cfg.BATCH_SIZE, shuffle=False):
+                                                batch_size=cfg.N_PATCH_TO_IMG, shuffle=False):
                 img_idx += 1
                 batch_x, _ = batch
 
@@ -89,11 +90,15 @@ class Test:
                 pred[pred == 3] = 4.
                 pred.astype(np.float32)
 
-                img_list.append(pred.tolist())
+                patch_list.append(pred.tolist())
+                patch_list = np.array(patch_list).reshape([-1,192,160])
+                patch_list = utils.reconstruct_from_patches_nd(patch_list, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), cfg.PATCH_STRIDE)
+                img_list.append(patch_list.tolist())
+                patch_list = []
+
 
                 if img_idx == ((cfg.N_PATCH_TO_IMG * 150) // cfg.BATCH_SIZE) :
                     img_list = np.array(img_list).reshape([-1, 192, 160])
-                    img_list = utils.reconstruct_from_patches_nd(img_list, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), cfg.PATCH_STRIDE)
                     img_list = np.transpose(img_list, [2,1,0])
                     zero_padded = np.pad(img_list, ((41, 39), (30, 18), (3, 2)), 'constant')
                     # zero_padded = np.flip(zero_padded,0)
