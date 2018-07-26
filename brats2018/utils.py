@@ -16,7 +16,7 @@ from itertools import product
 #############################################################################################################################
 
 initializer = tf.contrib.layers.variance_scaling_initializer()
-regularizer = None #tf.contrib.layers.l2_regularizer(0.0001)
+regularizer = tf.contrib.layers.l2_regularizer(0.0001)
 
 
 def conv2D(name, inputs, filters, kernel_size, strides, padding='valid', dilation_rate=(1,1)):
@@ -1266,14 +1266,11 @@ def reconstruct_from_patches_nd(patches, image_shape, stride):
 
     n_h = i_h - p_h + 1
     n_w = i_w - p_w + 1
-    print(patches.shape)
-    print(patches.ndim)
     for p, (i, j) in zip(patches, product(range(0,n_h,stride), range(0,n_w,stride))):
         if patches.ndim == 3:
             img[i:i + p_h, j:j + p_w] += p
             img_overlapped[i:i + p_h, j:j + p_w] += 1
         elif patches.ndim == 4:
-            print(np.shape(img))
             img[i:i + p_h, j:j + p_w,:] += p
             img_overlapped[i:i + p_h, j:j + p_w,:] += 1
     img /= img_overlapped

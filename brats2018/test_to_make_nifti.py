@@ -73,7 +73,7 @@ class Test:
 
             img_idx = 0
             img_list = []
-            patch_list = []
+            # patch_list = []
             save_idx = 0
             for batch in tl.iterate.minibatches(inputs=test_X, targets=test_X,
                                                 batch_size=cfg.N_PATCH_TO_IMG, shuffle=False):
