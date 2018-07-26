@@ -90,7 +90,15 @@ class Test:
                 # print(np.shape(pred))
                 # patch_list.append(pred.tolist())
                 # patch_list = np.array(patch_list)
-                patch_list = utils.reconstruct_from_patches_nd(pred, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], cfg.N_CLASS), cfg.PATCH_STRIDE)
+
+                bg, ncr, ed, et = np.split(pred, 4, axis=-1)
+
+                bg = utils.reconstruct_from_patches_nd(bg, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), cfg.PATCH_STRIDE).reshape((-1,192,160,1))
+                ncr = utils.reconstruct_from_patches_nd(ncr, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), cfg.PATCH_STRIDE).reshape((-1,192,160,1))
+                ed = utils.reconstruct_from_patches_nd(ed, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), cfg.PATCH_STRIDE).reshape((-1,192,160,1))
+                et = utils.reconstruct_from_patches_nd(et, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), cfg.PATCH_STRIDE).reshape((-1,192,160,1))
+
+                patch_list = np.concatenate((bg,ncr,ed,et), axis=-1)
                 img_list.append(patch_list.tolist())
                 # patch_list = []
 
