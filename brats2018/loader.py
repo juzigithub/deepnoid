@@ -109,9 +109,9 @@ def get_hm_landmarks(data_sets, n_divide, scale, save_path , train):
     print('np.shape(total_list) : ' , np.shape(total_list))
 
     for modal_idx in range(m):
-        for patient_idx in range(n):
-            print('hm',np.array(utils.cal_hm_landmark(total_list[modal_idx][patient_idx], n_divide=n_divide, scale=scale)))
-            total_hm_std_arr[modal_idx] += np.array(utils.cal_hm_landmark(total_list[modal_idx][patient_idx], n_divide=n_divide, scale=scale))
+        if modal_idx <= cfg.N_INPUT_CHANNEL - 1 :
+            for patient_idx in range(n):
+                total_hm_std_arr[modal_idx] += np.array(utils.cal_hm_landmark(total_list[modal_idx][patient_idx], n_divide=n_divide, standard=True, scale=scale))
 
     total_hm_std_arr /= n
 
