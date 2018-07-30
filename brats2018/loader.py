@@ -89,29 +89,29 @@ def get_hm_landmarks(data_sets, n_divide, scale, save_path , train):
         for idx in range(len(total_list)):
             vol = nibabel.load(data[idx]).get_data()
             total_list[idx].append(vol)
-    # flatten
-    print('np.shape(total_list) : ' , np.shape(total_list)) # (5, 42, 160, 192, 150)
-    m, n, h, w, c = np.shape(total_list)  # m : train 5(flair, t1, t1ce, t2, seg)/ validation or test 4(seg x), h,w : 240(img_size)
+
+    m, n, _, _, c = np.shape(total_list)  # m : train 5(flair, t1, t1ce, t2, seg)/ validation or test 4(seg x), h,w : 240(img_size)
     total_hm_std_arr = np.zeros([m, n_divide + 1])
-    print('total_hm_std_arr.shape', total_hm_std_arr.shape)
     total_list = np.transpose(total_list, [0, 1, 4, 2, 3])
-    print('total_list.shape', total_list.shape)
     total_list = total_list.astype(np.uint16)
 
     clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
 
     for modal_idx in range(m):
-        for patient_idx in range(n):
-            for img_idx in range(c):
-                total_list[modal_idx][patient_idx][img_idx] = clahe.apply(total_list[modal_idx][patient_idx][img_idx])
+        if modal_idx <= cfg.N_INPUT_CHANNEL - 1 :
+            for patient_idx in range(n):
+                for img_idx in range(c):
+                    total_list[modal_idx][patient_idx][img_idx] = clahe.apply(total_list[modal_idx][patient_idx][img_idx])
 
     print('clahe finished')
-    print('np.shape(total_list) : ' , np.shape(total_list))
 
     for modal_idx in range(m):
         if modal_idx <= cfg.N_INPUT_CHANNEL - 1 :
             for patient_idx in range(n):
-                total_hm_std_arr[modal_idx] += np.array(utils.cal_hm_landmark(total_list[modal_idx][patient_idx], n_divide=n_divide, standard=True, scale=scale))
+                total_hm_std_arr[modal_idx] += np.array(utils.cal_hm_landmark(total_list[modal_idx][patient_idx],
+                                                                              n_divide=n_divide,
+                                                                              standard=True,
+                                                                              scale=scale))
 
     total_hm_std_arr /= n
 
@@ -124,9 +124,26 @@ def get_hm_landmarks(data_sets, n_divide, scale, save_path , train):
 def get_normalized_img(data_sets, train, task1=True):
     total_list = [[] for _ in range(np.shape(data_sets)[-1])] # [ [flair], [t1], [t1ce], [t2], [seg] ]
     total_norm_list = [[] for _ in range(np.shape(data_sets)[-1])]
+
+    modal_dic = {'flair': 0, 't1': 1, 't1ce': 2, 't2': 3}
+    used_modal_list = [modal_dic[i] for i in cfg.USED_MODALITY]
+    standard_list = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'std_landmark.npy')
+    clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
+
     for data in data_sets:
         for idx in range(len(total_list)):
-            vol = nibabel.load(data[idx]).get_fdata()
+            vol = nibabel.load(data[idx]).get_data()
+
+            if idx <= cfg.N_INPUT_CHANNEL - 1:
+                vol = np.transpose(vol, (-1, 0, 1))
+                vol = vol.astype(np.uint16)
+
+                for i in range(155):
+                    vol[i] = clahe.apply(vol[i])
+
+                vol_list = utils.cal_hm_landmark(vol, n_divide=10)
+                vol= utils.hm_rescale(vol, vol_list, standard_list[used_modal_list[idx]])
+
             b_min, b_max = [41, 30, 3] , [200, 221, 152]
             vol = crop_volume_with_bounding_box(vol,b_min,b_max)
             total_list[idx].append(vol)
@@ -149,7 +166,7 @@ def get_normalized_img(data_sets, train, task1=True):
             shape = np.shape(imgset)
             imgset = imgset.reshape([len(imgset), -1])
             # minmax_scale(imgset, axis=1, copy=False)
-            scale(imgset, axis=1, copy=False)
+            # scale(imgset, axis=1, copy=False)
             # imgset = imgset / (np.max(imgset, axis=1) + 1e-6).reshape([-1,1])
             imgset = imgset.reshape(shape)
             total_norm_list[idx] = imgset
