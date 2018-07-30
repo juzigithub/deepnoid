@@ -4,7 +4,7 @@ from skimage.exposure import rescale_intensity
 import cv2
 
 ############## make landmarks of histogram #################
-def cal_hm_landmark(arr, max_percent = 99.8, standard=False, scale=1):
+def cal_hm_landmark(arr, max_percent = 99.8, n_divide = 4, standard=False, scale=1):
     if arr.ndim > 1:
         arr = arr.ravel()
     arr_hist_sd, arr_edges_sd = np.histogram(arr, bins = int(np.max(arr) - np.min(arr)))
@@ -16,19 +16,14 @@ def cal_hm_landmark(arr, max_percent = 99.8, standard=False, scale=1):
     pc1 = threshold
     pc2 = np.percentile(arr, max_percent)
     ioi = arr[np.where((arr>=pc1) * (arr<=pc2))]
-    m25 = np.percentile(ioi, 25)
-    m50 = np.percentile(ioi, 50)
-    m75 = np.percentile(ioi, 75)
+    landmark_list = [np.percentile(ioi, i * (100/n_divide) ) for i in range(n_divide) if not i == 0]
+    landmark_list = [pc1] + landmark_list + [pc2]
 
     if standard:
         std_scale = (scale / pc2)
-        pc1 *= std_scale
-        pc2 *= std_scale
-        m25 *= std_scale
-        m50 *= std_scale
-        m75 *= std_scale
+        landmark_list = [landmark * std_scale for landmark in landmark_list]
 
-    return [int(pc1), int(m25), int(m50), int(m75), int(pc2)]
+    return [int(landmark) for landmark in landmark_list]
 
 ############## scale imgs based on landmarks of histogram #################
 def hm_rescale(arr, input_landmark_list, standard_landmark_list):
@@ -101,14 +96,14 @@ c = np.append(a,b, axis=0)
 
 ############## make landmarks #################
 s = 255
-standard_list = cal_hm_landmark(c, standard=True, scale=s)
-a_list = cal_hm_landmark(a)
-b_list = cal_hm_landmark(b)
+standard_list = cal_hm_landmark(c, n_divide= 10, standard=True, scale=s)
+a_list = cal_hm_landmark(a, n_divide=10)
+b_list = cal_hm_landmark(b, n_divide=10)
 
 ############## print landmarks [pc1, m25, m50, m75, pc2] #################
-print('s', cal_hm_landmark(c, standard=True, scale=s))
-print('a',cal_hm_landmark(a))
-print('b',cal_hm_landmark(b))
+print('s', standard_list)
+print('a',a_list)
+print('b',b_list)
 
 ############## rescale each img based on landmarks #################
 a_scaled = hm_rescale(a, a_list, standard_list)
