@@ -85,7 +85,7 @@ def cv(data_path, splits, shuffle):
 def get_hm_landmarks(data_sets, n_divide, scale, save_path , train):
     total_list = [[] for _ in range(np.shape(data_sets)[-1])]
     total_hm_std_arr = np.zeros([np.shape(data_sets)[0], n_divide])
-
+    print('total_hm_std_arr.shape', total_hm_std_arr.shape)
     for data in data_sets:
         for idx in range(len(total_list)):
             vol = nibabel.load(data[idx]).get_data()
@@ -97,6 +97,7 @@ def get_hm_landmarks(data_sets, n_divide, scale, save_path , train):
     m, n, h, w, c = np.shape(total_list)  # m : train 5(flair, t1, t1ce, t2, seg)/ validation or test 4(seg x), h,w : 240(img_size)
 
     total_list = np.transpose(total_list, [0, 1, 4, 2, 3])
+    print('total_list.shape', total_list.shape)
     total_list = total_list.astype(np.uint16)
 
     clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
@@ -106,7 +107,7 @@ def get_hm_landmarks(data_sets, n_divide, scale, save_path , train):
             for img_idx in range(c):
                 total_list[modal_idx][patient_idx][img_idx] = clahe.apply(total_list[modal_idx][patient_idx][img_idx])
 
-
+    print('clahe finished')
     print('np.shape(total_list) : ' , np.shape(total_list))
 
     for modal_idx in range(m):
