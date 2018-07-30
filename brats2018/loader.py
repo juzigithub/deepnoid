@@ -6,10 +6,10 @@ import nibabel
 from sklearn.preprocessing import scale
 import csv
 import cv2
-# import config as cfg
-# import utils
-import brats2018.config as cfg
-import brats2018.utils as utils
+import config as cfg
+import utils
+# import brats2018.config as cfg
+# import brats2018.utils as utils
 
 os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU
 
@@ -296,7 +296,7 @@ def data_saver(data_path, save_path, splits, train, shuffle=True):
         print('saved')
 
 if __name__ == '__main__':
-    data_path = 'D:\\dataset\\BRATS\\2018\\MICCAI_BraTS_2018_Data_Training\\HGG'
-    print(nii_names([data_path], train=True))
-
+    data_path = cfg.HGG_DATA_PATH
+    test_sets = nii_names([data_path], train=True)
+    get_hm_landmarks(test_sets, n_divide=10, scale=255, save_path=cfg.SAVE_TRAIN_DATA_PATH, train=False)
 
