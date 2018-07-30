@@ -5,10 +5,11 @@ import numpy as np
 import nibabel
 from sklearn.preprocessing import scale
 import csv
-import config as cfg
-import utils
-# import brats2018.config as cfg
-# import brats2018.utils as utils
+import cv2
+# import config as cfg
+# import utils
+import brats2018.config as cfg
+import brats2018.utils as utils
 
 os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU
 
@@ -81,6 +82,45 @@ def cv(data_path, splits, shuffle):
         val_sets.append(sub_val_set)
     return np.array(train_sets), np.array(val_sets)
 
+def get_hm_landmarks(data_sets, n_divide, scale, save_path , train):
+    total_list = [[] for _ in range(np.shape(data_sets)[-1])]
+    total_hm_std_arr = np.zeros([np.shape(data_sets)[0], n_divide])
+
+    for data in data_sets:
+        for idx in range(len(total_list)):
+            vol = nibabel.load(data[idx]).get_data()
+            total_list[idx].append(vol)
+    # flatten
+
+
+    print('np.shape(total_list) : ' , np.shape(total_list)) # (5, 42, 160, 192, 150)
+    m, n, h, w, c = np.shape(total_list)  # m : train 5(flair, t1, t1ce, t2, seg)/ validation or test 4(seg x), h,w : 240(img_size)
+
+    total_list = np.transpose(total_list, [0, 1, 4, 2, 3])
+    total_list = total_list.astype(np.uint16)
+
+    clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
+
+    for modal_idx in range(m):
+        for patient_idx in range(n):
+            for img_idx in range(c):
+                total_list[modal_idx][patient_idx][img_idx] = clahe.apply(total_list[modal_idx][patient_idx][img_idx])
+
+
+    print('np.shape(total_list) : ' , np.shape(total_list))
+
+    for modal_idx in range(m):
+        for patient_idx in range(n):
+            total_hm_std_arr[modal_idx] += np.array(utils.cal_hm_landmark(total_list[modal_idx][patient_idx], n_divide=n_divide, scale=scale))
+
+    total_hm_std_arr /= n
+
+    np.save(save_path + 'std_landmark.npy', total_hm_std_arr[:cfg.N_INPUT_CHANNEL].astype(int))
+    print('landmark saved')
+
+
+
+
 def get_normalized_img(data_sets, train, task1=True):
     total_list = [[] for _ in range(np.shape(data_sets)[-1])] # [ [flair], [t1], [t1ce], [t2], [seg] ]
     total_norm_list = [[] for _ in range(np.shape(data_sets)[-1])]
@@ -91,11 +131,11 @@ def get_normalized_img(data_sets, train, task1=True):
             vol = crop_volume_with_bounding_box(vol,b_min,b_max)
             total_list[idx].append(vol)
 
-    print('np.shape(total_list) : ' , np.shape(total_list)) # (5, 42, 160, 190, 150)
+    print('np.shape(total_list) : ' , np.shape(total_list)) # (5, 42, 160, 192, 150)
     m, _, h, w, _ = np.shape(total_list)  # m : train 5(flair, t1, t1ce, t2, seg)/ validation or test 4(seg x), h,w : 240(img_size)
 
     total_list = np.transpose(total_list, [0, 1, 4, 3, 2])
-    total_list = np.reshape(total_list, [m, -1, w, h])          # (5, 6300, 190, 160)
+    total_list = np.reshape(total_list, [m, -1, w, h])          # (5, 6300, 192, 160)
     print('np.shape(total_list) : ' , np.shape(total_list))
 
     if train:
@@ -254,3 +294,9 @@ def data_saver(data_path, save_path, splits, train, shuffle=True):
         print('np.shape(test_sets_X)', np.shape(test_sets_X))
         np.save(save_path + 'brats_val_image.npy', test_sets_X)
         print('saved')
+
+if __name__ == '__main__':
+    data_path = 'D:\\dataset\\BRATS\\2018\\MICCAI_BraTS_2018_Data_Training\\HGG'
+    print(nii_names([data_path], train=True))
+
+
