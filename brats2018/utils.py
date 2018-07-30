@@ -11,6 +11,8 @@ from sklearn.feature_extraction import image
 import os
 import SimpleITK as sitk
 from itertools import product
+from skimage.exposure import rescale_intensity
+
 #############################################################################################################################
 #                                                    Layer Functions                                                        #
 #############################################################################################################################
@@ -1282,3 +1284,63 @@ def reconstruct_from_patches_nd(patches, image_shape, stride):
 def discard_patch_idx(input, cut_line):
     n_non_zero = np.count_nonzero(input, axis=tuple(i for i in range(input.ndim) if not i == 0)) / np.prod(input.shape[1:])
     return np.where(n_non_zero >= cut_line)
+
+
+
+#############################################################################################################################
+#                                              Histogram Function                                                           #
+#############################################################################################################################
+
+
+def cal_hm_landmark(arr, max_percent = 99.8, n_divide = 4, standard=False, scale=1):
+    if arr.ndim > 1:
+        arr = arr.ravel()
+    arr_hist_sd, arr_edges_sd = np.histogram(arr, bins = int(np.max(arr) - np.min(arr)))
+
+    hist_mean = int(np.mean(arr))
+    black_peak = arr_edges_sd[0] + np.argmax(arr_hist_sd[:hist_mean])
+    white_peak = hist_mean + np.argmax(arr_hist_sd[hist_mean:])
+
+    threshold = int((black_peak + white_peak) / 2)
+    pc1 = threshold
+    pc2 = np.percentile(arr, max_percent)
+    ioi = arr[np.where((arr>=pc1) * (arr<=pc2))]
+    landmark_list = [np.percentile(ioi, i * (100/n_divide) ) for i in range(n_divide) if not i == 0]
+    landmark_list = [pc1] + landmark_list + [pc2]
+
+    if standard:
+        std_scale = (scale / pc2)
+        landmark_list = [landmark * std_scale for landmark in landmark_list]
+
+    return landmark_list
+
+def hm_rescale(arr, input_landmark_list, standard_landmark_list):
+    arr_shape = arr.shape
+    if arr.ndim > 1:
+        arr = arr.ravel()
+    arr_copy = np.zeros_like(arr)
+
+    scale_idx = np.where((arr < input_landmark_list[0]))
+
+    # 0 ~ pc1 rescale
+    arr_copy[scale_idx] = rescale_intensity(arr[scale_idx],
+                                            in_range=(input_landmark_list[0] - 1, input_landmark_list[0]),
+                                            out_range=(standard_landmark_list[0] - 1, standard_landmark_list[0]))
+    # pc1 ~ m25 ~ m50 ~ m75 ~ pc2 rescale
+    for idx in range(len(input_landmark_list) - 1):
+
+        scale_idx = np.where((arr >= input_landmark_list[idx]) * (arr < input_landmark_list[idx+1]))
+        arr_copy[scale_idx] = rescale_intensity(arr[scale_idx],
+                                                in_range=(input_landmark_list[idx], input_landmark_list[idx+1]),
+                                                out_range=(standard_landmark_list[idx], standard_landmark_list[idx+1]))
+    # pc2 ~ max rescale
+    scale_idx = np.where((arr >= input_landmark_list[-1]))
+    arr_copy[scale_idx] = rescale_intensity(arr[scale_idx],
+                                                in_range=(input_landmark_list[-1], input_landmark_list[-1] + 1),
+                                                out_range=(standard_landmark_list[-1], standard_landmark_list[-1] + 1))
+
+
+
+    arr_copy = np.clip(arr_copy, a_min=standard_landmark_list[0], a_max=standard_landmark_list[-1])
+
+    return arr_copy.reshape(arr_shape)
