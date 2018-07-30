@@ -110,6 +110,7 @@ def get_hm_landmarks(data_sets, n_divide, scale, save_path , train):
 
     for modal_idx in range(m):
         for patient_idx in range(n):
+            print('hm',np.array(utils.cal_hm_landmark(total_list[modal_idx][patient_idx], n_divide=n_divide, scale=scale)))
             total_hm_std_arr[modal_idx] += np.array(utils.cal_hm_landmark(total_list[modal_idx][patient_idx], n_divide=n_divide, scale=scale))
 
     total_hm_std_arr /= n
