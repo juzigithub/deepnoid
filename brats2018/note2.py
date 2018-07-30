@@ -1,148 +1,137 @@
 import nibabel
-import tensorlayer as tl
-import os
 import numpy as np
-from sklearn.preprocessing import scale
-from sklearn.feature_extraction import image
+from skimage.exposure import rescale_intensity
+import cv2
+
+############## make landmarks of histogram #################
+def cal_hm_landmark(arr, max_percent = 99.8, standard=False, scale=1):
+    if arr.ndim > 1:
+        arr = arr.ravel()
+    arr_hist_sd, arr_edges_sd = np.histogram(arr, bins = int(np.max(arr) - np.min(arr)))
+    hist_mean = int(np.mean(arr))
+    black_peak = arr_edges_sd[0] + np.argmax(arr_hist_sd[:hist_mean])
+    white_peak = arr_edges_sd[0] + hist_mean + np.argmax(arr_hist_sd[hist_mean:])
+
+    threshold = int((black_peak + white_peak) / 2)
+    pc1 = threshold
+    pc2 = np.percentile(arr, max_percent)
+    ioi = arr[np.where((arr>=pc1) * (arr<=pc2))]
+    m25 = np.percentile(ioi, 25)
+    m50 = np.percentile(ioi, 50)
+    m75 = np.percentile(ioi, 75)
+
+    if standard:
+        std_scale = (scale / pc2)
+        pc1 *= std_scale
+        pc2 *= std_scale
+        m25 *= std_scale
+        m50 *= std_scale
+        m75 *= std_scale
+
+    return [int(pc1), int(m25), int(m50), int(m75), int(pc2)]
+
+############## scale imgs based on landmarks of histogram #################
+def hm_rescale(arr, input_landmark_list, standard_landmark_list):
+    arr_shape = arr.shape
+    if arr.ndim > 1:
+        arr = arr.ravel()
+    arr_copy = np.zeros_like(arr)
+
+    scale_idx = np.where((arr < input_landmark_list[0]))
+
+    # 0 ~ pc1 rescale
+    arr_copy[scale_idx] = rescale_intensity(arr[scale_idx],
+                                            in_range=(input_landmark_list[0] - 1, input_landmark_list[0]),
+                                            out_range=(standard_landmark_list[0] - 1, standard_landmark_list[0]))
+    # pc1 ~ m25 ~ m50 ~ m75 ~ pc2 rescale
+    for idx in range(len(input_landmark_list) - 1):
+
+        scale_idx = np.where((arr >= input_landmark_list[idx]) * (arr < input_landmark_list[idx+1]))
+        arr_copy[scale_idx] = rescale_intensity(arr[scale_idx],
+                                                in_range=(input_landmark_list[idx], input_landmark_list[idx+1]),
+                                                out_range=(standard_landmark_list[idx], standard_landmark_list[idx+1]))
+    # pc2 ~ max rescale
+    scale_idx = np.where((arr >= input_landmark_list[-1]))
+    arr_copy[scale_idx] = rescale_intensity(arr[scale_idx],
+                                                in_range=(input_landmark_list[-1], input_landmark_list[-1] + 1),
+                                                out_range=(standard_landmark_list[-1], standard_landmark_list[-1] + 1))
 
 
-USED_MODALITY = ['flair', 't1', 't1ce', 't2']
-INPUT_CHANNEL = len(USED_MODALITY)
-PATCH_SIZE = 64
-PATCH_STRIDE = 16
-PATCH_NCR_CUTLINE = 0.01
-PATCH_WT_CUTLINE = 0.25
 
-def extract_patches_from_batch(imgs, patch_shape, stride):
-    # simple version of sklearn.feature_extraction.image.extract_patches
+    arr_copy = np.clip(arr_copy, a_min=standard_landmark_list[0], a_max=standard_landmark_list[-1])
 
-    # if input imgs are not multiple imgs(just one img), then add axis=0 to make shape like [batch_size, w, h, ...]
-    if imgs.ndim == 2 or (imgs.ndim == 3 and len(patch_shape) == 3):
-        imgs = np.expand_dims(imgs, axis=0)
+    return arr_copy.reshape(arr_shape)
 
-    patch_shape = (len(imgs),) + patch_shape
-    patch_transpose = (3,0,1,2,4,5) if len(patch_shape) == 3 else (4,0,1,2,3,5,6,7)
-    patch_reshape = (-1,) + patch_shape[1:]
-    patch = image.extract_patches(imgs, patch_shape, extraction_step=stride)
+############## load nifti img #################
+a = nibabel.load('d:\\Brats18_2013_7_1_flair.nii.gz').get_data()
+b = nibabel.load('d:\\Brats18_2013_13_1_flair.nii.gz').get_data()
 
-    return patch.transpose(patch_transpose).reshape(patch_reshape)
+############## 3d shape to 2d shape : (240, 240, 155) -> (155, 240, 240) #################
+a = np.transpose(a, (-1,0,1))
+b = np.transpose(b, (-1,0,1))
 
+############## for cv2.clahe (uint type으로 해야함) #################
+a = a.astype(np.uint16)
+b = b.astype(np.uint16)
 
-def get_path_list(data_path):
-    id_list = []
-    for path in data_path:
-        path_list = tl.files.load_folder_list(path)
-        id_list += [os.path.join(path, os.path.basename(p), os.path.basename(p)) for p in path_list]
-    return id_list
+############## apply CLAHE (value range : 0 ~ 255 * 255) #################
+clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8,8))
+for i in range(155):
+    b[i] = clahe.apply(a[i]) / 2 + 1000
+for i in range(155):
+    a[i] = clahe.apply(a[i])
+# for i in range(155):
+#     b[i] = clahe.apply(b[i])
 
-def nii_names(data_path, train):
-    file_list = []  # train [ [flair_path, t1_path, t1ce_path, t2_path, seg_path], ... ]
-                    # validation or test [ [flair_path, t1_path, t1ce_path, t2_path],  ... ]
+############## show imgs after clahe #################
+cv2.imshow('a1', a[0])
+cv2.imshow('a2', a[30])
+cv2.imshow('a3', a[50])
+cv2.imshow('a4', a[80])
+cv2.imshow('a5', a[120])
 
-    path_list = get_path_list(data_path)
+cv2.imshow('b1', b[0])
+cv2.imshow('b2', b[30])
+cv2.imshow('b3', b[50])
+cv2.imshow('b4', b[80])
+cv2.imshow('b5', b[120])
 
-    for path in path_list:
-        flair_path = path + '_flair.nii.gz'
-        t1_path = flair_path.replace('flair', 't1')
-        t1ce_path = flair_path.replace('flair', 't1ce')
-        t2_path = flair_path.replace('flair', 't2')
-        seg_path = flair_path.replace('flair', 'seg')
-        path_dic = {'flair' : flair_path, 't1' : t1_path, 't1ce' : t1ce_path, 't2' : t2_path}
+############## concat imgs for histogram match #################
+c = np.append(a,b, axis=0)
 
-        if train :
-            # cfg.([flair_path, t1_path, t1ce_path, t2_path, seg_path] )
-            file_list.append([path_dic[modal] for modal in USED_MODALITY] + [seg_path])
-        else :
-            # file_list.append([flair_path, t1_path, t1ce_path, t2_path])
-            file_list.append([path_dic[modal] for modal in USED_MODALITY])
+############## make landmarks #################
+s = 255
+standard_list = cal_hm_landmark(c, standard=True, scale=s)
+a_list = cal_hm_landmark(a)
+b_list = cal_hm_landmark(b)
 
-    return file_list
+############## print landmarks [pc1, m25, m50, m75, pc2] #################
+print('s', cal_hm_landmark(c, standard=True, scale=s))
+print('a',cal_hm_landmark(a))
+print('b',cal_hm_landmark(b))
 
-def get_normalized_img(data_sets, train, task1=True):
-    total_list = [[] for _ in range(np.shape(data_sets)[-1])] # [ [flair], [t1], [t1ce], [t2], [seg] ]
-    total_norm_list = [[] for _ in range(np.shape(data_sets)[-1])]
-
-    for data in data_sets:
-        for idx in range(len(total_list)):
-            vol = nibabel.load(data[idx]).get_fdata()
-            total_list[idx].append(vol)
-
-    print('np.shape(total_list) : ' , np.shape(total_list)) # (5, 42, 160, 190, 150)
-    m, _, h, w, _ = np.shape(total_list)  # m : train 5(flair, t1, t1ce, t2, seg)/ validation or test 4(seg x), h,w : 240(img_size)
-
-    total_list = np.transpose(total_list, [0, 1, 4, 3, 2])
-    total_list = np.reshape(total_list, [m, -1, w, h])          # (5, 6300, 190, 160)
-    print('np.shape(total_list) : ' , np.shape(total_list))
-
-    if train:
-        nonzero_idx = np.where(total_list[INPUT_CHANNEL].sum(axis=(1, 2)) != 0.) if task1 else np.arange(len(total_list[0]), dtype=np.int32)
-
-    for idx, imgset in enumerate(total_list):
-        if train:
-            imgset = imgset[nonzero_idx]
-        # to avoid normalizing seg
-        if idx < INPUT_CHANNEL:
-            shape = np.shape(imgset)
-            imgset = imgset.reshape([len(imgset), -1])
-            scale(imgset, axis=1, copy=False)
-            imgset = imgset.reshape(shape)
-            total_norm_list[idx] = imgset
-        elif idx ==INPUT_CHANNEL:
-            total_norm_list[idx] = imgset
-
-    X = np.transpose(total_norm_list[0:INPUT_CHANNEL], [1, 2, 3, 0])
-    Y = total_norm_list[INPUT_CHANNEL] if train else []
-
-    return X, Y
-
-def data_saver(data_path, save_path, splits, train):
-    if train :
-        test_sets = nii_names(data_path, train=train)
-        print('test_sets_shape', np.shape(test_sets))
-
-        for idx in range(splits):
-            # train_sets_X, train_sets_Y = get_normalized_img(train_sets[idx], train=train)
-            chunk_X, chunk_Y = get_normalized_img(test_sets[idx], train=train)
-            print('idx, chunk_x.shape, chunk_y.shape', idx ,np.shape(chunk_X),np.shape(chunk_Y))
-
-            # def extract_patches_from_batch(imgs, patch_shape, stride):
-            # def reconstruct_from_patches_nd(patches, image_shape, stride):
-            # def discard_patch_idx(input, cut_line):
-            #############
-            chunk_X = extract_patches_from_batch(chunk_X, (PATCH_SIZE, PATCH_SIZE, INPUT_CHANNEL), PATCH_STRIDE)
-            chunk_Y = extract_patches_from_batch(chunk_Y, (PATCH_SIZE, PATCH_SIZE), PATCH_STRIDE)
-
-            print('chunk_x.shape : ', chunk_X.shape)  # shape :  (n, patch size, patch size, n input channel)
-            print('chunk_y.shape : ', chunk_Y.shape)  # shape :  (n, patch size, patch size)
-
-            np.save(save_path + 'brats_image_whole_{}.npy'.format(idx), chunk_X)
-            np.save(save_path + 'brats_label_whole_{}.npy'.format(idx), chunk_Y)
-
-            print('whole_patch{}.saved'.format(idx))
-
-            n_ncr = np.count_nonzero(chunk_Y==1, axis=tuple(i for i in range(chunk_Y.ndim) if not i == 0)) / np.prod(chunk_Y.shape[1:])
-            n_non_zero = np.count_nonzero(chunk_Y, axis=tuple(i for i in range(chunk_Y.ndim) if not i == 0)) / np.prod(chunk_Y.shape[1:])
-
-            passed_idx = np.where((n_ncr >= PATCH_NCR_CUTLINE) * (n_non_zero >= PATCH_WT_CUTLINE))
-
-            print('passed_chunk_x.shape', chunk_X[passed_idx].shape)
-            print('passed_chunk_y.shape', chunk_Y[passed_idx].shape)
-
-            np.save(save_path + 'brats_image_selected_{}.npy'.format(idx), chunk_X[passed_idx])
-            np.save(save_path + 'brats_label_selected_{}.npy'.format(idx), chunk_Y[passed_idx])
-            #########################
-            print('selected_patch{}.saved'.format(idx))
-    else :
-        test_sets = nii_names(data_path, train=False)
-        test_sets_X, _ = get_normalized_img(test_sets, train=train)
-        test_sets_X = extract_patches_from_batch(test_sets_X, (PATCH_SIZE, PATCH_SIZE, INPUT_CHANNEL), PATCH_STRIDE)
-        print('np.shape(test_sets_X)', np.shape(test_sets_X))
-        np.save(save_path + 'brats_val_image.npy', test_sets_X)
-        print('saved')
+############## rescale each img based on landmarks #################
+a_scaled = hm_rescale(a, a_list, standard_list)
+b_scaled = hm_rescale(b, b_list, standard_list)
 
 
-if __name__ == '__main__':
-    data_path = '/mnt/sdb/mspark/data/brats2018/MICCAI_BraTS_2018_Data_Training/HGG/'
-    save_path = '~~~/npy/train/'
-    data_saver(data_path=[data_path], save_path=save_path, splits = INPUT_CHANNEL, train = True)
-    # 이러면 환자별로 순서대로 2d 155장 * 패치 225장 -> 155 * 225 장의 패치 나옴
+############## 특정 intenstiy 범위만 이미지 출력하도록 그 외 범위의 값들은 다 지워버리기 #################
+a_scaled[a_scaled<7 * s / 10] = 0
+b_scaled[b_scaled<7 * s/ 10] = 0
+a_scaled[a_scaled>=8 * s/ 10] = 0
+b_scaled[b_scaled>=8 * s/ 10] = 0
+
+############## show imgs after histogram match #################
+cv2.imshow('a11', a_scaled[0]/s)
+cv2.imshow('a22', a_scaled[30]/s)
+cv2.imshow('a33', a_scaled[50]/s)
+cv2.imshow('a44', a_scaled[80]/s)
+cv2.imshow('a55', a_scaled[120]/s)
+
+cv2.imshow('b11', b_scaled[0]/s)
+cv2.imshow('b22', b_scaled[30]/s)
+cv2.imshow('b33', b_scaled[50]/s)
+cv2.imshow('b44', b_scaled[80]/s)
+cv2.imshow('b55', b_scaled[120]/s)
+
+cv2.waitKey()
