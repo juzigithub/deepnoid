@@ -109,6 +109,7 @@ def get_hm_landmarks(data_sets, n_divide, scale, save_path):
         if modal_idx <= cfg.N_INPUT_CHANNEL - 1 :
             for patient_idx in range(n):
                 total_hm_std_arr[modal_idx] += np.array(utils.cal_hm_landmark(total_list[modal_idx][patient_idx],
+                                                                              threshold=cfg.HM_THRESHOLD_TYPE,
                                                                               n_divide=n_divide,
                                                                               standard=True,
                                                                               scale=scale))
@@ -141,7 +142,7 @@ def get_normalized_img(data_sets, train, task1=True):
                 for i in range(155):
                     vol[i] = clahe.apply(vol[i])
 
-                vol_list = utils.cal_hm_landmark(vol, n_divide=10)
+                vol_list = utils.cal_hm_landmark(vol, threshold=cfg.HM_THRESHOLD_TYPE, n_divide=10)
                 vol = utils.hm_rescale(vol, vol_list, standard_list[used_modal_list[idx]])
                 vol = np.transpose(vol, (1, 2, 0))
 

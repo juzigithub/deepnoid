@@ -12,6 +12,7 @@ import os
 import SimpleITK as sitk
 from itertools import product
 from skimage.exposure import rescale_intensity
+from scipy.signal import argrelextrema
 
 #############################################################################################################################
 #                                                    Layer Functions                                                        #
@@ -1292,27 +1293,64 @@ def discard_patch_idx(input, cut_line):
 #############################################################################################################################
 
 
-def cal_hm_landmark(arr, max_percent = 99.8, n_divide = 4, standard=False, scale=1):
-    if arr.ndim > 1:
-        arr = arr.ravel()
-    arr_hist_sd, arr_edges_sd = np.histogram(arr, bins = int(np.max(arr) - np.min(arr)))
+# def cal_hm_landmark(arr, max_percent = 99.8, n_divide = 4, standard=False, scale=1):
+#     if arr.ndim > 1:
+#         arr = arr.ravel()
+#     arr_hist_sd, arr_edges_sd = np.histogram(arr, bins = int(np.max(arr) - np.min(arr)))
+#
+#     hist_mean = int(np.mean(arr))
+#     black_peak = arr_edges_sd[0] + np.argmax(arr_hist_sd[:hist_mean])
+#     white_peak = hist_mean + np.argmax(arr_hist_sd[hist_mean:])
+#
+#     threshold = int((black_peak + white_peak) / 2)
+#     pc1 = threshold
+#     pc2 = np.percentile(arr, max_percent)
+#     ioi = arr[np.where((arr>=pc1) * (arr<=pc2))]
+#     landmark_list = [np.percentile(ioi, i * (100/n_divide) ) for i in range(n_divide) if not i == 0]
+#     landmark_list = [pc1] + landmark_list + [pc2]
+#
+#     if standard:
+#         std_scale = (scale / pc2)
+#         landmark_list = [landmark * std_scale for landmark in landmark_list]
+#
+#     return landmark_list
 
-    hist_mean = int(np.mean(arr))
-    black_peak = arr_edges_sd[0] + np.argmax(arr_hist_sd[:hist_mean])
-    white_peak = hist_mean + np.argmax(arr_hist_sd[hist_mean:])
 
-    threshold = int((black_peak + white_peak) / 2)
-    pc1 = threshold
-    pc2 = np.percentile(arr, max_percent)
-    ioi = arr[np.where((arr>=pc1) * (arr<=pc2))]
-    landmark_list = [np.percentile(ioi, i * (100/n_divide) ) for i in range(n_divide) if not i == 0]
-    landmark_list = [pc1] + landmark_list + [pc2]
+def cal_hm_landmark(arr, max_percent = 99.8, threshold = 'fuzzy', n_divide = 4, standard=False, scale=1):
+   if arr.ndim > 1:
+       arr = arr.ravel()
+   arr_hist_sd, arr_edges_sd = np.histogram(arr, bins = range(np.max(arr)+2))
 
-    if standard:
-        std_scale = (scale / pc2)
-        landmark_list = [landmark * std_scale for landmark in landmark_list]
+   hist_mean = int(np.mean(arr))
+   black_peak = np.argmax(arr_hist_sd[:hist_mean])
+   white_peak = hist_mean + np.argmax(arr_hist_sd[hist_mean:])
+   valley = arr_hist_sd[int(black_peak):int(white_peak)]
+   # consider only points over 10
+   over_cutline = np.where(valley > 10)
+   # find local minmums among 500 points
+   local_mins = argrelextrema(valley[over_cutline], np.less, order=250)
+   # take first local minimum
+   local_min = over_cutline[0][local_mins[0][0]]
+   # local_min = argrelextrema(valley, np.less, order=250)[0][np.where(arr_hist_sd[argrelextrema(valley, np.less, order=250)] > 10)[0][0]]
 
-    return landmark_list
+   threshold_dict = {}     # 'fuzzy', 'mean', 'median', 'valley'
+   threshold_dict['fuzzy'] = int((black_peak + white_peak) / 2)
+   threshold_dict['mean'] = hist_mean
+   threshold_dict['median'] = int(np.median(arr))
+   threshold_dict['valley'] = black_peak + local_min
+
+   pc1 = threshold_dict[threshold]
+   pc2 = np.percentile(arr, max_percent)
+   ioi = arr[np.where((arr>=pc1) * (arr<=pc2))]
+   landmark_list = [np.percentile(ioi, i * (100/n_divide) ) for i in range(n_divide) if not i == 0]
+   landmark_list = [pc1] + landmark_list + [pc2]
+
+   if standard:
+       std_scale = (scale / pc2)
+       landmark_list = [landmark * std_scale for landmark in landmark_list]
+
+   return [int(landmark) for landmark in landmark_list]
+
 
 def hm_rescale(arr, input_landmark_list, standard_landmark_list):
     arr_shape = arr.shape
