@@ -53,6 +53,7 @@ VAL_SURVIVAL_CSV_PATH = '/mnt/sdb/mspark/data/brats2018/MICCAI_BraTS_2018_Data_V
 
 ###  File setting ###
 DATA_FILE_TYPE = 'npy'
+HM_THRESHOLD_TYPE = 'fuzzy'     # fuzzy, mean, median, valley
 REBUILD_HM_DATA = False
 REBUILD_TASK1_DATA = False      # train_mobile.py
 REBUILD_TASK2_DATA = False      # train_mobile.py
