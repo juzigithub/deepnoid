@@ -143,6 +143,7 @@ def get_normalized_img(data_sets, train, task1=True):
 
                 vol_list = utils.cal_hm_landmark(vol, n_divide=10)
                 vol = utils.hm_rescale(vol, vol_list, standard_list[used_modal_list[idx]])
+                vol = np.transpose(vol, (1, 2, 0))
 
             b_min, b_max = [41, 30, 3] , [200, 221, 152]
             vol = crop_volume_with_bounding_box(vol,b_min,b_max)
