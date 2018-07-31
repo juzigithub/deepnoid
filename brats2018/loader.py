@@ -300,6 +300,8 @@ def data_saver(data_path, save_path, splits, train, shuffle=True):
             n_non_zero = np.count_nonzero(chunk_Y, axis=tuple(i for i in range(chunk_Y.ndim) if not i == 0)) / np.prod(chunk_Y.shape[1:])
 
             passed_idx = np.where((n_ncr >= cfg.PATCH_NCR_CUTLINE) * (n_non_zero >= cfg.PATCH_WT_CUTLINE))
+            random_idx = np.random.choice(len(chunk_Y), 1000, replace=False)
+            passed_idx = np.unique(np.append(passed_idx, random_idx))
 
             # passed_idx = utils.discard_patch_idx(chunk_Y, cfg.PATCH_CUTLINE)
             # print('passed', passed_idx)
