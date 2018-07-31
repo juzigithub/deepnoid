@@ -82,7 +82,7 @@ def cv(data_path, splits, shuffle):
         val_sets.append(sub_val_set)
     return np.array(train_sets), np.array(val_sets)
 
-def get_hm_landmarks(data_sets, n_divide, scale, save_path , train):
+def get_hm_landmarks(data_sets, n_divide, scale, save_path):
     total_list = [[] for _ in range(np.shape(data_sets)[-1])]
 
     for data in data_sets:
@@ -142,7 +142,7 @@ def get_normalized_img(data_sets, train, task1=True):
                     vol[i] = clahe.apply(vol[i])
 
                 vol_list = utils.cal_hm_landmark(vol, n_divide=10)
-                vol= utils.hm_rescale(vol, vol_list, standard_list[used_modal_list[idx]])
+                vol = utils.hm_rescale(vol, vol_list, standard_list[used_modal_list[idx]])
 
             b_min, b_max = [41, 30, 3] , [200, 221, 152]
             vol = crop_volume_with_bounding_box(vol,b_min,b_max)
@@ -266,6 +266,11 @@ def survival_data_saver(data_path, csv_path, save_path, train=True):
     return survival_id_list
 
 def data_saver(data_path, save_path, splits, train, shuffle=True):
+    if cfg.REBUILD_HM_DATA:
+        test_sets = nii_names([data_path], train=train)
+        get_hm_landmarks(test_sets, n_divide=10, scale=255, save_path=save_path)
+        pass
+
     if train :
         _, test_sets = cv(data_path, splits, shuffle=shuffle)
         print('test_sets_shape', np.shape(test_sets))
@@ -312,8 +317,8 @@ def data_saver(data_path, save_path, splits, train, shuffle=True):
         np.save(save_path + 'brats_val_image.npy', test_sets_X)
         print('saved')
 
-if __name__ == '__main__':
-    data_path = cfg.HGG_DATA_PATH
-    test_sets = nii_names([data_path], train=True)
-    get_hm_landmarks(test_sets, n_divide=10, scale=255, save_path=cfg.SAVE_TRAIN_DATA_PATH, train=False)
+# if __name__ == '__main__':
+    # data_path = cfg.HGG_DATA_PATH
+    # test_sets = nii_names([data_path], train=True)
+    # get_hm_landmarks(test_sets, n_divide=10, scale=255, save_path=cfg.SAVE_TRAIN_DATA_PATH, train=False)
 
