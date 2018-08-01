@@ -8,9 +8,10 @@ def cal_hm_landmark(arr, max_percent = 99.8, n_divide = 4, standard=False, scale
     if arr.ndim > 1:
         arr = arr.ravel()
     arr_hist_sd, arr_edges_sd = np.histogram(arr, bins = int(np.max(arr) - np.min(arr)))
+
     hist_mean = int(np.mean(arr))
     black_peak = arr_edges_sd[0] + np.argmax(arr_hist_sd[:hist_mean])
-    white_peak = arr_edges_sd[0] + hist_mean + np.argmax(arr_hist_sd[hist_mean:])
+    white_peak = hist_mean + np.argmax(arr_hist_sd[hist_mean:])
 
     threshold = int((black_peak + white_peak) / 2)
     pc1 = threshold
@@ -79,17 +80,10 @@ for i in range(155):
 #     b[i] = clahe.apply(b[i])
 
 ############## show imgs after clahe #################
-cv2.imshow('a1', a[0])
-cv2.imshow('a2', a[30])
-cv2.imshow('a3', a[50])
-cv2.imshow('a4', a[80])
-cv2.imshow('a5', a[120])
 
-cv2.imshow('b1', b[0])
-cv2.imshow('b2', b[30])
-cv2.imshow('b3', b[50])
-cv2.imshow('b4', b[80])
-cv2.imshow('b5', b[120])
+a_concat = cv2.hconcat([a[0], a[30], a[50], a[80], a[120]]) / np.max(a)
+b_concat = cv2.hconcat([b[0], b[30], b[50], b[80], b[120]]) / np.max(b)
+
 
 ############## concat imgs for histogram match #################
 c = np.append(a,b, axis=0)
@@ -105,6 +99,15 @@ print('s', standard_list)
 print('a',a_list)
 print('b',b_list)
 
+a[a<= a_list[0]] = 0
+b[b<= b_list[0]] = 0
+
+a_concat1 = cv2.hconcat([a[0], a[30], a[50], a[80], a[120]]) / np.max(a)
+b_concat1 = cv2.hconcat([b[0], b[30], b[50], b[80], b[120]]) / np.max(b)
+
+cv2.imshow('aaaa', a_concat1)
+cv2.imshow('bbbb', b_concat1)
+
 ############## rescale each img based on landmarks #################
 a_scaled = hm_rescale(a, a_list, standard_list)
 b_scaled = hm_rescale(b, b_list, standard_list)
@@ -117,16 +120,11 @@ a_scaled[a_scaled>=8 * s/ 10] = 0
 b_scaled[b_scaled>=8 * s/ 10] = 0
 
 ############## show imgs after histogram match #################
-cv2.imshow('a11', a_scaled[0]/s)
-cv2.imshow('a22', a_scaled[30]/s)
-cv2.imshow('a33', a_scaled[50]/s)
-cv2.imshow('a44', a_scaled[80]/s)
-cv2.imshow('a55', a_scaled[120]/s)
+a_scaled_concat = cv2.hconcat([a_scaled[0], a_scaled[30],a_scaled[50],a_scaled[80],a_scaled[120]]) / s
+b_scaled_concat = cv2.hconcat([b_scaled[0], b_scaled[30],b_scaled[50],b_scaled[80],b_scaled[120]]) / s
 
-cv2.imshow('b11', b_scaled[0]/s)
-cv2.imshow('b22', b_scaled[30]/s)
-cv2.imshow('b33', b_scaled[50]/s)
-cv2.imshow('b44', b_scaled[80]/s)
-cv2.imshow('b55', b_scaled[120]/s)
+total = cv2.vconcat([a_concat, b_concat, a_scaled_concat, b_scaled_concat])
+cv2.imshow('_', total)
+
 
 cv2.waitKey()

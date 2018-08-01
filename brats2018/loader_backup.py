@@ -5,7 +5,6 @@ import numpy as np
 import nibabel
 from sklearn.preprocessing import scale
 import csv
-import cv2
 import config as cfg
 import utils
 # import brats2018.config as cfg
@@ -82,79 +81,21 @@ def cv(data_path, splits, shuffle):
         val_sets.append(sub_val_set)
     return np.array(train_sets), np.array(val_sets)
 
-def get_hm_landmarks(data_sets, n_divide, scale, save_path):
-    total_list = [[] for _ in range(np.shape(data_sets)[-1])]
-
-    for data in data_sets:
-        for idx in range(len(total_list)):
-            vol = nibabel.load(data[idx]).get_data()
-            total_list[idx].append(vol)
-
-    m, n, _, _, c = np.shape(total_list)  # m : train 5(flair, t1, t1ce, t2, seg)/ validation or test 4(seg x), h,w : 240(img_size)
-    total_hm_std_arr = np.zeros([m, n_divide + 1])
-    total_list = np.transpose(total_list, [0, 1, 4, 2, 3])
-    total_list = total_list.astype(np.uint16)
-
-    clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
-
-    for modal_idx in range(m):
-        if modal_idx <= cfg.N_INPUT_CHANNEL - 1 :
-            for patient_idx in range(n):
-                for img_idx in range(c):
-                    total_list[modal_idx][patient_idx][img_idx] = clahe.apply(total_list[modal_idx][patient_idx][img_idx])
-
-    print('clahe finished')
-
-    for modal_idx in range(m):
-        if modal_idx <= cfg.N_INPUT_CHANNEL - 1 :
-            for patient_idx in range(n):
-                total_hm_std_arr[modal_idx] += np.array(utils.cal_hm_landmark(total_list[modal_idx][patient_idx],
-                                                                              threshold=cfg.HM_THRESHOLD_TYPE,
-                                                                              n_divide=n_divide,
-                                                                              standard=True,
-                                                                              scale=scale))
-
-    total_hm_std_arr /= n
-
-    np.save(save_path + 'std_landmark.npy', total_hm_std_arr[:cfg.N_INPUT_CHANNEL].astype(int))
-    print('landmark saved')
-
-
-
-
 def get_normalized_img(data_sets, train, task1=True):
     total_list = [[] for _ in range(np.shape(data_sets)[-1])] # [ [flair], [t1], [t1ce], [t2], [seg] ]
     total_norm_list = [[] for _ in range(np.shape(data_sets)[-1])]
-
-    modal_dic = {'flair': 0, 't1': 1, 't1ce': 2, 't2': 3}
-    used_modal_list = [modal_dic[i] for i in cfg.USED_MODALITY]
-    standard_list = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'std_landmark.npy')
-    clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
-
     for data in data_sets:
         for idx in range(len(total_list)):
-            vol = nibabel.load(data[idx]).get_data()
-
-            if idx <= cfg.N_INPUT_CHANNEL - 1:
-                vol = np.transpose(vol, (-1, 0, 1))
-                vol = vol.astype(np.uint16)
-
-                for i in range(155):
-                    vol[i] = clahe.apply(vol[i])
-
-                vol_list = utils.cal_hm_landmark(vol, threshold=cfg.HM_THRESHOLD_TYPE, n_divide=cfg.LANDMARK_DIVIDE)
-                vol = utils.hm_rescale(vol, vol_list, standard_list[idx])
-                vol = np.transpose(vol, (1, 2, 0))
-
+            vol = nibabel.load(data[idx]).get_fdata()
             b_min, b_max = [41, 30, 3] , [200, 221, 152]
             vol = crop_volume_with_bounding_box(vol,b_min,b_max)
             total_list[idx].append(vol)
 
-    print('np.shape(total_list) : ' , np.shape(total_list)) # (5, 42, 160, 192, 150)
+    print('np.shape(total_list) : ' , np.shape(total_list)) # (5, 42, 160, 190, 150)
     m, _, h, w, _ = np.shape(total_list)  # m : train 5(flair, t1, t1ce, t2, seg)/ validation or test 4(seg x), h,w : 240(img_size)
 
     total_list = np.transpose(total_list, [0, 1, 4, 3, 2])
-    total_list = np.reshape(total_list, [m, -1, w, h])          # (5, 6300, 192, 160)
+    total_list = np.reshape(total_list, [m, -1, w, h])          # (5, 6300, 190, 160)
     print('np.shape(total_list) : ' , np.shape(total_list))
 
     if train:
@@ -168,7 +109,7 @@ def get_normalized_img(data_sets, train, task1=True):
             shape = np.shape(imgset)
             imgset = imgset.reshape([len(imgset), -1])
             # minmax_scale(imgset, axis=1, copy=False)
-            # scale(imgset, axis=1, copy=False)
+            scale(imgset, axis=1, copy=False)
             # imgset = imgset / (np.max(imgset, axis=1) + 1e-6).reshape([-1,1])
             imgset = imgset.reshape(shape)
             total_norm_list[idx] = imgset
@@ -268,11 +209,6 @@ def survival_data_saver(data_path, csv_path, save_path, train=True):
     return survival_id_list
 
 def data_saver(data_path, save_path, splits, train, shuffle=True):
-    if cfg.REBUILD_HM_DATA:
-        test_sets = nii_names(data_path, train=train)
-        get_hm_landmarks(test_sets, n_divide=cfg.LANDMARK_DIVIDE, scale=255, save_path=save_path)
-        pass
-
     if train :
         _, test_sets = cv(data_path, splits, shuffle=shuffle)
         print('test_sets_shape', np.shape(test_sets))
@@ -301,8 +237,6 @@ def data_saver(data_path, save_path, splits, train, shuffle=True):
             n_non_zero = np.count_nonzero(chunk_Y, axis=tuple(i for i in range(chunk_Y.ndim) if not i == 0)) / np.prod(chunk_Y.shape[1:])
 
             passed_idx = np.where((n_ncr >= cfg.PATCH_NCR_CUTLINE) * (n_non_zero >= cfg.PATCH_WT_CUTLINE))
-            random_idx = np.random.choice(len(chunk_Y), 1000, replace=False)
-            passed_idx = np.unique(np.append(passed_idx, random_idx))
 
             # passed_idx = utils.discard_patch_idx(chunk_Y, cfg.PATCH_CUTLINE)
             # print('passed', passed_idx)
@@ -320,9 +254,3 @@ def data_saver(data_path, save_path, splits, train, shuffle=True):
         print('np.shape(test_sets_X)', np.shape(test_sets_X))
         np.save(save_path + 'brats_val_image.npy', test_sets_X)
         print('saved')
-
-# if __name__ == '__main__':
-    # data_path = cfg.HGG_DATA_PATH
-    # test_sets = nii_names([data_path], train=True)
-    # get_hm_landmarks(test_sets, n_divide=10, scale=255, save_path=cfg.SAVE_TRAIN_DATA_PATH, train=False)
-

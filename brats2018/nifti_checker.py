@@ -28,7 +28,7 @@ def masking_rgb(img, color=None):
 
 
 # original_path = 'd:\\Brats18_CBICA_AAM_1_flair.nii.gz'
-result_path = 'd:\\Brats18_CBICA_AAM_1.nii.gz'
+result_path = 'd:\\Brats18_CBICA_ALT_1.nii.gz'
 
 # original_img = nb.load(original_path).get_fdata().transpose((-1,1,0))
 # original_img /= np.max(original_img)
@@ -37,9 +37,11 @@ result_img = nb.load(result_path).get_fdata().transpose((-1,1,0))
 # print(original_img.shape)
 print(result_img.shape)
 
-for i in range(240):
-    for j in range(240):
-        print(result_img[6][i][j])
+for k in range(155):
+    for i in range(240):
+        for j in range(240):
+            if result_img[k][i][j] not in [0., 1., 2., 4.]:
+                print(result_img[k][i][j])
 
 # for i in range(155):
 #     ncr_mask = masking_rgb(result_img[i], color='green')
