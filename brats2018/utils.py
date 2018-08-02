@@ -153,14 +153,24 @@ def Normalization(x, norm_type, is_train, name, G=2, esp=1e-5, channel_mode='NHW
 
         # Batch Normalization
         elif norm_type == 'batch':
-            output = tf.contrib.layers.batch_norm(inputs=x,
-                                                  center=True,
-                                                  scale=True,
-                                                  fused=True,
-                                                  decay=0.999,
-                                                  is_training=is_train,
-                                                  updates_collections=tf.GraphKeys.UPDATE_OPS,
-                                                  scope='BN_'+name)
+            if is_train:
+                output = tf.contrib.layers.batch_norm(inputs=x,
+                                                      center=True,
+                                                      scale=True,
+                                                      fused=True,
+                                                      decay=0.9,
+                                                      is_training=True,
+                                                      updates_collections=tf.GraphKeys.UPDATE_OPS,
+                                                      scope='BN_'+name)
+            else:
+                output = tf.contrib.layers.batch_norm(inputs=x,
+                                                      center=True,
+                                                      scale=True,
+                                                      fused=True,
+                                                      decay=0.9,
+                                                      is_training=False,
+                                                      updates_collections=tf.GraphKeys.UPDATE_OPS,
+                                                      scope='BN_'+name)
             # output = tf.layers.batch_normalization(x, momentum=0.9, epsilon=0.0001, training=is_train, name='BN_'+name)
             return output
 
