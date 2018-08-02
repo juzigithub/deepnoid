@@ -24,6 +24,7 @@ def crop_volume_with_bounding_box(volume, min_idx, max_idx):
 def get_path_list(data_path):
     id_list = []
     for path in data_path:
+        # print('aaaaaaaaaaaaaaaaaaaa: ', path)
         path_list = tl.files.load_folder_list(path)
         id_list += [os.path.join(path, os.path.basename(p), os.path.basename(p)) for p in path_list]
     return id_list
@@ -120,8 +121,6 @@ def get_hm_landmarks(data_sets, n_divide, scale, save_path):
     print('landmark saved')
 
 
-
-
 def get_normalized_img(data_sets, train, task1=True):
     total_list = [[] for _ in range(np.shape(data_sets)[-1])] # [ [flair], [t1], [t1ce], [t2], [seg] ]
     total_norm_list = [[] for _ in range(np.shape(data_sets)[-1])]
@@ -143,8 +142,14 @@ def get_normalized_img(data_sets, train, task1=True):
                     vol[i] = clahe.apply(vol[i])
 
                 vol_list = utils.cal_hm_landmark(vol, threshold=cfg.HM_THRESHOLD_TYPE, n_divide=cfg.LANDMARK_DIVIDE)
-                vol = utils.hm_rescale(vol, vol_list, standard_list[idx])
-                vol = np.transpose(vol, (1, 2, 0))
+                try:
+                    vol = utils.hm_rescale(vol, vol_list, standard_list[idx])
+                    # vol = utils.hm_rescale(vol, vol_list, standard_list[used_modal_list[idx]])
+                    vol = np.transpose(vol, (1, 2, 0))
+                except:
+                    print('used_modal_list : {0}, '
+                          'standard_list : {1}, idx : {2}'.format(used_modal_list, standard_list, idx))
+                    raise Exception
 
             b_min, b_max = [41, 30, 3] , [200, 221, 152]
             vol = crop_volume_with_bounding_box(vol,b_min,b_max)
@@ -248,7 +253,7 @@ def survival_data_saver(data_path, csv_path, save_path, train=True):
             # file_list.append([eval(modal + '_path') for modal in cfg.USED_MODALITY])
             file_list.append([path_dic[modal] for modal in cfg.USED_MODALITY])
 
-    if train :
+    if train:
         train_sets_X, train_sets_Y= get_normalized_img(file_list, train=train, task1=False)
         print('idx, chunk_x.shape, chunk_y.shape', np.shape(train_sets_X),np.shape(train_sets_Y))
 
@@ -259,7 +264,7 @@ def survival_data_saver(data_path, csv_path, save_path, train=True):
         np.save(save_path + 'task2_train_label.npy', train_sets_Y)
         print('saved')
 
-    else :
+    else:
         test_sets_X, _ = get_normalized_img(file_list, train=train, task1=False)
         print(np.shape(test_sets_X))
         np.save(save_path + 'task2_val_image.npy', test_sets_X)
@@ -273,7 +278,7 @@ def data_saver(data_path, save_path, splits, train, shuffle=True):
         get_hm_landmarks(test_sets, n_divide=cfg.LANDMARK_DIVIDE, scale=255, save_path=save_path)
         pass
 
-    if train :
+    if train:
         _, test_sets = cv(data_path, splits, shuffle=shuffle)
         print('test_sets_shape', np.shape(test_sets))
 

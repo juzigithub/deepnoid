@@ -9,6 +9,7 @@ class Model:
         self.training = tf.placeholder(tf.bool, name='training')
         self.X = tf.placeholder(tf.float32, [None, None, None, cfg.N_INPUT_CHANNEL], name='X')
         self.Y = tf.placeholder(tf.float32, [None, None, None, cfg.N_CLASS], name='Y')
+        self.loss_ratio = tf.placeholder(tf.float32, [len(cfg.LAMBDA)], name='loss_ratio')
         self.logit = self.mobilenet()
 
         self.pred = tf.nn.softmax(logits=self.logit)
@@ -20,8 +21,8 @@ class Model:
         self.ncr_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.ncr_pred, target=self.ncr_label)
         self.ed_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.ed_pred, target=self.ed_label)
         self.et_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.et_pred, target=self.et_label)
-        self.loss = cfg.LAMBDA[0] * self.bg_loss + cfg.LAMBDA[1] * self.ncr_loss + \
-                    cfg.LAMBDA[2] * self.ed_loss + cfg.LAMBDA[3] * self.et_loss
+        self.loss = self.loss_ratio[0] * self.bg_loss + self.loss_ratio[1] * self.ncr_loss + \
+                    self.loss_ratio[2] * self.ed_loss + self.loss_ratio[3] * self.et_loss
 
 
 

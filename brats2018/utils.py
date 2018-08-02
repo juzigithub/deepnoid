@@ -153,8 +153,15 @@ def Normalization(x, norm_type, is_train, name, G=2, esp=1e-5, channel_mode='NHW
 
         # Batch Normalization
         elif norm_type == 'batch':
-            # output = tf.contrib.layers.batch_norm(x, center=True, scale=True, decay=0.999, is_training=is_train, updates_collections=None)
-            output = tf.layers.batch_normalization(x, momentum=0.9, epsilon=0.0001, training=is_train, name='BN_'+name)
+            output = tf.contrib.layers.batch_norm(inputs=x,
+                                                  center=True,
+                                                  scale=True,
+                                                  fused=True,
+                                                  decay=0.999,
+                                                  is_training=is_train,
+                                                  updates_collections=tf.GraphKeys.UPDATE_OPS,
+                                                  scope='BN_'+name)
+            # output = tf.layers.batch_normalization(x, momentum=0.9, epsilon=0.0001, training=is_train, name='BN_'+name)
             return output
 
         # Group Normalization
@@ -349,8 +356,6 @@ def focal_loss(prediction_tensor, target_tensor, alpha=0.25, gamma=2, epsilon=1e
 1. 틀린 픽셀의 갯수에 비례해서 로그적으로 로스가 증가하게 한다
 2. 있는 걸 없다고 체크한 오답에 대해 더 큰 로스를 적용한다
 '''
-
-
 def dice_loss(output, target, axis=(1, 2, 3), smooth=1e-6):
     inse = tf.reduce_mean(output * target, axis=axis)
     l = tf.reduce_mean(output * output, axis=axis)
@@ -1293,7 +1298,7 @@ def discard_patch_idx(input, cut_line):
 #############################################################################################################################
 
 
-# def cal_hm_landmark(arr, max_percent = 99.8, n_divide = 4, standard=False, scale=1):
+# def cal_hm_landmark(arr, max_percent = 99.8, n_divide = 4, threshold = None, standard=False, scale=1):
 #     if arr.ndim > 1:
 #         arr = arr.ravel()
 #     arr_hist_sd, arr_edges_sd = np.histogram(arr, bins = int(np.max(arr) - np.min(arr)))
@@ -1305,7 +1310,12 @@ def discard_patch_idx(input, cut_line):
 #     threshold = int((black_peak + white_peak) / 2)
 #     pc1 = threshold
 #     pc2 = np.percentile(arr, max_percent)
+#     if pc1 > pc2:
+#         pc1 = np.percentile(arr, max_percent - 20)
 #     ioi = arr[np.where((arr>=pc1) * (arr<=pc2))]
+#     #
+#     # print('black={0}, white={1}'.format(black_peak, white_peak))
+#     # print('pc1={0}, pc2={1}, ioi={2}'.format(pc1, pc2, ioi))
 #     landmark_list = [np.percentile(ioi, i * (100/n_divide) ) for i in range(n_divide) if not i == 0]
 #     landmark_list = [pc1] + landmark_list + [pc2]
 #
@@ -1316,86 +1326,53 @@ def discard_patch_idx(input, cut_line):
 #     return landmark_list
 
 
-# def cal_hm_landmark(arr, max_percent = 99.8, threshold = 'fuzzy', n_divide = 4, standard=False, scale=1):
-#    if arr.ndim > 1:
-#        arr = arr.ravel()
-#    arr_hist_sd, arr_edges_sd = np.histogram(arr, bins = range(np.max(arr)+2))
-#
-#    hist_mean = int(np.mean(arr))
-#    black_peak = np.argmax(arr_hist_sd[:hist_mean])
-#    white_peak = hist_mean + np.argmax(arr_hist_sd[hist_mean:])
-#    valley = arr_hist_sd[int(black_peak):int(white_peak)]
-#    # consider only points over 10
-#    over_cutline = np.where(valley > 10)
-#    # find local minmums among 500 points
-#    local_mins = argrelextrema(valley[over_cutline], np.less, order=250)
-#    # take first local minimum
-#    local_min = over_cutline[0][local_mins[0][0]]
-#    # local_min = argrelextrema(valley, np.less, order=250)[0][np.where(arr_hist_sd[argrelextrema(valley, np.less, order=250)] > 10)[0][0]]
-#
-#    threshold_dict = {}     # 'fuzzy', 'mean', 'median', 'valley'
-#    threshold_dict['fuzzy'] = int((black_peak + white_peak) / 2)
-#    threshold_dict['mean'] = hist_mean
-#    threshold_dict['median'] = int(np.median(arr))
-#    threshold_dict['valley'] = black_peak + local_min
-#
-#    pc1 = threshold_dict[threshold]
-#    pc2 = np.percentile(arr, max_percent)
-#    ioi = arr[np.where((arr>=pc1) * (arr<=pc2))]
-#    landmark_list = [np.percentile(ioi, i * (100/n_divide) ) for i in range(n_divide) if not i == 0]
-#    landmark_list = [pc1] + landmark_list + [pc2]
-#
-#    if standard:
-#        std_scale = (scale / pc2)
-#        landmark_list = [landmark * std_scale for landmark in landmark_list]
-#
-#    return [int(landmark) for landmark in landmark_list]
-def cal_hm_landmark(arr, max_percent = 99.8, threshold = 'fuzzy', n_divide = 4, standard=False, scale=1):
-   if arr.ndim > 1:
-        arr = arr.ravel()
-   arr_hist_sd, arr_edges_sd = np.histogram(arr, bins = range(np.max(arr)+2))
+def cal_hm_landmark(arr, max_percent = 99.8, threshold = 'fuzzy_log', n_divide = 4, standard=False, scale=1):
+    if arr.ndim > 1:
+         arr = arr.ravel()
+    arr_hist_sd, arr_edges_sd = np.histogram(arr, bins = range(np.max(arr)+2))
 
-   hist_mean = int(np.mean(arr))
-   black_peak = np.argmax(arr_hist_sd[:hist_mean])
-   white_peak = hist_mean + np.argmax(arr_hist_sd[hist_mean:])
+    hist_mean = int(np.mean(arr))
+    black_peak = np.argmax(arr_hist_sd[:hist_mean])
+    white_peak = hist_mean + np.argmax(arr_hist_sd[hist_mean:])
 
-   ## Valley : Error Occured
-   # valley = arr_hist_sd[int(black_peak):int(white_peak)]
-   # # consider only points over 10
-   # over_cutline = np.where(valley > 10)
-   # # find local minmums among 500 points
-   # local_mins = argrelextrema(valley[over_cutline], np.less, order=250)
-   # # take first local minimum
-   # local_min = over_cutline[0][local_mins[0][0]]
-   # # local_min = argrelextrema(valley, np.less, order=250)[0][np.where(arr_hist_sd[argrelextrema(valley, np.less, order=250)] > 10)[0][0]]
+    ## Valley : Error Occured
+    # valley = arr_hist_sd[int(black_peak):int(white_peak)]
+    # # consider only points over 10
+    # over_cutline = np.where(valley > 10)
+    # # find local minmums among 500 points
+    # local_mins = argrelextrema(valley[over_cutline], np.less, order=250)
+    # # take first local minimum
+    # local_min = over_cutline[0][local_mins[0][0]]
+    # # local_min = argrelextrema(valley, np.less, order=250)[0][np.where(arr_hist_sd[argrelextrema(valley, np.less, order=250)] > 10)[0][0]]
 
-   # define coordinate of black_peak = (a, b) and white_peak = (c, d)
-   # fuzzy_log = nodal point of [(a, log(d)), (c, 0)] and [(c, log(b)), (a, 0)]
-   black_peak_val = np.log(arr_hist_sd[black_peak])
-   white_peak_val = np.log(arr_hist_sd[white_peak])
-   fuzzy_log = ((black_peak * black_peak_val) + (white_peak * white_peak_val)) / (black_peak_val + white_peak_val)
+    # define coordinate of black_peak = (a, b) and white_peak = (c, d)
+    # fuzzy_log = nodal point of [(a, log(d)), (c, 0)] and [(c, log(b)), (a, 0)]
+    black_peak_val = np.log(arr_hist_sd[black_peak])
+    white_peak_val = np.log(arr_hist_sd[white_peak])
+    fuzzy_log = ((black_peak * black_peak_val) + (white_peak * white_peak_val)) / (black_peak_val + white_peak_val)
 
-   threshold_dict = {}      # 'fuzzy', 'fuzzy_log', 'mean', 'median', 'valley'
-   threshold_dict['fuzzy'] = int((black_peak + white_peak) / 2)
-   threshold_dict['fuzzy_log'] = fuzzy_log
-   threshold_dict['mean'] = hist_mean
-   threshold_dict['median'] = int(np.median(arr))
-   # threshold_dict['valley'] = black_peak + local_min
+    threshold_dict = {}      # 'fuzzy', 'fuzzy_log', 'mean', 'median', 'valley'
+    threshold_dict['fuzzy'] = int((black_peak + white_peak) / 2)
+    threshold_dict['fuzzy_log'] = fuzzy_log
+    threshold_dict['mean'] = hist_mean
+    threshold_dict['median'] = int(np.median(arr))
+    # threshold_dict['valley'] = black_peak + local_min
 
-   pc1 = threshold_dict[threshold]
-   pc2 = np.percentile(arr, max_percent)
-   if pc1 > pc2:
-       print('pc1({0}) > pc2({1}'.format(pc1, pc2))
-       pc1 = np.percentile(arr, max_percent - 20)
-   ioi = arr[np.where((arr>=pc1) * (arr<=pc2))]
-   landmark_list = [np.percentile(ioi, i * (100/n_divide) ) for i in range(n_divide) if not i == 0]
-   landmark_list = [pc1] + landmark_list + [pc2]
+    pc1 = threshold_dict[threshold]
+    pc2 = np.percentile(arr, max_percent)
+    if pc1 > pc2:
+        print('pc1({0}) > pc2({1}'.format(pc1, pc2))
+        pc1 = np.percentile(arr, max_percent - 20)
+    ioi = arr[np.where((arr>=pc1) * (arr<=pc2))]
+    landmark_list = [np.percentile(ioi, i * (100/n_divide) ) for i in range(n_divide) if not i == 0]
+    landmark_list = [pc1] + landmark_list + [pc2]
 
-   if standard:
-        std_scale = (scale / pc2)
-        landmark_list = [landmark * std_scale for landmark in landmark_list]
+    if standard:
+         std_scale = (scale / pc2)
+         landmark_list = [landmark * std_scale for landmark in landmark_list]
 
-   return [int(landmark) for landmark in landmark_list]
+    return [int(landmark) for landmark in landmark_list]
+
 
 def hm_rescale(arr, input_landmark_list, standard_landmark_list):
     arr_shape = arr.shape
@@ -1421,6 +1398,9 @@ def hm_rescale(arr, input_landmark_list, standard_landmark_list):
     arr_copy[scale_idx] = rescale_intensity(arr[scale_idx],
                                                 in_range=(input_landmark_list[-1], input_landmark_list[-1] + 1),
                                                 out_range=(standard_landmark_list[-1], standard_landmark_list[-1] + 1))
+
+
+
     arr_copy = np.clip(arr_copy, a_min=standard_landmark_list[0], a_max=standard_landmark_list[-1])
 
     return arr_copy.reshape(arr_shape)

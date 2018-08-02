@@ -54,7 +54,7 @@ class Test:
 
             #  Saving a model is saving variables such as weights, ans we call it as ckpt(check point file) in tensorflow
             # It's a tensorflow class saving ckpt file
-            saver = tf.train.Saver()
+            saver = tf.train.Saver(var_list = tf.global_variables())
 
             # save graphs from tensorboard
             self.writer.add_graph(sess.graph)
