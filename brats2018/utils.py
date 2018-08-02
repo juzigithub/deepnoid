@@ -159,7 +159,7 @@ def Normalization(x, norm_type, is_train, name, G=2, esp=1e-5, channel_mode='NHW
                                                   fused=True,
                                                   decay=0.001,
                                                   is_training=is_train,
-                                                  updates_collections=tf.GraphKeys.UPDATE_OPS,
+                                                  updates_collections=None,
                                                   scope='BN_'+name)
 
             # output = tf.layers.batch_normalization(x, momentum=0.9, epsilon=0.0001, training=is_train, name='BN_'+name)
