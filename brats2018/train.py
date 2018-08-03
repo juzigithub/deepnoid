@@ -139,7 +139,7 @@ class Train:
 
                     if save_yn:
                         # Make folder in the saving path for qualified epochs
-                        self._make_path(epoch + idx * cfg.EPOCHS)
+                        self._make_path(epoch * len(val_order) + idx)
 
                     # train
                     for batch in tl.iterate.minibatches(inputs=train_X, targets=train_Y,

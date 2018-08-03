@@ -553,29 +553,29 @@ def unet_down_block(inputs, conv_list, pool_list, channel_n, pool_size_h, pool_s
     return pool_list[idx]
 
 
-def unet_same_block(inputs, channel_n, group_n, act_fn, norm_type, training):
-    conv_list = conv2D('same_conv1', inputs, channel_n, [3, 3], [1, 1], padding='SAME')
-    conv_list = Normalization(conv_list, norm_type, training, 'same_norm1', G=group_n)
-    conv_list = activation('same_act1', conv_list, act_fn)
-    conv_list = conv2D('same_conv2', conv_list, channel_n, [1, 1], [1, 1], padding='SAME')
-    conv_list = Normalization(conv_list, norm_type, training, 'same_norm2', G=group_n)
-    conv_list = activation('same_act2', conv_list, act_fn)
+def unet_same_block(inputs, channel_n, group_n, act_fn, norm_type, training, name='same'):
+    conv_list = conv2D(name + 'same_conv1', inputs, channel_n, [3, 3], [1, 1], padding='SAME')
+    conv_list = Normalization(conv_list, norm_type, training, name + 'same_norm1', G=group_n)
+    conv_list = activation(name + 'same_act1', conv_list, act_fn)
+    conv_list = conv2D(name + 'same_conv2', conv_list, channel_n, [1, 1], [1, 1], padding='SAME')
+    conv_list = Normalization(conv_list, norm_type, training, name + 'same_norm2', G=group_n)
+    conv_list = activation(name + 'same_act2', conv_list, act_fn)
 
     return conv_list
 
 
-def unet_up_block(inputs, downconv_list, upconv_list, pool_list, channel_n, group_n, act_fn, norm_type, training, idx):
-    pool_list[idx] = Normalization(inputs, norm_type, training, str(idx) + '_norm1', G=group_n)
-    pool_list[idx] = activation(str(idx) + '_upsampling_act', pool_list[idx], act_fn)
-    pool_list[idx] = concat(str(idx) + '_upconcat', [pool_list[idx], downconv_list[idx]], axis=3)
+def unet_up_block(inputs, downconv_list, upconv_list, pool_list, channel_n, group_n, act_fn, norm_type, training, idx, name='up'):
+    pool_list[idx] = Normalization(inputs, norm_type, training, name + str(idx) + '_norm1', G=group_n)
+    pool_list[idx] = activation(name + str(idx) + '_upsampling_act', pool_list[idx], act_fn)
+    pool_list[idx] = concat(name + str(idx) + '_upconcat', [pool_list[idx], downconv_list[idx]], axis=3)
 
-    upconv_list[idx] = conv2D(str(idx) + '_upconv1', pool_list[idx], channel_n, [3, 3], [1, 1], padding='SAME')
-    upconv_list[idx] = Normalization(upconv_list[idx], norm_type, training, str(idx) + '_upnorm1', G=group_n)
-    upconv_list[idx] = activation(str(idx) + '_upact1', upconv_list[idx], act_fn)
+    upconv_list[idx] = conv2D(name + str(idx) + '_upconv1', pool_list[idx], channel_n, [3, 3], [1, 1], padding='SAME')
+    upconv_list[idx] = Normalization(upconv_list[idx], norm_type, training, name + str(idx) + '_upnorm1', G=group_n)
+    upconv_list[idx] = activation(name + str(idx) + '_upact1', upconv_list[idx], act_fn)
 
-    upconv_list[idx] = conv2D(str(idx) + '_upconv2', upconv_list[idx], channel_n, [3, 3], [1, 1], padding='SAME')
-    upconv_list[idx] = Normalization(upconv_list[idx], norm_type, training, str(idx) + '_upnorm2', G=group_n)
-    upconv_list[idx] = activation(str(idx) + '_upact2', upconv_list[idx], act_fn)
+    upconv_list[idx] = conv2D(name + str(idx) + '_upconv2', upconv_list[idx], channel_n, [3, 3], [1, 1], padding='SAME')
+    upconv_list[idx] = Normalization(upconv_list[idx], norm_type, training, name + str(idx) + '_upnorm2', G=group_n)
+    upconv_list[idx] = activation(name + str(idx) + '_upact2', upconv_list[idx], act_fn)
     print('up' + str(idx + 1) + 'conv', upconv_list[idx])
 
     return upconv_list[idx]
