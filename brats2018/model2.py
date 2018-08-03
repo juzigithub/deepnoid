@@ -119,7 +119,7 @@ class Model:
 
         with tf.variable_scope('low_path'):
             ###########
-            n, h, _, c = tf.shape(self.X)
+            n, h, c = cfg.BATCH_SIZE, cfg.PATCH_SIZE, cfg.N_INPUT_CHANNEL
             channel_n = cfg.INIT_N_FILTER
             pool_size_h = cfg.PATCH_SIZE // 2
             pool_size_w = cfg.PATCH_SIZE // 2
