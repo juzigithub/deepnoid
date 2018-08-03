@@ -4,7 +4,7 @@ import tensorlayer as tl
 import os
 import time
 import cv2
-
+import random
 import loader
 import config as cfg
 import performance_eval as pe
@@ -27,7 +27,7 @@ class Train:
             dstime = time.time()
             tl.files.exists_or_mkdir(cfg.SAVE_TRAIN_DATA_PATH)
 
-            loader.data_saver([cfg.HGG_DATA_PATH], cfg.SAVE_TRAIN_DATA_PATH, cfg.SPLITS, train=True)
+            loader.data_saver([cfg.HGG_DATA_PATH, cfg.LGG_DATA_PATH], cfg.SAVE_TRAIN_DATA_PATH, cfg.SPLITS, train=True)
 
             detime = time.time()
 
@@ -74,7 +74,7 @@ class Train:
 
             #  Saving a model is saving variables such as weights, ans we call it as ckpt(check point file) in tensorflow
             # It's a tensorflow class saving ckpt file
-            saver = tf.train.Saver()
+            saver = tf.train.Saver(max_to_keep=10000, var_list=tf.global_variables())
 
             # save graphs from tensorboard
             self.writer.add_graph(sess.graph)
@@ -92,28 +92,44 @@ class Train:
             tc_total_result_list = []
             wt_total_result_list = []
 
-            for idx in range(cfg.SPLITS):
+            X = np.array(
+                [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_selected_{}.npy'.format(i)) for i in
+                 range(cfg.SPLITS)])
+            Y = np.array(
+                [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_selected_{}.npy'.format(i)) for i in
+                 range(cfg.SPLITS)])
+
+            drop_rate = cfg.INIT_DROPOUT_RATE
+            loss_ratio = np.array(cfg.LAMBDA)
+            for epoch in range(cfg.EPOCHS):
                 split_training_time = 0
-                train_idx = [i for i in range(cfg.SPLITS) if i != idx]
-                val_idx = idx
-
-                train_X = np.concatenate(
-                    [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_chunk_{}.npy'.format(i)) for i in train_idx], axis=0)
-                train_Y = np.concatenate(
-                    [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_chunk_{}.npy'.format(i)) for i in train_idx], axis=0)
-                val_X = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_chunk_{}.npy'.format(val_idx))
-                val_Y = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_chunk_{}.npy'.format(val_idx))
-                val_selected_idx = np.random.randint(len(val_Y), size=int(cfg.VAL_PATCH_RATIO * len(val_Y)))
-                val_X = val_X[val_selected_idx]
-                val_Y = val_Y[val_selected_idx]
-
-                train_step = train_X.shape[0] // cfg.BATCH_SIZE
 
                 et_one_split_result = []
                 tc_one_split_result = []
                 wt_one_split_result = []
 
-                for epoch in range(cfg.EPOCHS):
+                # random order select validation block
+                val_order = [i for i in range(cfg.SPLITS)]
+                random.shuffle(val_order)
+                # dynamic dropout rate
+                drop_rate *= cfg.DROPOUT_INCREASE_RATE
+
+                for idx, val_idx in enumerate(val_order):
+                    print('data preparing at epoch {0} step {1}...'.format(epoch+1, idx+1))
+                    train_idx = [i for i in range(cfg.SPLITS) if i != val_idx]
+
+                    train_X = np.concatenate([X[i] for i in train_idx], axis=0)
+                    train_Y = np.concatenate([Y[i] for i in train_idx], axis=0)
+                    val_X = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_whole_{}.npy'.format(val_idx))
+                    val_Y = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_whole_{}.npy'.format(val_idx))
+                    val_selected_idx = np.random.randint(len(val_Y), size=int(cfg.VAL_PATCH_RATIO * len(val_Y)))
+                    val_X = val_X[val_selected_idx]
+                    val_Y = val_Y[val_selected_idx]
+                    print('X : {0}, train_X : {1}'.format(X.shape, train_X.shape))
+                    print('data preparing complete!')
+
+                    train_step = train_X.shape[0] // cfg.BATCH_SIZE
+
                     epoch_start = time.time()
                     # create variables to save results
                     total_cost, step = 0, 0
@@ -123,8 +139,7 @@ class Train:
 
                     if save_yn:
                         # Make folder in the saving path for qualified epochs
-                        self._make_path(epoch + idx * cfg.EPOCHS)
-
+                        self._make_path(epoch * len(val_order) + idx)
 
                     # train
                     for batch in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
@@ -140,17 +155,23 @@ class Train:
                         tr_feed_dict = {self.model.X: batch_x,
                                         self.model.Y: batch_y,
                                         self.model.training: True,
-                                        self.model.drop_rate: cfg.DROPOUT_RATE}
+                                        self.model.drop_rate: drop_rate,
+                                        self.model.loss_ratio: loss_ratio}
 
                         cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
 
                         bg, ncr, ed, et = sess.run([self.model.bg_loss, self.model.ncr_loss, self.model.ed_loss, self.model.et_loss],
                                                    feed_dict=tr_feed_dict)
+
                         s = bg + ncr + ed + et
                         print('bg loss ratio : ', (bg/s) * 100)
                         print('ncr loss ratio : ', ( ncr/s ) * 100)
                         print('ed loss ratio : ', ( ed/s ) * 100)
                         print('et loss ratio : ', ( et/s ) * 100)
+
+                        # Update Loss Ratio for next step
+                        loss_ratio = loss_ratio * np.sqrt([bg, ncr, ed, et])
+                        loss_ratio = loss_ratio / np.sum(loss_ratio)
 
                         total_cost += cost
                         step += 1
@@ -171,7 +192,6 @@ class Train:
                     tc_one_epoch_result_list = []
                     wt_one_epoch_result_list = []
                     print_img_idx = 0
-
 
                     # validation test
                     for batch in tl.iterate.minibatches(inputs=val_X, targets=val_Y,
@@ -212,7 +232,7 @@ class Train:
                         et_one_epoch_result_list.append(et_one_batch_result)
                         tc_one_epoch_result_list.append(tc_one_batch_result)
                         wt_one_epoch_result_list.append(wt_one_batch_result)
-                        #
+
                         # if save_yn:
                         #     # make img
                         #     for i in range(0, cfg.BATCH_SIZE, cfg.BATCH_SIZE//2):
@@ -339,12 +359,12 @@ class Train:
 
             # print and save total result
             self.result = 'ET >>> ' \
-                          '\n\tAccuracy: {:.4f} ± {:.2f} ' \
-                          '\n\tSensitivity {:.4f} ± {:.2f} ' \
-                          '\n\tSpecificity: {:.4f} ± {:.2f} ' \
-                          '\n\tDice Score : {:.4f} ± {:.2f} ' \
-                          '\n\tMean IoU : {:.4f} ± {:.2f} ' \
-                          '\n\tHausdorff_D : {:.4f} ± {:.2f}'.format(et_total_mean[0], et_total_std[0],
+                          '\n\tAccuracy: {:.4f} +- {:.2f} ' \
+                          '\n\tSensitivity {:.4f} +- {:.2f} ' \
+                          '\n\tSpecificity: {:.4f} +- {:.2f} ' \
+                          '\n\tDice Score : {:.4f} +- {:.2f} ' \
+                          '\n\tMean IoU : {:.4f} +- {:.2f} ' \
+                          '\n\tHausdorff_D : {:.4f} +- {:.2f}'.format(et_total_mean[0], et_total_std[0],
                                                                      et_total_mean[1], et_total_std[1],
                                                                      et_total_mean[2], et_total_std[2],
                                                                      et_total_mean[3], et_total_std[3],
@@ -353,12 +373,12 @@ class Train:
             utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 
             self.result = 'TC >>> ' \
-                          '\n\tAccuracy: {:.4f} ± {:.2f} ' \
-                          '\n\tSensitivity {:.4f} ± {:.2f} ' \
-                          '\n\tSpecificity: {:.4f} ± {:.2f} ' \
-                          '\n\tDice Score : {:.4f} ± {:.2f} ' \
-                          '\n\tMean IoU : {:.4f} ± {:.2f} ' \
-                          '\n\tHausdorff_D : {:.4f} ± {:.2f}'.format(tc_total_mean[0], tc_total_std[0],
+                          '\n\tAccuracy: {:.4f} +- {:.2f} ' \
+                          '\n\tSensitivity {:.4f} +- {:.2f} ' \
+                          '\n\tSpecificity: {:.4f} +- {:.2f} ' \
+                          '\n\tDice Score : {:.4f} +- {:.2f} ' \
+                          '\n\tMean IoU : {:.4f} +- {:.2f} ' \
+                          '\n\tHausdorff_D : {:.4f} +- {:.2f}'.format(tc_total_mean[0], tc_total_std[0],
                                                                      tc_total_mean[1], tc_total_std[1],
                                                                      tc_total_mean[2], tc_total_std[2],
                                                                      tc_total_mean[3], tc_total_std[3],
@@ -367,12 +387,12 @@ class Train:
             utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 
             self.result = 'WT >>> ' \
-                          '\n\tAccuracy: {:.4f} ± {:.2f} ' \
-                          '\n\tSensitivity {:.4f} ± {:.2f} ' \
-                          '\n\tSpecificity: {:.4f} ± {:.2f} ' \
-                          '\n\tDice Score : {:.4f} ± {:.2f} ' \
-                          '\n\tMean IoU : {:.4f} ± {:.2f} ' \
-                          '\n\tHausdorff_D : {:.4f} ± {:.2f}'.format(wt_total_mean[0], wt_total_std[0],
+                          '\n\tAccuracy: {:.4f} +- {:.2f} ' \
+                          '\n\tSensitivity {:.4f} +- {:.2f} ' \
+                          '\n\tSpecificity: {:.4f} +- {:.2f} ' \
+                          '\n\tDice Score : {:.4f} +- {:.2f} ' \
+                          '\n\tMean IoU : {:.4f} +- {:.2f} ' \
+                          '\n\tHausdorff_D : {:.4f} +- {:.2f}'.format(wt_total_mean[0], wt_total_std[0],
                                                                      wt_total_mean[1], wt_total_std[1],
                                                                      wt_total_mean[2], wt_total_std[2],
                                                                      wt_total_mean[3], wt_total_std[3],
