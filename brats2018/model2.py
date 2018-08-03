@@ -24,6 +24,7 @@ class Model:
         self.ed_pred = tf.add(tf.scalar_mul(0.2, self.ed_pred_high), tf.scalar_mul(0.8, self.ed_pred_low))
         self.et_pred = tf.add(tf.scalar_mul(0.8, self.et_pred_high), tf.scalar_mul(0.2, self.et_pred_low))
 
+        self.pred = tf.nn.softmax(tf.concat([self.bg_pred, self.ncr_pred, self.ed_pred, self.et_pred], -1))
 
         self.bg_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.bg_pred, target=self.bg_label)
         self.ncr_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.ncr_pred, target=self.ncr_label)
