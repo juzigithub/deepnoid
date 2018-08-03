@@ -48,7 +48,7 @@ class Model:
 
 
         with tf.variable_scope('high_path'):
-
+            inputs_high = self.X
             channel_n = cfg.INIT_N_FILTER
             pool_size_h = cfg.PATCH_SIZE
             pool_size_w = cfg.PATCH_SIZE
@@ -60,7 +60,7 @@ class Model:
                     # residual_block_v1_dr(name, inputs, channel_n, group_n, drop_rate, act_fn, norm_type, training, idx,
                     #                      shortcut=True):
                     self.down_conv_high[i] = utils.residual_block_v1_dr(name='high_resconv_{}_{}_'.format(str(i),str(j)),
-                                                                               inputs=self.X,
+                                                                               inputs=inputs_high,
                                                                                channel_n=channel_n,
                                                                                group_n=cfg.GROUP_N,
                                                                                drop_rate=self.drop_rate,
