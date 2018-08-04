@@ -15,8 +15,8 @@ class Model:
         self.pred_high = tf.nn.softmax(logits=self.logit_high)
         self.pred_low = tf.nn.softmax(logits=self.logit_low)
 
-        self.bg_pred_high, self.ed_pred_high, self.else_high = tf.split(self.pred_high, [1,1,1,1], axis=3)
-        self.ncr_pred_low, self.et_pred_low, self.else_low = tf.split(self.pred_low, [1,1,1,1], axis=3)
+        self.bg_pred_high, self.ed_pred_high, self.else_high = tf.split(self.pred_high, [1,1,1], axis=3)
+        self.ncr_pred_low, self.et_pred_low, self.else_low = tf.split(self.pred_low, [1,1,1], axis=3)
         self.bg_label, self.ncr_label, self.ed_label, self.et_label = tf.split(self.Y, [1,1,1,1], axis=3)
 
         # self.bg_pred = tf.add(tf.scalar_mul(0.8, self.bg_pred_high), tf.scalar_mul(0.2, self.bg_pred_low))
