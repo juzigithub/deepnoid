@@ -113,7 +113,7 @@ class Train:
 
                 # dynamic dropout rate
                 drop_rate *= cfg.DROPOUT_INCREASE_RATE
-                val_selected_idx = np.random.randint(len(val_Y), size=int(cfg.VAL_PATCH_RATIO * len(val_Y)))
+                val_selected_idx = np.random.randint(len(total_val_Y), size=int(cfg.VAL_PATCH_RATIO * len(total_val_Y)))
                 val_X = total_val_X[val_selected_idx]
                 val_Y = total_val_Y[val_selected_idx]
                 print('X : {0}, train_X : {1}'.format(X.shape, train_X.shape))
