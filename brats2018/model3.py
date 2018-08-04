@@ -203,10 +203,10 @@ class Model:
             up_conv_f_low = utils.conv2D('final_upconv_low', inputs_low, cfg.N_CLASS//2 + 1, [1, 1], [1, 1], 'SAME')
             ###################
             # Using patches here to reconstruct
-            up_conv_f_low = tf.reshape(up_conv_f_low, [-1, h // p, h // p, p * p, c])
+            up_conv_f_low = tf.reshape(up_conv_f_low, [-1, h // p, h // p, p * p, cfg.N_CLASS//2 + 1])
             up_conv_f_low = tf.split(up_conv_f_low, p * p, 3)
             up_conv_f_low = tf.stack(up_conv_f_low, axis=0)
-            up_conv_f_low = tf.reshape(up_conv_f_low, [-1, h // p, h // p, c])
+            up_conv_f_low = tf.reshape(up_conv_f_low, [-1, h // p, h // p, cfg.N_CLASS//2 + 1])
             up_conv_f_low = tf.batch_to_space_nd(up_conv_f_low, [p, p], pad)
             ###################
 
