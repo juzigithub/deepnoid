@@ -102,8 +102,8 @@ class Train:
             train_idx = [i for i in range(cfg.SPLITS) if i != cfg.CV_VAL_IDX]
             train_X = np.concatenate([X[i] for i in train_idx], axis=0)
             train_Y = np.concatenate([Y[i] for i in train_idx], axis=0)
-            val_X = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_whole_{}.npy'.format(cfg.CV_VAL_IDX))
-            val_Y = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_whole_{}.npy'.format(cfg.CV_VAL_IDX))
+            total_val_X = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_whole_{}.npy'.format(cfg.CV_VAL_IDX))
+            total_val_Y = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_whole_{}.npy'.format(cfg.CV_VAL_IDX))
 
             drop_rate = cfg.INIT_DROPOUT_RATE
             loss_ratio = np.array(cfg.LAMBDA)
@@ -114,8 +114,8 @@ class Train:
                 # dynamic dropout rate
                 drop_rate *= cfg.DROPOUT_INCREASE_RATE
                 val_selected_idx = np.random.randint(len(val_Y), size=int(cfg.VAL_PATCH_RATIO * len(val_Y)))
-                val_X = val_X[val_selected_idx]
-                val_Y = val_Y[val_selected_idx]
+                val_X = total_val_X[val_selected_idx]
+                val_Y = total_val_Y[val_selected_idx]
                 print('X : {0}, train_X : {1}'.format(X.shape, train_X.shape))
                 print('data preparing complete!')
 
