@@ -244,6 +244,55 @@ def cal_result(pred, label, one_hot=False, e=1e-6):
         _pred = pred
         _label = label
 
+    _pred = _pred.reshape(np.shape(_pred)[0], -1)
+    _label = _label.reshape(np.shape(_label)[0], -1)
+
+    acc_list = []
+    sens_list = []
+    spec_list = []
+    miou_list = []
+    dice_list = []
+
+    for p, l in zip(_pred, _label):
+        cm = confusion_matrix(l, p, labels=[0, 1])
+        TP = cm[1][1].astype(np.float32)
+        FP = cm[0][1].astype(np.float32)
+        FN = cm[1][0].astype(np.float32)
+        TN = cm[0][0].astype(np.float32)
+
+        # accuracy, sensitivity, specificity, mean iou, dice coefficient, hausdorff
+        acc = (TP + TN) / (TP + FP + FN + TN + e)
+        sens = TP / (TP + FN + e)
+        spec = TN / (TN + FP + e)
+        miou = TP / (FP + FN + TP + e)
+        dice = (2 * TP) / (2 * TP + FP + FN + e)
+
+        acc_list.append(acc)
+        sens_list.append(sens)
+        spec_list.append(spec)
+        miou_list.append(miou)
+        dice_list.append(dice)
+
+    mean_acc = np.mean(np.array(acc_list))
+    mean_sens = np.mean(np.array(sens_list))
+    mean_spec = np.mean(np.array(spec_list))
+    mean_miou = np.mean(np.array(miou_list))
+    mean_dice = np.mean(np.array(dice_list))
+
+    hdorff = max(directed_hausdorff(_pred, _label)[0], directed_hausdorff(_label, _pred)[0])
+
+    return [mean_acc, mean_sens, mean_spec, mean_miou, mean_dice, hdorff]
+
+def cal_result2(pred, label, one_hot=False, e=1e-6):
+    # convert one-hot labels to multiple labels
+    if one_hot:
+        _pred = np.argmax(pred, axis=-1)
+        _label = np.argmax(label, axis=-1)
+
+    else:
+        _pred = pred
+        _label = label
+
     _pred1 = _pred.flatten()
     _label1 = _label.flatten()
     _pred2 = _pred.reshape(np.shape(_pred)[0], -1)
