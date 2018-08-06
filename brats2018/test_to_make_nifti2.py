@@ -96,19 +96,19 @@ class Test:
                 # patch_list = []
 
 
-                if img_idx == 150:
-                    img_list = np.array(img_list).reshape([-1, 192, 160,4])
+                if img_idx == 155:
+                    img_list = np.array(img_list).reshape([-1, cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], cfg.N_CLASS])
 
                     img_list = np.argmax(img_list, axis=-1)
                     img_list[img_list == 3] = 4
                     img_list.astype(np.float32)
 
                     img_list = np.transpose(img_list, [2,1,0])
-                    zero_padded = np.pad(img_list, ((41, 39), (30, 18), (3, 2)), 'constant')
+                    zero_padded = np.pad(img_list, ((24, 24), (24, 24), (0, 0)), 'constant')
                     # zero_padded = np.flip(zero_padded,0)
                     # zero_padded = np.flip(zero_padded,1)
 
-                    utils.save_array_as_nifty_volume(zero_padded, './img/test/for_nifti/{}.nii.gz'.format(self.patient_id_list[save_idx]))
+                    utils.save_array_as_nifty_volume2(zero_padded, './img/test/for_nifti/{}.nii.gz'.format(self.patient_id_list[save_idx]))
                     # np.save('./img/test/for_nifti/{}.npy'.format(self.patient_id_list[save_idx]), zero_padded)
                     img_list = []
                     img_idx = 0
