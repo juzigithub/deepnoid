@@ -246,7 +246,7 @@ def cal_result(pred, label, one_hot=False, e=1e-6):
 
     _pred = _pred.reshape(np.shape(_pred)[0], -1)
     _label = _label.reshape(np.shape(_label)[0], -1)
-
+    print('cal_shape0', _pred.shape)
     acc_list = []
     sens_list = []
     spec_list = []
@@ -254,6 +254,7 @@ def cal_result(pred, label, one_hot=False, e=1e-6):
     dice_list = []
 
     for p, l in zip(_pred, _label):
+        print('cal_shape', l.shape, p.shape)
         cm = confusion_matrix(l, p, labels=[0, 1])
         TP = cm[1][1].astype(np.float32)
         FP = cm[0][1].astype(np.float32)
