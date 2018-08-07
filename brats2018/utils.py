@@ -260,11 +260,11 @@ def cal_result(pred, label, one_hot=False, e=1e-6):
         TN = cm[0][0].astype(np.float32)
 
         # accuracy, sensitivity, specificity, mean iou, dice coefficient, hausdorff
-        acc = (TP + TN) + e / (TP + FP + FN + TN + e)
-        sens = TP + e / (TP + FN + e)
-        spec = TN + e / (TN + FP + e)
-        miou = TP + e / (FP + FN + TP + e)
-        dice = (2 * TP) + e / (2 * TP + FP + FN + e)
+        acc = (TP + TN + e)  / (TP + FP + FN + TN + e)
+        sens = (TP + e) / (TP + FN + e)
+        spec = (TN + e) / (TN + FP + e)
+        miou = (TP + e) / (FP + FN + TP + e)
+        dice = (2 * TP + e)  / (2 * TP + FP + FN + e)
 
         acc_list.append(acc)
         sens_list.append(sens)
@@ -304,11 +304,11 @@ def cal_result2(pred, label, one_hot=False, e=1e-6):
     TN = cm[0][0].astype(np.float32)
 
     # accuracy, sensitivity, specificity, mean iou, dice coefficient, hausdorff
-    acc = (TP + TN) + e / (TP + FP + FN + TN + e)
-    sens = TP + e / (TP + FN + e)
-    spec = TN + e / (TN + FP + e)
-    miou = TP + e / (FP + FN + TP + e)
-    dice = (2 * TP) + e / (2 * TP + FP + FN + e)
+    acc = (TP + TN + e) / (TP + FP + FN + TN + e)
+    sens = (TP + e) / (TP + FN + e)
+    spec = (TN + e) / (TN + FP + e)
+    miou = (TP + e) / (FP + FN + TP + e)
+    dice = (2 * TP + e)  / (2 * TP + FP + FN + e)
     hdorff = max(directed_hausdorff(_pred2, _label2)[0], directed_hausdorff(_label2, _pred2)[0])
 
     return [acc, sens, spec, miou, dice, hdorff]
