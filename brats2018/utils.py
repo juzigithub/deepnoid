@@ -611,7 +611,6 @@ def unet_same_block(inputs, channel_n, group_n, act_fn, norm_type, training, nam
 
     return conv_list
 
-
 def unet_up_block(inputs, downconv_list, upconv_list, pool_list, channel_n, group_n, act_fn, norm_type, training, idx, name='up'):
     pool_list[idx] = Normalization(inputs, norm_type, training, name + str(idx) + '_norm1', G=group_n)
     pool_list[idx] = activation(name + str(idx) + '_upsampling_act', pool_list[idx], act_fn)
@@ -625,6 +624,23 @@ def unet_up_block(inputs, downconv_list, upconv_list, pool_list, channel_n, grou
     upconv_list[idx] = Normalization(upconv_list[idx], norm_type, training, name + str(idx) + '_upnorm2', G=group_n)
     upconv_list[idx] = activation(name + str(idx) + '_upact2', upconv_list[idx], act_fn)
     print('up' + str(idx + 1) + 'conv', upconv_list[idx])
+
+    return upconv_list[idx]
+
+def unet_up_block2(inputs, downconv_list, upconv_list, pool_list, channel_n, group_n, act_fn, norm_type, training, idx, n_layers=1, name='up'):
+    pool_list[idx] = Normalization(inputs, norm_type, training, name + str(idx) + '_norm1', G=group_n)
+    pool_list[idx] = activation(name + str(idx) + '_upsampling_act', pool_list[idx], act_fn)
+    pool_list[idx] = concat(name + str(idx) + '_upconcat', [pool_list[idx], downconv_list[idx]], axis=3)
+
+    for i in range(n_layers):
+        upconv_list[idx] = conv2D(name + str(idx) + '_upconv1_' + str(i), pool_list[idx], channel_n, [3, 3], [1, 1], padding='SAME')
+        upconv_list[idx] = Normalization(upconv_list[idx], norm_type, training, name + str(idx) + '_upnorm1_' + str(i), G=group_n)
+        upconv_list[idx] = activation(name + str(idx) + '_upact1_' + str(i), upconv_list[idx], act_fn)
+
+        upconv_list[idx] = conv2D(name + str(idx) + '_upconv2_' + str(i), upconv_list[idx], channel_n, [3, 3], [1, 1], padding='SAME')
+        upconv_list[idx] = Normalization(upconv_list[idx], norm_type, training, name + str(idx) + '_upnorm2_' + str(i), G=group_n)
+        upconv_list[idx] = activation(name + str(idx) + '_upact2_' + str(i), upconv_list[idx], act_fn)
+        print('up' + str(idx + 1) + 'conv_' + str(i), upconv_list[idx])
 
     return upconv_list[idx]
 

@@ -57,7 +57,7 @@ class Model:
             pool_size_h = cfg.PATCH_SIZE
             pool_size_w = cfg.PATCH_SIZE
 
-            for i in range(cfg.DEPTH):
+            for i in range(cfg.DEPTH_HIGH):
                 pool_size_h //= 2
                 pool_size_w //= 2
                 for j in range(cfg.N_LAYERS_HIGH[i]):
@@ -93,7 +93,7 @@ class Model:
                                                 norm_type=cfg.NORMALIZATION_TYPE,
                                                 training=self.training)
 
-            for i in reversed(range(cfg.DEPTH)):
+            for i in reversed(range(cfg.DEPTH_HIGH)):
                 channel_n //= 2
                 pool_size_h *= 2
                 pool_size_w *= 2
@@ -137,7 +137,7 @@ class Model:
             inputs_low = tf.reshape(inputs_low, [-1, p, p, c])
             ##########
 
-            for i in range(cfg.DEPTH):
+            for i in range(cfg.DEPTH_LOW):
                 pool_size_h //= 2
                 pool_size_w //= 2
                 for j in range(cfg.N_LAYERS_LOW[i]):
@@ -174,7 +174,7 @@ class Model:
                                                 norm_type=cfg.NORMALIZATION_TYPE,
                                                 training=self.training)
 
-            for i in reversed(range(cfg.DEPTH)):
+            for i in reversed(range(cfg.DEPTH_LOW)):
                 channel_n //= 2
                 pool_size_h *= 2
                 pool_size_w *= 2

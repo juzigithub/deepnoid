@@ -15,23 +15,26 @@ class Model:
         self.pred_high = tf.nn.softmax(logits=self.logit_high)
         self.pred_low = tf.nn.softmax(logits=self.logit_low)
 
-        self.bg_pred_high, self.ncr_pred_high, self.ed_pred_high, self.et_pred_high = tf.split(self.pred_high, [1,1,1,1], axis=3)
-        self.bg_pred_low, self.ncr_pred_low, self.ed_pred_low, self.et_pred_low = tf.split(self.pred_low, [1,1,1,1], axis=3)
+        self.bg_pred_high, self.ed_pred_high, self.else_high = tf.split(self.pred_high, [1,1,1], axis=3)
+        self.ncr_pred_low, self.et_pred_low, self.else_low = tf.split(self.pred_low, [1,1,1], axis=3)
         self.bg_label, self.ncr_label, self.ed_label, self.et_label = tf.split(self.Y, [1,1,1,1], axis=3)
 
-        self.bg_pred = tf.add(tf.scalar_mul(0.8, self.bg_pred_high), tf.scalar_mul(0.2, self.bg_pred_low))
-        self.ncr_pred = tf.add(tf.scalar_mul(0.2, self.ncr_pred_high), tf.scalar_mul(0.8, self.ncr_pred_low))
-        self.ed_pred = tf.add(tf.scalar_mul(0.2, self.ed_pred_high), tf.scalar_mul(0.8, self.ed_pred_low))
-        self.et_pred = tf.add(tf.scalar_mul(0.8, self.et_pred_high), tf.scalar_mul(0.2, self.et_pred_low))
+        # self.bg_pred = tf.add(tf.scalar_mul(0.8, self.bg_pred_high), tf.scalar_mul(0.2, self.bg_pred_low))
+        # self.ncr_pred = tf.add(tf.scalar_mul(0.2, self.ncr_pred_high), tf.scalar_mul(0.8, self.ncr_pred_low))
+        # self.ed_pred = tf.add(tf.scalar_mul(0.2, self.ed_pred_high), tf.scalar_mul(0.8, self.ed_pred_low))
+        # self.et_pred = tf.add(tf.scalar_mul(0.8, self.et_pred_high), tf.scalar_mul(0.2, self.et_pred_low))
 
-        self.pred = tf.nn.softmax(tf.concat([self.bg_pred, self.ncr_pred, self.ed_pred, self.et_pred], -1))
+        self.pred = tf.nn.softmax(tf.concat([self.bg_pred_high, self.ncr_pred_low, self.ed_pred_high, self.et_pred_low], -1))
 
-        self.bg_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.bg_pred, target=self.bg_label)
-        self.ncr_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.ncr_pred, target=self.ncr_label)
-        self.ed_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.ed_pred, target=self.ed_label)
-        self.et_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.et_pred, target=self.et_label)
+        self.bg_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.bg_pred_high, target=self.bg_label)
+        self.ncr_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.ncr_pred_low, target=self.ncr_label)
+        self.ed_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.ed_pred_high, target=self.ed_label)
+        self.et_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.et_pred_low, target=self.et_label)
+        self.else_high_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.else_high, target=tf.add(self.ncr_label, self.et_label))
+        self.else_low_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.else_low, target=tf.add(self.bg_label, self.ed_label))
         self.loss = self.loss_ratio[0] * self.bg_loss + self.loss_ratio[1] * self.ncr_loss + \
-                    self.loss_ratio[2] * self.ed_loss + self.loss_ratio[3] * self.et_loss
+                    self.loss_ratio[2] * self.ed_loss + self.loss_ratio[3] * self.et_loss  + \
+                    0.05 * self.else_high_loss + 0.05 * self.else_low_loss
 
 
 
@@ -94,29 +97,43 @@ class Model:
                 channel_n //= 2
                 pool_size_h *= 2
                 pool_size_w *= 2
-                inputs_high = utils.select_upsampling(name=str(i) + 'high_upsampling',
+                inputs_high = utils.select_upsampling2(name=str(i) + 'high_upsampling',
                                                  up_conv=inputs_high,
-                                                 up_pool=self.up_pool_high[i],
                                                  channel_n=channel_n,
                                                  pool_size_h=pool_size_h,
                                                  pool_size_w=pool_size_w,
                                                  mode=cfg.UPSAMPLING_TYPE)
                 print('up_pool_high', inputs_high)
 
-                inputs_high = utils.unet_up_block(name='high_',
-                                                  inputs=inputs_high,
-                                                  downconv_list=self.down_conv_high,
-                                                  upconv_list=self.up_conv_high,
-                                                  pool_list=self.up_pool_high,
-                                                  channel_n=channel_n,
-                                                  group_n=cfg.GROUP_N,
-                                                  act_fn=cfg.ACTIVATION_FUNC,
-                                                  norm_type=cfg.NORMALIZATION_TYPE,
-                                                  training=self.training,
-                                                  idx=i)
-                print('up_conv_high', inputs_high)
+                inputs_high = utils.unet_up_block2(name='high_',
+                                                   inputs=inputs_high,
+                                                   downconv_list=self.down_conv_high,
+                                                   upconv_list=self.up_conv_high,
+                                                   pool_list=self.up_pool_high,
+                                                   channel_n=channel_n,
+                                                   group_n=cfg.GROUP_N,
+                                                   act_fn=cfg.ACTIVATION_FUNC,
+                                                   norm_type=cfg.NORMALIZATION_TYPE,
+                                                   training=self.training,
+                                                   n_layers=2,
+                                                   idx=i)
 
-            up_conv_f_high = utils.conv2D('final_upconv_high', inputs_high, cfg.N_CLASS, [1, 1], [1, 1], 'SAME')
+                self.up_pool_high[i] = utils.conv2D('upsample_1x1_conv{}_high'.format(i), self.up_pool_high[i], cfg.N_CLASS//2 + 1, [1, 1], [1, 1], padding='SAME')
+
+                print('up_conv_high', inputs_high)
+                print('up_pool_high{}'.format(i), self.up_pool_high[i])
+
+
+            for i in reversed(range(1, cfg.DEPTH_HIGH)):
+                self.up_pool_high[i-1] = utils.select_upsampling2(name=str(i) + 'high_segmap',
+                                                                 up_conv=self.up_pool_high[i],
+                                                                 channel_n=cfg.N_CLASS // 2 + 1,
+                                                                 pool_size_h=pool_size_h // (2 ** (i - 1)),
+                                                                 pool_size_w=pool_size_w // (2 ** (i - 1)),
+                                                                 mode=cfg.UPSAMPLING_TYPE) + self.up_pool_high[i-1]
+
+            up_conv_f_high = utils.conv2D('final_upconv_high', inputs_high, cfg.N_CLASS//2 + 1, [1, 1], [1, 1], 'SAME')
+            up_conv_f_high = up_conv_f_high + self.up_pool_low[0]
 
         with tf.variable_scope('low_path'):
             ###########
@@ -175,16 +192,15 @@ class Model:
                 channel_n //= 2
                 pool_size_h *= 2
                 pool_size_w *= 2
-                inputs_low = utils.select_upsampling(name=str(i) + 'low_upsampling',
-                                                      up_conv=inputs_low,
-                                                      up_pool=self.up_pool_low[i],
-                                                      channel_n=channel_n,
-                                                      pool_size_h=pool_size_h,
-                                                      pool_size_w=pool_size_w,
-                                                      mode=cfg.UPSAMPLING_TYPE)
+                inputs_low = utils.select_upsampling2(name=str(i) + 'low_upsampling',
+                                                     up_conv=inputs_low,
+                                                     channel_n=channel_n,
+                                                     pool_size_h=pool_size_h,
+                                                     pool_size_w=pool_size_w,
+                                                     mode=cfg.UPSAMPLING_TYPE)
                 print('up_pool_low', inputs_low)
 
-                inputs_low = utils.unet_up_block(name='low_',
+                inputs_low = utils.unet_up_block2(name='low_',
                                                   inputs=inputs_low,
                                                   downconv_list=self.down_conv_low,
                                                   upconv_list=self.up_conv_low,
@@ -194,16 +210,35 @@ class Model:
                                                   act_fn=cfg.ACTIVATION_FUNC,
                                                   norm_type=cfg.NORMALIZATION_TYPE,
                                                   training=self.training,
+                                                  n_layers=2,
                                                   idx=i)
-                print('up_conv_low', inputs_low)
 
-            up_conv_f_low = utils.conv2D('final_upconv_low', inputs_low, cfg.N_CLASS, [1, 1], [1, 1], 'SAME')
+                self.up_pool_low[i] = utils.conv2D('upsample_1x1_conv{}_low'.format(i), self.up_pool_low[i], cfg.N_CLASS//2 + 1, [1, 1], [1, 1], padding='SAME')
+
+                print('up_conv_low', inputs_low)
+                print('up_pool_low{}'.format(i), self.up_pool_low[i])
+
+
+            for i in reversed(range(1, cfg.DEPTH_LOW)):
+                self.up_pool_low[i-1] = utils.select_upsampling2(name=str(i) + 'low_segmap',
+                                                                 up_conv=self.up_pool_low[i],
+                                                                 channel_n=cfg.N_CLASS // 2 + 1,
+                                                                 pool_size_h=pool_size_h // (2 ** (i - 1)),
+                                                                 pool_size_w=pool_size_w // (2 ** (i - 1)),
+                                                                 mode=cfg.UPSAMPLING_TYPE) + self.up_pool_low[i-1]
+
+
+
+
+
+            up_conv_f_low = utils.conv2D('final_upconv_low', inputs_low, cfg.N_CLASS//2 + 1, [1, 1], [1, 1], 'SAME')
+            up_conv_f_low = up_conv_f_low + self.up_pool_low[0]
             ###################
             # Using patches here to reconstruct
-            up_conv_f_low = tf.reshape(up_conv_f_low, [-1, h // p, h // p, p * p, c])
+            up_conv_f_low = tf.reshape(up_conv_f_low, [-1, h // p, h // p, p * p, cfg.N_CLASS//2 + 1])
             up_conv_f_low = tf.split(up_conv_f_low, p * p, 3)
             up_conv_f_low = tf.stack(up_conv_f_low, axis=0)
-            up_conv_f_low = tf.reshape(up_conv_f_low, [-1, h // p, h // p, c])
+            up_conv_f_low = tf.reshape(up_conv_f_low, [-1, h // p, h // p, cfg.N_CLASS//2 + 1])
             up_conv_f_low = tf.batch_to_space_nd(up_conv_f_low, [p, p], pad)
             ###################
 

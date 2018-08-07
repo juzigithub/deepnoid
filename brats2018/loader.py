@@ -151,7 +151,7 @@ def get_normalized_img(data_sets, train, task1=True):
                           'standard_list : {1}, idx : {2}'.format(used_modal_list, standard_list, idx))
                     raise Exception
 
-            b_min, b_max = [41, 30, 3] , [200, 221, 152]
+            b_min, b_max = [24, 24, 0] , [215, 215, 154]
             vol = crop_volume_with_bounding_box(vol,b_min,b_max)
             total_list[idx].append(vol)
 
