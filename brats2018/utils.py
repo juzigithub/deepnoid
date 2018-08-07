@@ -271,21 +271,12 @@ def cal_result(pred, label, one_hot=False, e=1e-6):
         spec_list.append(spec)
         miou_list.append(miou)
         dice_list.append(dice)
-    print('acc_list', acc_list)
-    print('sens_list', sens_list)
-    print('miou_list', miou_list)
-    print('dice_list', dice_list)
 
     mean_acc = np.mean(np.array(acc_list))
     mean_sens = np.mean(np.array(sens_list))
     mean_spec = np.mean(np.array(spec_list))
     mean_miou = np.mean(np.array(miou_list))
     mean_dice = np.mean(np.array(dice_list))
-
-    print('mean_acc', mean_acc)
-    print('sens_acc', mean_sens)
-    print('miou_acc', mean_miou)
-    print('dice_acc', mean_dice)
 
     hdorff = max(directed_hausdorff(_pred, _label)[0], directed_hausdorff(_label, _pred)[0])
 
