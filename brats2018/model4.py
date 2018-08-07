@@ -130,6 +130,7 @@ class Model:
                                                                  channel_n=cfg.N_CLASS // 2 + 1,
                                                                  pool_size_h=pool_size_h // (2 ** (i - 1)),
                                                                  pool_size_w=pool_size_w // (2 ** (i - 1)),
+                                                                  mul_channel=False,
                                                                  mode=cfg.UPSAMPLING_TYPE) + self.up_pool_high[i-1]
 
             up_conv_f_high = utils.conv2D('final_upconv_high', inputs_high, cfg.N_CLASS//2 + 1, [1, 1], [1, 1], 'SAME')
@@ -225,6 +226,7 @@ class Model:
                                                                  channel_n=cfg.N_CLASS // 2 + 1,
                                                                  pool_size_h=pool_size_h // (2 ** (i - 1)),
                                                                  pool_size_w=pool_size_w // (2 ** (i - 1)),
+                                                                 mul_channel=False,
                                                                  mode=cfg.UPSAMPLING_TYPE) + self.up_pool_low[i-1]
 
 
