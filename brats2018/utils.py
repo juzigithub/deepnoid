@@ -282,6 +282,11 @@ def cal_result(pred, label, one_hot=False, e=1e-6):
     mean_miou = np.mean(np.array(miou_list))
     mean_dice = np.mean(np.array(dice_list))
 
+    print('mean_acc', mean_acc)
+    print('sens_acc', mean_sens)
+    print('miou_acc', mean_miou)
+    print('dice_acc', mean_dice)
+
     hdorff = max(directed_hausdorff(_pred, _label)[0], directed_hausdorff(_label, _pred)[0])
 
     return [mean_acc, mean_sens, mean_spec, mean_miou, mean_dice, hdorff]
