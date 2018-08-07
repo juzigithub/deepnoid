@@ -234,7 +234,7 @@ def iou_coe(output, target, smooth=1e-5):
     return iou, inse, pre
 
 
-def cal_result(pred, label, one_hot=False, e=1e-6):
+def cal_result2(pred, label, one_hot=False, e=1e-6):
     # convert one-hot labels to multiple labels
     if one_hot:
         _pred = np.argmax(pred, axis=-1)
@@ -282,7 +282,7 @@ def cal_result(pred, label, one_hot=False, e=1e-6):
 
     return [mean_acc, mean_sens, mean_spec, mean_miou, mean_dice, hdorff]
 
-def cal_result2(pred, label, one_hot=False, e=1e-6):
+def cal_result(pred, label, one_hot=False, e=1e-6):
     # convert one-hot labels to multiple labels
     if one_hot:
         _pred = np.argmax(pred, axis=-1)
