@@ -1,7 +1,7 @@
 import tensorflow as tf
-# import utils
+import utils
 import config as cfg
-import brats2018.utils as utils
+# import brats2018.utils as utils
 
 
 class Model:
@@ -28,85 +28,84 @@ class Model:
 
 
     def deeplab(self):
-        # start down sampling by depth n.
-        self.down_conv = [0] * cfg.DEPTH
-        self.down_pool = [0] * cfg.DEPTH
-        self.up_conv = [0] * cfg.DEPTH
-        self.up_pool = [0] * cfg.DEPTH
-
-        # def xception_depthwise_separable_convlayer(name, inputs, channel_n, last_stride, act_fn, training,
-        #                                            shortcut_conv=False, atrous=False, atrous_rate=2):
+        self.down_conv = [0] * (cfg.DEPTH + 1)
 
         with tf.variable_scope('down'):
 
             inputs = self.X  # iterator 변수 self.features 를 이용해 inputs 생성
             channel_n = cfg.INIT_N_FILTER
-            pool_size_h = cfg.PATCH_SIZE
-            pool_size_w = cfg.PATCH_SIZE
+            pool_size_h = cfg.PATCH_SIZE // 2
+            pool_size_w = cfg.PATCH_SIZE // 2
 
-            for i in range(cfg.DEPTH):
-                pool_size_h //= 2
-                pool_size_w //= 2
-                for j in range(cfg.N_LAYERS[i]):
-                    inputs = utils.depthwise_separable_convlayer_dr(name='dsconv_{}_{}_'.format(str(i),str(j)),
-                                                                               inputs=inputs,
-                                                                               channel_n=channel_n,
-                                                                               width_mul=cfg.WIDTH_MULTIPLIER,
-                                                                               group_n=cfg.GROUP_N,
-                                                                               drop_rate=self.drop_rate,
-                                                                               act_fn=cfg.ACTIVATION_FUNC,
-                                                                               norm_type=cfg.NORMALIZATION_TYPE,
-                                                                               training=self.training,
-                                                                               idx=i)
-                self.down_conv[i] = tf.identity(inputs)
-                print('down_conv', self.down_conv[i])
+            for i in range(cfg.N_LAYERS[0]):
+                inputs = utils.xception_depthwise_separable_convlayer(name='dsconv_0_{}'.format(str(i)),
+                                                                      inputs=inputs,
+                                                                      channel_n=channel_n,
+                                                                      last_stride=1,
+                                                                      act_fn=cfg.ACTIVATION_FUNC,
+                                                                      training=self.training,
+                                                                      shortcut_conv=False,
+                                                                      atrous=False)
 
-                self.down_pool[i] = utils.select_downsampling(name=str(i) + '_downsampling',
-                                                              down_conv=self.down_conv[i],
-                                                              down_pool=self.down_pool[i],
-                                                              channel_n=channel_n,
-                                                              pool_size_h=pool_size_h,
-                                                              pool_size_w=pool_size_w,
-                                                              mode=cfg.DOWNSAMPLING_TYPE)
+            inputs = utils.select_downsampling(name='0_downsampling',
+                                               down_conv=inputs,
+                                               down_pool=[],
+                                               channel_n=channel_n,
+                                               pool_size_h=pool_size_h,
+                                               pool_size_w=pool_size_w,
+                                               mode=cfg.DOWNSAMPLING_TYPE)
+
+            self.down_conv[0] = tf.identity(inputs)
+
+
+            for i in range(1, cfg.DEPTH):
                 channel_n *= 2
+                for j in range(cfg.N_LAYERS[i]-1):
+                    inputs = utils.xception_depthwise_separable_convlayer(name='dsconv_{}_{}'.format(str(i), str(j)),
+                                                                          inputs=inputs,
+                                                                          channel_n=channel_n,
+                                                                          last_stride=1,
+                                                                          act_fn=cfg.ACTIVATION_FUNC,
+                                                                          training=self.training,
+                                                                          shortcut_conv=True,
+                                                                          atrous=False)
+                inputs = utils.xception_depthwise_separable_convlayer(name='dsconv_{}_{}'.format(str(i), str(cfg.N_LAYERS[i] - 1)),
+                                                                      inputs=inputs,
+                                                                      channel_n=channel_n,
+                                                                      last_stride=1,
+                                                                      act_fn=cfg.ACTIVATION_FUNC,
+                                                                      training=self.training,
+                                                                      shortcut_conv=True,
+                                                                      atrous=True,
+                                                                      atrous_rate=2)
+                self.down_conv[i] = tf.identity(inputs)
 
-
-                inputs = tf.identity(self.down_pool[i])
-                print('down_pool', inputs)
-
-            inputs = utils.unet_same_block(inputs=inputs,
-                                           channel_n=channel_n,
-                                           group_n=cfg.GROUP_N,
-                                           act_fn=cfg.ACTIVATION_FUNC,
-                                           norm_type=cfg.NORMALIZATION_TYPE,
-                                           training=self.training)
-
+            self.down_conv[-1] = utils.atrous_spatial_pyramid_pooling(name='aspp_layer',
+                                                                      inputs=inputs,
+                                                                      channel_n=channel_n,
+                                                                      atrous_rate_list=[8,12,16],
+                                                                      act_fn=cfg.ACTIVATION_FUNC,
+                                                                      training=self.training)
         with tf.variable_scope('up'):
-            for i in reversed(range(cfg.DEPTH)):
-                channel_n //= 2
-                pool_size_h *= 2
-                pool_size_w *= 2
-                inputs = utils.select_upsampling(name=str(i) + '_upsampling',
-                                                 up_conv=inputs,
-                                                 up_pool=self.up_pool[i],
-                                                 channel_n=channel_n,
+            pool_size_h *= 2
+            pool_size_w *= 2
+
+            concated_conv = tf.concat([utils.conv2D('concated_conv_{}'.format(idx), dc, cfg.INIT_N_FILTER, [1, 1], [1, 1], padding='SAME')
+                                       for idx, dc in enumerate(self.down_conv)], axis=0)
+            concated_conv = utils.xception_depthwise_separable_convlayer(name='usconv',
+                                                                  inputs=concated_conv,
+                                                                  channel_n=cfg.N_CLASS,
+                                                                  last_stride=1,
+                                                                  act_fn=cfg.ACTIVATION_FUNC,
+                                                                  training=self.training,
+                                                                  shortcut_conv=True,
+                                                                  atrous=False)
+            final_conv = utils.select_upsampling(name='upsampling',
+                                                 up_conv=concated_conv,
+                                                 up_pool=[],
+                                                 channel_n=cfg.N_CLASS,
                                                  pool_size_h=pool_size_h,
                                                  pool_size_w=pool_size_w,
                                                  mode=cfg.UPSAMPLING_TYPE)
-                print('up_pool', inputs)
 
-                inputs = utils.unet_up_block(inputs=inputs,
-                                             downconv_list=self.down_conv,
-                                             upconv_list=self.up_conv,
-                                             pool_list=self.up_pool,
-                                             channel_n=channel_n,
-                                             group_n=cfg.GROUP_N,
-                                             act_fn=cfg.ACTIVATION_FUNC,
-                                             norm_type=cfg.NORMALIZATION_TYPE,
-                                             training=self.training,
-                                             idx=i)
-                print('up_conv', inputs)
-
-            up_conv_f = utils.conv2D('final_upconv', inputs, cfg.N_CLASS, [1, 1], [1, 1], 'SAME')
-
-        return up_conv_f
+        return final_conv
