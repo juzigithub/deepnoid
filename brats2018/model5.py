@@ -36,7 +36,7 @@ class Model:
             channel_n = cfg.INIT_N_FILTER
             pool_size_h = cfg.PATCH_SIZE // 2
             pool_size_w = cfg.PATCH_SIZE // 2
-
+            print(inputs)
             for i in range(cfg.N_LAYERS[0]):
                 inputs = utils.xception_depthwise_separable_convlayer(name='dsconv_0_{}'.format(str(i)),
                                                                       inputs=inputs,
@@ -56,7 +56,7 @@ class Model:
                                                mode=cfg.DOWNSAMPLING_TYPE)
 
             self.down_conv[0] = tf.identity(inputs)
-
+            print(inputs)
 
             for i in range(1, cfg.DEPTH):
                 channel_n *= 2
@@ -79,6 +79,7 @@ class Model:
                                                                       atrous=True,
                                                                       atrous_rate=2)
                 self.down_conv[i] = tf.identity(inputs)
+                print(inputs)
 
             self.down_conv[-1] = utils.atrous_spatial_pyramid_pooling(name='aspp_layer',
                                                                       inputs=inputs,
@@ -86,12 +87,14 @@ class Model:
                                                                       atrous_rate_list=[[8,8],[12,12],[16,16]],
                                                                       act_fn=cfg.ACTIVATION_FUNC,
                                                                       training=self.training)
+            print(self.down_conv[-1])
         with tf.variable_scope('up'):
             pool_size_h *= 2
             pool_size_w *= 2
 
             concated_conv = tf.concat([utils.conv2D('concated_conv_{}'.format(idx), dc, cfg.INIT_N_FILTER, [1, 1], [1, 1], padding='SAME')
                                        for idx, dc in enumerate(self.down_conv)], axis=0)
+            print(concated_conv)
             concated_conv = utils.xception_depthwise_separable_convlayer(name='usconv',
                                                                   inputs=concated_conv,
                                                                   channel_n=cfg.N_CLASS,
@@ -100,6 +103,7 @@ class Model:
                                                                   training=self.training,
                                                                   shortcut_conv=True,
                                                                   atrous=False)
+            print(concated_conv)
             final_conv = utils.select_upsampling(name='upsampling',
                                                  up_conv=concated_conv,
                                                  up_pool=[],
@@ -107,5 +111,5 @@ class Model:
                                                  pool_size_h=pool_size_h,
                                                  pool_size_w=pool_size_w,
                                                  mode=cfg.UPSAMPLING_TYPE)
-
+            print(final_conv)
         return final_conv
