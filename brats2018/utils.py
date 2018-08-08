@@ -1082,7 +1082,45 @@ def he_stage(name, inputs, channel_in, channel_out, group_m, group_n, act_fn, no
     return l
 ################################################################################################
 
-def atrous_spatial_pyramid_pooling(name, inputs, channel_n, output_stride, act_fn, training):
+def atrous_spatial_pyramid_pooling(name, inputs, channel_n, atrous_rate_list, act_fn, training):
+    atrous_rates = atrous_rate_list
+
+    ### a) 1x1 Conv * 1  +  3x3 Conv * 3
+    conv_1x1 = conv2D(name + '_a_1x1', inputs, channel_n, [1,1], [1,1], padding='SAME')
+    conv_1x1 = Normalization(conv_1x1, 'batch', training, name + '_a_1x1_norm')
+    conv_1x1 = activation(name + '_a_1x1_act', conv_1x1, act_fn)
+
+    conv_3x3_0 = conv2D(name + '_a_3x3_0', inputs, channel_n, [3,3], [1,1], dilation_rate=atrous_rates[0], padding='SAME')
+    conv_3x3_0 = Normalization(conv_3x3_0, 'batch', training, name + '_a_3x3_0_norm')
+    conv_3x3_0 = activation(name + 'a_3x3_0_act', conv_3x3_0, act_fn)
+
+    conv_3x3_1 = conv2D(name + '_a_3x3_1', inputs, channel_n, [3, 3], [1, 1], dilation_rate=atrous_rates[1], padding='SAME')
+    conv_3x3_1 = Normalization(conv_3x3_1, 'batch', training, name + '_a_3x3_1_norm')
+    conv_3x3_1 = activation(name + 'a_3x3_1_act', conv_3x3_1, act_fn)
+
+    conv_3x3_2 = conv2D(name + '_a_3x3_2', inputs, channel_n, [3, 3], [1, 1], dilation_rate=atrous_rates[2], padding='SAME')
+    conv_3x3_2 = Normalization(conv_3x3_2, 'batch', training, name + '_a_3x3_2_norm')
+    conv_3x3_2 = activation(name + 'a_3x3_2_act', conv_3x3_2, act_fn)
+
+    ### (b) the image-level features
+    # global average pooling
+    img_lv_features = GlobalAveragePooling2D(inputs, channel_n, name + '_GAP', keep_dims=True)
+    # 1x1 conv
+    img_lv_features = conv2D(name + '_img_lv_features', img_lv_features, channel_n, [1,1], [1,1], padding='SAME')
+    img_lv_features = Normalization(img_lv_features, 'batch', training, name + '_img_lv_features_norm')
+    img_lv_features = activation(name + '_img_lv_features_act', img_lv_features, act_fn)
+    # upsampling
+    img_lv_features = re_conv2D(name + '_upsample', img_lv_features, [-1, tf.shape(inputs)[1], tf.shape(inputs)[2], channel_n])
+    # concat
+    aspp_layer = tf.concat([conv_1x1, conv_3x3_0, conv_3x3_1, conv_3x3_2, img_lv_features], axis=3, name=name+'_concat')
+    # 1x1 conv
+    aspp_layer = conv2D(name + '_aspp_layer', aspp_layer, channel_n, [1,1], [1,1], padding='SAME')
+    aspp_layer = Normalization(aspp_layer, 'batch', training, name + '_aspp_layer_norm')
+    aspp_layer = activation(name + '_aspp_layer_act', aspp_layer, act_fn)
+
+    return aspp_layer
+
+def atrous_spatial_pyramid_pooling2(name, inputs, channel_n, output_stride, act_fn, training):
     if output_stride not in [8, 16]:
         raise ValueError('output_stride must be in 8 or 16')
     multi_grid = [1,2,3]
@@ -1123,7 +1161,50 @@ def atrous_spatial_pyramid_pooling(name, inputs, channel_n, output_stride, act_f
 
     return aspp_layer
 
-def xception_depthwise_separable_convlayer(name, inputs, channel_n, last_stride, act_fn, training, shortcut_conv=False, atrous=False):
+def xception_depthwise_separable_convlayer(name, inputs, channel_n, last_stride, act_fn, training, shortcut_conv=False, atrous=False, atrous_rate=2):
+    rate = atrous_rate if atrous else None
+    # shortcut layer
+    shortcut = tf.identity(inputs)
+
+    if shortcut_conv:
+        shortcut = conv2D(name + '_shortcut', shortcut, channel_n, [1,1], [last_stride, last_stride], padding='SAME')
+        shortcut = Normalization(shortcut, 'batch', training, name + '_shortcut_norm')
+        shortcut = activation(name + '_shortcut_act', shortcut, act_fn)
+
+    in_channel = inputs.get_shape().as_list()[-1]
+    width_mul = int(channel_n / in_channel)
+
+    depthwise_filter1 = tf.get_variable(name = name + '_depthwise_filter1',
+                                        shape = [3, 3, in_channel, width_mul],
+                                        dtype = tf.float32,
+                                        initializer = initializer)
+
+    depthwise_filter2 = tf.get_variable(name = name + '_depthwise_filter2',
+                                        shape = [3, 3, channel_n, 1],
+                                        dtype = tf.float32,
+                                        initializer = initializer)
+    # conv layer 1
+    l = tf.nn.depthwise_conv2d(inputs, depthwise_filter1, [1, 1, 1, 1], 'SAME', rate = None, name = name + '_sep1')
+    l = Normalization(l, 'batch', training, name + '_sep_norm1')
+    l = activation(name + '_sep_act1', l, act_fn)
+
+    # conv layer 2
+    l = tf.nn.depthwise_conv2d(l, depthwise_filter2, [1, 1, 1, 1], 'SAME', rate = None, name = name + '_sep2')
+    l = Normalization(l, 'batch', training, name + '_sep_norm2')
+    l = activation(name + '_sep_act2', l, act_fn)
+
+    # conv layer 3
+    l = tf.nn.depthwise_conv2d(l, depthwise_filter2, [1, last_stride, last_stride, 1], 'SAME', rate = rate, name = name + '_sep3')
+    l = Normalization(l, 'batch', training, name + '_sep_norm3')
+    l = activation(name + '_sep_act3', l, act_fn)
+
+    # add layer
+    l = l + shortcut
+
+    return l
+
+
+def xception_depthwise_separable_convlayer2(name, inputs, channel_n, last_stride, act_fn, training, shortcut_conv=False, atrous=False):
     rate = [[1, 1], [2, 2], [4, 4]] if atrous else [None, None, None]
     # shortcut layer
     shortcut = tf.identity(inputs)
@@ -1163,7 +1244,6 @@ def xception_depthwise_separable_convlayer(name, inputs, channel_n, last_stride,
     l = l + shortcut
 
     return l
-
 #############################################################################################################################
 #                                                    Result Function                                                        #
 #############################################################################################################################

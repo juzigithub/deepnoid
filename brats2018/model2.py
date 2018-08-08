@@ -60,7 +60,7 @@ class Model:
                 for j in range(cfg.N_LAYERS_HIGH[i]):
                     # residual_block_v1_dr(name, inputs, channel_n, group_n, drop_rate, act_fn, norm_type, training, idx,
                     #                      shortcut=True):
-                    self.down_conv_high[i] = utils.residual_block_v1_dr(name='high_resconv_{}_{}_'.format(str(i),str(j)),
+                    inputs_high = utils.residual_block_v1_dr(name='high_resconv_{}_{}_'.format(str(i),str(j)),
                                                                                inputs=inputs_high,
                                                                                channel_n=channel_n,
                                                                                group_n=cfg.GROUP_N,
@@ -69,6 +69,7 @@ class Model:
                                                                                norm_type=cfg.NORMALIZATION_TYPE,
                                                                                training=self.training,
                                                                                idx=i)
+                self.down_conv_high[i] = tf.identity(inputs_high)
                 print('down_conv_high', self.down_conv_high[i])
                 channel_n *= 2
                 self.down_pool_high[i] = utils.select_downsampling(name=str(i) + '_high_downsampling',
@@ -140,7 +141,7 @@ class Model:
                 for j in range(cfg.N_LAYERS_LOW[i]):
                     # residual_block_v1_dr(name, inputs, channel_n, group_n, drop_rate, act_fn, norm_type, training, idx,
                     #                      shortcut=True):
-                    self.down_conv_low[i] = utils.residual_block_v1_dr(
+                    inputs_low = utils.residual_block_v1_dr(
                         name='low_resconv_{}_{}_'.format(str(i), str(j)),
                         inputs=inputs_low,
                         channel_n=channel_n,
@@ -150,6 +151,8 @@ class Model:
                         norm_type=cfg.NORMALIZATION_TYPE,
                         training=self.training,
                         idx=i)
+
+                self.down_conv_low[i] = tf.identity(inputs_low)
                 print('down_conv_low', self.down_conv_low[i])
                 channel_n *= 2
                 self.down_pool_low[i] = utils.select_downsampling(name=str(i) + '_low_downsampling',
