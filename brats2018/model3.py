@@ -40,15 +40,15 @@ class Model:
 
     def multiscale_segnet(self):
         # start down sampling by depth n.
-        self.down_conv_high = [0] * cfg.DEPTH
-        self.down_pool_high = [0] * cfg.DEPTH
-        self.up_conv_high = [0] * cfg.DEPTH
-        self.up_pool_high = [0] * cfg.DEPTH
+        self.down_conv_high = [0] * cfg.DEPTH_HIGH
+        self.down_pool_high = [0] * cfg.DEPTH_HIGH
+        self.up_conv_high = [0] * cfg.DEPTH_HIGH
+        self.up_pool_high = [0] * cfg.DEPTH_HIGH
 
-        self.down_conv_low = [0] * cfg.DEPTH
-        self.down_pool_low = [0] * cfg.DEPTH
-        self.up_conv_low = [0] * cfg.DEPTH
-        self.up_pool_low = [0] * cfg.DEPTH
+        self.down_conv_low = [0] * cfg.DEPTH_LOW
+        self.down_pool_low = [0] * cfg.DEPTH_LOW
+        self.up_conv_low = [0] * cfg.DEPTH_LOW
+        self.up_pool_low = [0] * cfg.DEPTH_LOW
 
 
         with tf.variable_scope('high_path'):
