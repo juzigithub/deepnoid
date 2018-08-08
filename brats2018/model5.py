@@ -92,17 +92,23 @@ class Model:
             pool_size_h *= 2
             pool_size_w *= 2
 
-            concated_conv = tf.concat([utils.conv2D('concated_conv_{}'.format(idx), dc, cfg.INIT_N_FILTER // (cfg.DEPTH + 1), [1, 1], [1, 1], padding='SAME')
+            concated_conv = tf.concat([utils.conv2D('concated_conv_{}'.format(idx), dc, cfg.INIT_N_FILTER, [1, 1], [1, 1], padding='SAME')
                                        for idx, dc in enumerate(self.down_conv)], axis=-1)
             print(concated_conv)
-            concated_conv = utils.xception_depthwise_separable_convlayer(name='usconv',
-                                                                  inputs=concated_conv,
-                                                                  channel_n=cfg.N_CLASS,
-                                                                  last_stride=1,
-                                                                  act_fn=cfg.ACTIVATION_FUNC,
-                                                                  training=self.training,
-                                                                  shortcut_conv=True,
-                                                                  atrous=False)
+
+            # def depthwise_separable_convlayer(name, inputs, channel_n, width_mul, group_n, act_fn, norm_type, training,
+            #                                   idx, rate=None):
+
+            concated_conv = utils.depthwise_separable_convlayer(name='usconv',
+                                                                inputs=concated_conv,
+                                                                channel_n=cfg.N_CLASS,
+                                                                width_mul=cfg.WIDTH_MULTIPLIER,
+                                                                group_n=cfg.GROUP_N,
+                                                                act_fn=cfg.ACTIVATION_FUNC,
+                                                                norm_type=cfg.NORMALIZATION_TYPE,
+                                                                training=self.training,
+                                                                idx=0)
+
             print(concated_conv)
             final_conv = utils.select_upsampling(name='upsampling',
                                                  up_conv=concated_conv,
