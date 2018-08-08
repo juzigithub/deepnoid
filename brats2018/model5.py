@@ -92,8 +92,8 @@ class Model:
             pool_size_h *= 2
             pool_size_w *= 2
 
-            concated_conv = tf.concat([utils.conv2D('concated_conv_{}'.format(idx), dc, cfg.INIT_N_FILTER, [1, 1], [1, 1], padding='SAME')
-                                       for idx, dc in enumerate(self.down_conv)], axis=0)
+            concated_conv = tf.concat([utils.conv2D('concated_conv_{}'.format(idx), dc, cfg.INIT_N_FILTER // (cfg.DEPTH + 1), [1, 1], [1, 1], padding='SAME')
+                                       for idx, dc in enumerate(self.down_conv)], axis=-1)
             print(concated_conv)
             concated_conv = utils.xception_depthwise_separable_convlayer(name='usconv',
                                                                   inputs=concated_conv,
