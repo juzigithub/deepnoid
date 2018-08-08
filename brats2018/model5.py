@@ -44,7 +44,7 @@ class Model:
                                                                       last_stride=1,
                                                                       act_fn=cfg.ACTIVATION_FUNC,
                                                                       training=self.training,
-                                                                      shortcut_conv=False,
+                                                                      shortcut_conv=True,
                                                                       atrous=False)
 
             inputs = utils.select_downsampling(name='0_downsampling',
