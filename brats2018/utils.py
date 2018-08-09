@@ -461,10 +461,11 @@ def generalised_dice_loss(prediction,
         # ref_vol = tf.sparse_reduce_sum(one_hot, reduction_axes=[0])
         # intersect = tf.sparse_reduce_sum(one_hot * prediction,
         #                                  reduction_axes=[0])
-
-        ref_vol = tf.reduce_sum(one_hot, 0)
+        print('one_hot', one_hot)
+        print('prediction', prediction)
+        ref_vol = tf.reduce_sum(one_hot, [0])
         print('ref_vol', ref_vol)
-        intersect = tf.reduce_sum(one_hot * prediction, 0)
+        intersect = tf.reduce_sum(one_hot * prediction, [0])
         seg_vol = tf.reduce_sum(prediction, 0)
         print('seg_vol', seg_vol)
     if type_weight == 'Square':
