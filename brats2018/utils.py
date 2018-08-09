@@ -440,8 +440,8 @@ def generalised_dice_loss(prediction,
     :return: the loss
     """
     prediction = tf.cast(prediction, tf.float32)
-    if len(ground_truth.shape) == len(prediction.shape):
-        ground_truth = ground_truth[..., -1]
+    # if len(ground_truth.shape) == len(prediction.shape):
+    #     ground_truth = ground_truth[..., -1]
     one_hot = ground_truth
 
     if weight_map is not None:
