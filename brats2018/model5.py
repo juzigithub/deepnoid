@@ -11,7 +11,7 @@ class Model:
         self.X = tf.placeholder(tf.float32, [None, None, None, cfg.N_INPUT_CHANNEL], name='X')
         self.Y = tf.placeholder(tf.float32, [None, None, None, cfg.N_CLASS], name='Y')
         self.loss_ratio = tf.placeholder(tf.float32, [len(cfg.LAMBDA)], name='loss_ratio')
-        self.logit = self.deeplab()
+        self.logit = self.BeVEAM_NET()
 
         self.pred = tf.nn.softmax(logits=self.logit)
 
@@ -27,7 +27,7 @@ class Model:
 
 
 
-    def deeplab(self):
+    def BeVEAM_NET(self):
         self.down_conv = [0] * (cfg.DEPTH + 1)
 
         with tf.variable_scope('down'):
@@ -77,7 +77,7 @@ class Model:
                                                                       training=self.training,
                                                                       shortcut_conv=True,
                                                                       atrous=True,
-                                                                      atrous_rate=2)
+                                                                      atrous_rate=2**i)
                 self.down_conv[i] = tf.identity(inputs)
                 print(inputs)
 
