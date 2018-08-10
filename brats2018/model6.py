@@ -33,31 +33,37 @@ class Model:
 
             inputs = self.X  # iterator 변수 self.features 를 이용해 inputs 생성
             channel_n = cfg.INIT_N_FILTER
-            pool_size_h = cfg.PATCH_SIZE // 2
-            pool_size_w = cfg.PATCH_SIZE // 2
-            print(inputs)
-            for i in range(cfg.N_LAYERS[0]):
-                inputs = utils.xception_depthwise_separable_convlayer(name='dsconv_0_{}'.format(str(i)),
-                                                                      inputs=inputs,
-                                                                      channel_n=channel_n,
-                                                                      last_stride=1,
-                                                                      act_fn=cfg.ACTIVATION_FUNC,
-                                                                      training=self.training,
-                                                                      shortcut_conv=True,
-                                                                      atrous=False)
-
-            inputs = utils.select_downsampling(name='0_downsampling',
-                                               down_conv=inputs,
-                                               down_pool=[],
-                                               channel_n=channel_n,
-                                               pool_size_h=pool_size_h,
-                                               pool_size_w=pool_size_w,
-                                               mode=cfg.DOWNSAMPLING_TYPE)
-
-            self.down_conv[0] = tf.identity(inputs)
+            pool_size_h = cfg.PATCH_SIZE
+            pool_size_w = cfg.PATCH_SIZE
             print(inputs)
 
-            for i in range(1, cfg.DEPTH):
+            for i in range(2):
+
+                pool_size_h //= 2
+                pool_size_w //= 2
+
+                for j in range(cfg.N_LAYERS[0]):
+                    inputs = utils.xception_depthwise_separable_convlayer(name='dsconv_{}_{}'.format(str(i),str(j)),
+                                                                          inputs=inputs,
+                                                                          channel_n=channel_n,
+                                                                          last_stride=1,
+                                                                          act_fn=cfg.ACTIVATION_FUNC,
+                                                                          training=self.training,
+                                                                          shortcut_conv=True,
+                                                                          atrous=False)
+
+                inputs = utils.select_downsampling(name='{}_downsampling'.format(str(i)),
+                                                   down_conv=inputs,
+                                                   down_pool=[],
+                                                   channel_n=channel_n,
+                                                   pool_size_h=pool_size_h,
+                                                   pool_size_w=pool_size_w,
+                                                   mode=cfg.DOWNSAMPLING_TYPE)
+
+                self.down_conv[i] = tf.identity(inputs)
+                print(inputs)
+
+            for i in range(2, cfg.DEPTH):
                 channel_n *= 2
                 for j in range(cfg.N_LAYERS[i]-1):
                     inputs = utils.xception_depthwise_separable_convlayer(name='dsconv_{}_{}'.format(str(i), str(j)),
