@@ -610,6 +610,7 @@ def generalised_wasserstein_dice_loss(prediction,
     print('delta', delta)
     # compute generalisation of all error for multi-class seg
     all_error = tf.reduce_sum(delta)
+    print('all_error', all_error)
     # compute generalisation of true positives for multi-class seg
     one_hot = tf.cast(one_hot, dtype=tf.float64)
     print('one_hot', one_hot)
@@ -618,7 +619,9 @@ def generalised_wasserstein_dice_loss(prediction,
         axis=-1)
     print('true_pos', true_pos)
     true_pos = tf.reduce_sum(tf.multiply(true_pos, 1. - delta), axis=0)
+    print('true_pos2', true_pos)
     WGDL = 1. - (2. * true_pos) / (2. * true_pos + all_error)
+    print('WGDL', WGDL)
     return tf.cast(WGDL, dtype=tf.float32)
 
 
