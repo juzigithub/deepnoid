@@ -511,7 +511,7 @@ def wasserstein_disagreement_map(
     assert M is not None, "Distance matrix is required."
     # pixel-wise Wassertein distance (W) between flat_pred_proba and flat_labels
     # wrt the distance matrix on the label space M
-    n_classes = prediction.shape[1].value
+    n_classes = prediction.shape[-1].value
     ground_truth.set_shape(prediction.shape)
     unstack_labels = tf.unstack(ground_truth, axis=-1)
     unstack_labels = tf.cast(unstack_labels, dtype=tf.float64)
