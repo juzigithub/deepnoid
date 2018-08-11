@@ -612,6 +612,7 @@ def generalised_wasserstein_dice_loss(prediction,
     all_error = tf.reduce_sum(delta)
     # compute generalisation of true positives for multi-class seg
     one_hot = tf.cast(one_hot, dtype=tf.float64)
+    print('one_hot', one_hot)
     true_pos = tf.reduce_sum(
         tf.multiply(tf.constant(M[0, :n_classes], dtype=tf.float64), one_hot),
         axis=1)
