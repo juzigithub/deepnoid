@@ -492,6 +492,91 @@ def generalised_dice_loss(prediction,
                                       generalised_dice_score)
     return 1 - generalised_dice_score
 
+def wasserstein_disagreement_map(
+        prediction, ground_truth, weight_map=None, M=None):
+    """
+    Function to calculate the pixel-wise Wasserstein distance between the
+    flattened prediction and the flattened labels (ground_truth) with respect
+    to the distance matrix on the label space M.
+
+    :param prediction: the logits after softmax
+    :param ground_truth: segmentation ground_truth
+    :param M: distance matrix on the label space
+    :return: the pixelwise distance map (wass_dis_map)
+    """
+    if weight_map is not None:
+        # raise NotImplementedError
+        tf.logging.warning('Weight map specified but not used.')
+
+    assert M is not None, "Distance matrix is required."
+    # pixel-wise Wassertein distance (W) between flat_pred_proba and flat_labels
+    # wrt the distance matrix on the label space M
+    n_classes = prediction.shape[1].value
+    ground_truth.set_shape(prediction.shape)
+    unstack_labels = tf.unstack(ground_truth, axis=-1)
+    unstack_labels = tf.cast(unstack_labels, dtype=tf.float64)
+    unstack_pred = tf.unstack(prediction, axis=-1)
+    unstack_pred = tf.cast(unstack_pred, dtype=tf.float64)
+    # print("shape of M", M.shape, "unstacked labels", unstack_labels,
+    #       "unstacked pred" ,unstack_pred)
+    # W is a weighting sum of all pairwise correlations (pred_ci x labels_cj)
+    pairwise_correlations = []
+    for i in range(n_classes):
+        for j in range(n_classes):
+            pairwise_correlations.append(
+                M[i, j] * tf.multiply(unstack_pred[i], unstack_labels[j]))
+    wass_dis_map = tf.add_n(pairwise_correlations)
+    return wass_dis_map
+
+def generalised_wasserstein_dice_loss(prediction,
+                                      ground_truth,
+                                      weight_map=None):
+    """
+    Function to calculate the Generalised Wasserstein Dice Loss defined in
+
+        Fidon, L. et. al. (2017) Generalised Wasserstein Dice Score
+        for Imbalanced Multi-class Segmentation using Holistic
+        Convolutional Networks.MICCAI 2017 (BrainLes)
+
+    :param prediction: the logits
+    :param ground_truth: the segmentation ground_truth
+    :param weight_map:
+    :return: the loss
+    """
+    M_tree = np.array([[0., 1., 1., 1., 1.],
+                       [1., 0., 0.6, 0.2, 0.5],
+                       [1., 0.6, 0., 0.6, 0.7],
+                       [1., 0.2, 0.6, 0., 0.5],
+                       [1., 0.5, 0.7, 0.5, 0.]], dtype=np.float64)
+
+    if weight_map is not None:
+        # raise NotImplementedError
+        tf.logging.warning('Weight map specified but not used.')
+
+    prediction = tf.cast(prediction, tf.float32)
+    n_classes = prediction.shape[1].value
+    one_hot = ground_truth
+
+    one_hot = tf.sparse_tensor_to_dense(one_hot)
+    # M = tf.cast(M, dtype=tf.float64)
+    # compute disagreement map (delta)
+    M = M_tree
+    delta = wasserstein_disagreement_map(prediction, one_hot, M=M)
+    # compute generalisation of all error for multi-class seg
+    all_error = tf.reduce_sum(delta)
+    # compute generalisation of true positives for multi-class seg
+    one_hot = tf.cast(one_hot, dtype=tf.float64)
+    true_pos = tf.reduce_sum(
+        tf.multiply(tf.constant(M[0, :n_classes], dtype=tf.float64), one_hot),
+        axis=1)
+    true_pos = tf.reduce_sum(tf.multiply(true_pos, 1. - delta), axis=0)
+    WGDL = 1. - (2. * true_pos) / (2. * true_pos + all_error)
+    return tf.cast(WGDL, dtype=tf.float32)
+
+
+
+
+
 def cross_entropy(output, target):
     return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=target, logits=output))
 
