@@ -22,8 +22,8 @@ class Model:
         self.ncr_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.ncr_pred, target=self.ncr_label)
         self.ed_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.ed_pred, target=self.ed_label)
         self.et_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.et_pred, target=self.et_label)
-        # self.loss = utils.generalised_dice_loss(self.pred, self.Y)
-        self.loss = utils.generalised_wasserstein_dice_loss(self.pred, self.Y)
+        self.loss = utils.generalised_dice_loss(self.pred, self.Y)
+        # self.loss = utils.generalised_wasserstein_dice_loss(self.pred, self.Y)
 
 
 
