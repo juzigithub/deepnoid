@@ -144,7 +144,7 @@ def activation(name, inputs, type):
         return inputs
 
 
-def Normalization(x, norm_type, is_train, name, G=2, esp=1e-5, channel_mode='NHWC'):
+def Normalization(x, norm_type, is_train, name, G=2, esp=1e-5, channel_mode='NHWC', batch_size = 10, threshold = 'fuzzy',n_divide = 4,standard=False, scale=1,first=True):
     with tf.variable_scope('{}_norm'.format(norm_type)):
 
         if norm_type == 'None':
@@ -208,6 +208,9 @@ def Normalization(x, norm_type, is_train, name, G=2, esp=1e-5, channel_mode='NHW
                     # N -> -1
                     output = tf.reshape(x, [-1, C, H, W]) * gamma + beta
                     return output
+        elif norm_type == 'batch_match':
+            output = batch_histogram_match_tensor(x, batch_size=batch_size, threshold = threshold, n_divide = n_divide, standard=standard, scale=scale,first=first)
+            return output
 
         else:
             raise NotImplementedError
@@ -1002,6 +1005,29 @@ def depthwise_separable_convlayer(name, inputs, channel_n, width_mul, group_n, a
 
     return l
 
+def depthwise_separable_convlayer2(name, inputs, channel_n, width_mul, group_n, act_fn, norm_type, training, idx, batch_size, threshold='fuzzy', n_divide=10, standard=False, scale=1, rate=None):
+    # depthwise
+    depthwise_filter = tf.get_variable(name=name+'depthwise_filter' + str(idx),
+                                       shape=[3, 3, inputs.get_shape()[-1], width_mul],
+                                       dtype=tf.float32,
+                                       initializer=initializer)
+    l = tf.nn.depthwise_conv2d(inputs, depthwise_filter, [1, 1, 1, 1], 'SAME', rate=rate, name = name + str(idx) + '_depthwise')
+    # l = Normalization(l, norm_type, training, name + str(idx) + '_depthwise_norm', G=group_n)
+
+    l = Normalization(l, 'batch_match', training, name + str(idx) + '_depthwise_norm', batch_size=batch_size,
+                                 threshold=threshold, n_divide=n_divide, standard=standard, scale=scale, first=True)
+
+    l = activation(name + str(idx) + '_depthwise_act1', l, act_fn)
+
+    # pointwise
+    l = conv2D(name + str(idx) + '_pointwise', l, channel_n, [1, 1], [1, 1], padding='SAME')
+    # l = Normalization(l, norm_type, training, name + str(idx) + '_pointwise_norm1', G=group_n)
+    l = Normalization(l, 'batch_match', training, name + str(idx) + 'pointwise_norm1', batch_size=batch_size,
+                                 threshold=threshold, n_divide=n_divide, standard=standard, scale=scale, first=False)
+    l = activation(name + str(idx) + '_pointwise_act1', l, act_fn)
+
+    return l
+
 def depthwise_separable_convlayer_dr(name, inputs, channel_n, width_mul, group_n, drop_rate, act_fn, norm_type, training, idx,  rate=None):
     # depthwise
     depthwise_filter = tf.get_variable(name=name + 'depthwise_filter' + str(idx),
@@ -1325,7 +1351,61 @@ def atrous_spatial_pyramid_pooling(name, inputs, channel_n, atrous_rate_list, ac
 
     return aspp_layer
 
-def atrous_spatial_pyramid_pooling2(name, inputs, channel_n, output_stride, act_fn, training):
+
+def atrous_spatial_pyramid_pooling2(name, inputs, channel_n, atrous_rate_list, act_fn, training, batch_size, threshold='fuzzy', n_divide=10, standard=False, scale=1):
+    atrous_rates = atrous_rate_list
+
+    ### a) 1x1 Conv * 1  +  3x3 Conv * 3
+    conv_1x1 = conv2D(name + '_a_1x1', inputs, channel_n, [1,1], [1,1], padding='SAME')
+    # conv_1x1 = Normalization(conv_1x1, 'batch', training, name + '_a_1x1_norm')
+
+    conv_1x1 = Normalization(conv_1x1, 'batch_match', training, name + '_a_1x1_norm', batch_size=batch_size,
+                             threshold=threshold, n_divide=n_divide, standard=standard, scale=scale, first=True)
+
+    conv_1x1 = activation(name + '_a_1x1_act', conv_1x1, act_fn)
+
+    conv_3x3_0 = conv2D(name + '_a_3x3_0', inputs, channel_n, [3,3], [1,1], dilation_rate=atrous_rates[0], padding='SAME')
+    # conv_3x3_0 = Normalization(conv_3x3_0, 'batch', training, name + '_a_3x3_0_norm')
+    conv_3x3_0 = Normalization(conv_3x3_0, 'batch_match', training, name + '_a_3x3_0_norm', batch_size=batch_size,
+                             threshold=threshold, n_divide=n_divide, standard=standard, scale=scale, first=True)
+    conv_3x3_0 = activation(name + 'a_3x3_0_act', conv_3x3_0, act_fn)
+
+    conv_3x3_1 = conv2D(name + '_a_3x3_1', inputs, channel_n, [3, 3], [1, 1], dilation_rate=atrous_rates[1], padding='SAME')
+    # conv_3x3_1 = Normalization(conv_3x3_1, 'batch', training, name + '_a_3x3_1_norm')
+    conv_3x3_1 = Normalization(conv_3x3_1, 'batch_match', training, name + '_a_3x3_1_norm', batch_size=batch_size,
+                               threshold=threshold, n_divide=n_divide, standard=standard, scale=scale, first=True)
+    conv_3x3_1 = activation(name + 'a_3x3_1_act', conv_3x3_1, act_fn)
+
+    conv_3x3_2 = conv2D(name + '_a_3x3_2', inputs, channel_n, [3, 3], [1, 1], dilation_rate=atrous_rates[2], padding='SAME')
+    # conv_3x3_2 = Normalization(conv_3x3_2, 'batch', training, name + '_a_3x3_2_norm')
+    conv_3x3_2 = Normalization(conv_3x3_2, 'batch_match', training, name + '_a_3x3_2_norm', batch_size=batch_size,
+                               threshold=threshold, n_divide=n_divide, standard=standard, scale=scale, first=True)
+    conv_3x3_2 = activation(name + 'a_3x3_2_act', conv_3x3_2, act_fn)
+
+    ### (b) the image-level features
+    # global average pooling
+    img_lv_features = GlobalAveragePooling2D(inputs, channel_n, name + '_GAP', keep_dims=True)
+    # 1x1 conv
+    img_lv_features = conv2D(name + '_img_lv_features', img_lv_features, channel_n, [1,1], [1,1], padding='SAME')
+    # img_lv_features = Normalization(img_lv_features, 'batch', training, name + '_img_lv_features_norm')
+    img_lv_features = Normalization(img_lv_features, 'batch_match', training, name + '_img_lv_features_norm', batch_size=batch_size,
+                               threshold=threshold, n_divide=n_divide, standard=standard, scale=scale, first=True)
+
+    img_lv_features = activation(name + '_img_lv_features_act', img_lv_features, act_fn)
+    # upsampling
+    img_lv_features = re_conv2D(name + '_upsample', img_lv_features, [-1, tf.shape(inputs)[1], tf.shape(inputs)[2], channel_n])
+    # concat
+    aspp_layer = tf.concat([conv_1x1, conv_3x3_0, conv_3x3_1, conv_3x3_2, img_lv_features], axis=3, name=name+'_concat')
+    # 1x1 conv
+    aspp_layer = conv2D(name + '_aspp_layer', aspp_layer, channel_n, [1,1], [1,1], padding='SAME')
+    # aspp_layer = Normalization(aspp_layer, 'batch', training, name + '_aspp_layer_norm')
+    aspp_layer = Normalization(aspp_layer, 'batch_match', training, name + '_aspp_layer_norm', batch_size=batch_size,
+                               threshold=threshold, n_divide=n_divide, standard=standard, scale=scale, first=True)
+    aspp_layer = activation(name + '_aspp_layer_act', aspp_layer, act_fn)
+
+    return aspp_layer
+
+def atrous_spatial_pyramid_pooling3(name, inputs, channel_n, output_stride, act_fn, training):
     if output_stride not in [8, 16]:
         raise ValueError('output_stride must be in 8 or 16')
     multi_grid = [1,2,3]
@@ -1408,8 +1488,59 @@ def xception_depthwise_separable_convlayer(name, inputs, channel_n, last_stride,
 
     return l
 
+def xception_depthwise_separable_convlayer2(name, inputs, channel_n, last_stride, act_fn, training, batch_size, threshold = 'fuzzy',n_divide = 4,standard=False, scale=1, shortcut_conv=False, atrous=False, atrous_rate=2):
+    rate = [atrous_rate, atrous_rate] if atrous else None
+    # shortcut layer
+    shortcut = tf.identity(inputs)
 
-def xception_depthwise_separable_convlayer2(name, inputs, channel_n, last_stride, act_fn, training, shortcut_conv=False, atrous=False):
+    if shortcut_conv:
+        shortcut = conv2D(name + '_shortcut', shortcut, channel_n, [1,1], [last_stride, last_stride], padding='SAME')
+        shortcut = Normalization(shortcut, 'batch_match', training, name + '_shortcut_norm', batch_size=batch_size,
+                                 threshold=threshold, n_divide=n_divide, standard=standard, scale=scale, first=True)
+        # il = Normalization(il, norm_type, training, name + str(idx) + '_input_norm', G=group_n, batch_size=batch_size,
+        #                    threshold=threshold, n_divide=n_divide, standard=standard, scale=scale, first=True)
+
+        shortcut = activation(name + '_shortcut_act', shortcut, act_fn)
+
+    in_channel = inputs.get_shape().as_list()[-1]
+    width_mul = int(channel_n / in_channel)
+
+    depthwise_filter1 = tf.get_variable(name = name + '_depthwise_filter1',
+                                        shape = [3, 3, in_channel, width_mul],
+                                        dtype = tf.float32,
+                                        initializer = initializer)
+
+    depthwise_filter2 = tf.get_variable(name = name + '_depthwise_filter2',
+                                        shape = [3, 3, channel_n, 1],
+                                        dtype = tf.float32,
+                                        initializer = initializer)
+    # conv layer 1
+    l = tf.nn.depthwise_conv2d(inputs, depthwise_filter1, [1, 1, 1, 1], 'SAME', rate = None, name = name + '_sep1')
+    # l = Normalization(l, 'batch', training, name + '_sep_norm1')
+    l = Normalization(shortcut, 'batch_match', training, name + '_sep_norm1', batch_size=batch_size,
+                                 threshold=threshold, n_divide=n_divide, standard=standard, scale=scale, first=True)
+    l = activation(name + '_sep_act1', l, act_fn)
+
+    # conv layer 2
+    l = tf.nn.depthwise_conv2d(l, depthwise_filter2, [1, 1, 1, 1], 'SAME', rate = None, name = name + '_sep2')
+    # l = Normalization(l, 'batch', training, name + '_sep_norm2')
+    l = Normalization(shortcut, 'batch_match', training, name + '_sep_norm2', batch_size=batch_size,
+                                 threshold=threshold, n_divide=n_divide, standard=standard, scale=scale, first=False)
+    l = activation(name + '_sep_act2', l, act_fn)
+
+    # conv layer 3
+    l = tf.nn.depthwise_conv2d(l, depthwise_filter2, [1, last_stride, last_stride, 1], 'SAME', rate = rate, name = name + '_sep3')
+    # l = Normalization(l, 'batch', training, name + '_sep_norm3')
+    l = Normalization(shortcut, 'batch_match', training, name + '_sep_norm3', batch_size=batch_size,
+                                 threshold=threshold, n_divide=n_divide, standard=standard, scale=scale, first=False)
+    l = activation(name + '_sep_act3', l, act_fn)
+
+    # add layer
+    l = l + shortcut
+
+    return l
+
+def xception_depthwise_separable_convlayer3(name, inputs, channel_n, last_stride, act_fn, training, shortcut_conv=False, atrous=False):
     rate = [[1, 1], [2, 2], [4, 4]] if atrous else [None, None, None]
     # shortcut layer
     shortcut = tf.identity(inputs)
@@ -1754,3 +1885,198 @@ def hm_rescale(arr, input_landmark_list, standard_landmark_list):
     arr_copy = np.clip(arr_copy, a_min=standard_landmark_list[0], a_max=standard_landmark_list[-1])
 
     return arr_copy.reshape(arr_shape)
+
+
+#############################################################################################################################
+#                                        Tensor Histogram Match                                                             #
+#############################################################################################################################
+
+def cal_hm_landmark_tensor(arr, max_percent = 99.8, threshold = 'fuzzy', n_divide = 4, standard=False, scale=1):
+    if arr.get_shape().ndims > 1:
+        arr = tf.reshape(arr, [-1])
+    # if tf.errors.InvalidArgumentError:
+    #     landmark_list = [[0] for _ in range(n_divide + 1)]
+    def m1(arr):
+        landmark_list = [tf.reduce_min(arr) for _ in range(n_divide + 1)]
+        return landmark_list
+    def m2(arr):
+        hist = tf.histogram_fixed_width(arr, value_range = [0,tf.reduce_max(arr)], nbins = tf.cast(tf.reduce_max(arr),tf.int32))
+        arr_mean = tf.cast(tf.reduce_mean(arr),tf.int32)
+        if tf.errors.InvalidArgumentError:
+            black_peak = tf.cast(0, tf.int32)
+            white_peak = arr_mean + tf.cast(tf.argmax(hist[arr_mean:]), tf.int32)
+        else :
+            print('arr_mean : ', arr_mean)
+            print('hist[:arr_mean] : ', hist[:arr_mean])
+            black_peak = tf.cast(tf.argmax(hist[:arr_mean]),tf.int32)
+            white_peak = arr_mean + tf.cast(tf.argmax(hist[arr_mean:]),tf.int32)
+        valley = hist[black_peak:white_peak]
+        # consider only points over 10
+        # over_cutline = tf.where(valley > 10)
+        # print('over_cutline : ', sess.run(over_cutline))
+        # find local minmums among 500 points
+        # local_mins = argrelextrema(valley[over_cutline], np.less, order=250)
+        # take first local minimum
+        # local_min = over_cutline[0][local_mins[0][0]]
+        # local_min = argrelextrema(valley, np.less, order=250)[0][np.where(arr_hist_sd[argrelextrema(valley, np.less, order=250)] > 10)[0][0]]
+        black_peak_val = tf.log(tf.cast(hist[black_peak],tf.float32))
+        white_peak_val = tf.log(tf.cast(hist[white_peak],tf.float32))
+        fuzzy_log = ((tf.cast(black_peak,tf.float32) * black_peak_val) + (tf.cast(white_peak,tf.float32) * white_peak_val)) / (black_peak_val + white_peak_val)
+
+
+        threshold_dict = {}     # 'fuzzy', 'mean', 'median', 'valley', 'fuzzy_log'
+        threshold_dict['fuzzy_log'] = fuzzy_log
+        threshold_dict['fuzzy'] = tf.cast(((black_peak + white_peak) // 2),tf.int32)
+        threshold_dict['mean'] = arr_mean
+        threshold_dict['median'] = tf.contrib.distributions.percentile(arr, 50.0)
+        # threshold_dict['valley'] = black_peak + local_min
+
+        pc1 = tf.cast(threshold_dict[threshold], tf.float32)
+        pc2 = tf.contrib.distributions.percentile(arr, max_percent)
+        pc1 = tf.cond(tf.cast(pc1,tf.float32) > pc2, lambda: tf.contrib.distributions.percentile(arr, max_percent - 20),lambda: pc1)
+        ioi = tf.gather(arr, tf.where(tf.logical_and(arr >= pc1,arr <= pc2)))
+        landmark_list = [tf.contrib.distributions.percentile(ioi, i * (100 / n_divide)) for i in range(n_divide) if not i == 0]
+        landmark_list = [pc1] + landmark_list + [pc2]
+
+        if standard:
+            std_scale = (scale / pc2)
+            landmark_list = [landmark * std_scale for landmark in landmark_list]
+        return landmark_list
+    landmark_list = tf.cond(tf.equal(tf.cast(tf.reduce_max(arr), tf.int32),0), lambda: m1(arr), lambda: m2(arr))
+
+    return [tf.cast(landmark, tf.int32) for landmark in landmark_list]
+
+def rescale_tensor(arr, in_min,in_max, out_min,out_max):
+
+    scaled_arr = (arr - tf.cast(in_min,tf.float32)) / tf.cast((in_max - in_min),tf.float32)
+    # print('middle : ', sess.run(tf.reduce_min(scaled_arr)), sess.run(tf.reduce_max(scaled_arr)))
+    scaled_arr = tf.cast(scaled_arr,tf.float32) * tf.cast((out_max - out_min),tf.float32) + tf.cast(out_min,tf.float32)
+
+    return scaled_arr
+
+def hm_rescale_tensor(arr, input_landmark_list, standard_landmark_list,first=True):
+    # arr_shape = arr.shape
+    arr_shape = tf.shape(arr)
+    if arr.get_shape().ndims > 1:
+        arr = tf.reshape(arr, [-1])
+    arr_copy = tf.zeros_like(arr)
+
+    scale_idx = tf.where(tf.cast(arr,tf.int32) < input_landmark_list[0])
+    # 0 ~ pc1 rescale
+    scaled_arr = rescale_tensor(tf.gather(arr, scale_idx), tf.cast(tf.reduce_min(tf.gather(arr, scale_idx)),tf.int32), input_landmark_list[0],
+                                standard_landmark_list[0]-1, standard_landmark_list[0])
+    # scaled_arr = tf.reshape(scaled_arr, [-1])
+    with tf.variable_scope('rescale', reuse=True, dtype=tf.float32):
+        if first :
+            arr_copy_var = tf.Variable(arr_copy, validate_shape=False,name='arr_copy',trainable=False)
+            tf.add_to_collection("arr_copy_var", arr_copy_var)
+        if first == False:
+            arr_copy_var = tf.get_collection('arr_copy_var')[0]
+
+    update = tf.scatter_nd_update(arr_copy_var,
+                                  scale_idx,
+                                  tf.reshape(scaled_arr, [-1]))
+    # pc1 ~ m25 ~ m50 ~ m75 ~ pc2 rescale
+    for idx in range(len(input_landmark_list) - 1):
+        scale_idx = tf.where(tf.logical_and(tf.cast(arr,tf.int32) >= input_landmark_list[idx], tf.cast(arr,tf.int32) < input_landmark_list[idx+1]))
+        scaled_arr = rescale_tensor(tf.gather(arr, scale_idx), input_landmark_list[idx], input_landmark_list[idx+1],standard_landmark_list[idx], standard_landmark_list[idx+1])
+        # scaled_arr = tf.reshape(scaled_arr, [-1])
+        update = tf.scatter_nd_update(update,
+                                      scale_idx,
+                                      tf.reshape(scaled_arr, [-1]))
+    # pc2 ~ max rescale
+    scale_idx = tf.where((tf.cast(arr,tf.int32) >= input_landmark_list[-1]))
+    scaled_arr = rescale_tensor(tf.gather(arr, scale_idx), input_landmark_list[-1], tf.cast(tf.reduce_max(tf.gather(arr, scale_idx)),tf.int32),
+                                standard_landmark_list[-1], standard_landmark_list[-1] + 1)
+    # scaled_arr = tf.reshape(scaled_arr, [-1])
+
+    # print(zeros)
+    update = tf.scatter_nd_update(update,
+                                  scale_idx,
+                                  tf.reshape(scaled_arr, [-1]))
+
+    update = tf.clip_by_value(update, tf.cast(standard_landmark_list[0], tf.float32),
+                              tf.cast(standard_landmark_list[-1], tf.float32))
+    # tf.cond(tf.size(test_copy) > tf.size(test), lambda: f1(update,arr_copy),lambda : print('need to set first = True'))
+    def f1(update,arr_copy):
+        update = update[:tf.size(arr_copy)]
+        return update
+    def f2(update):
+        return update
+    update = tf.cond(tf.greater(tf.size(update), tf.size(arr_copy)), lambda: f1(update, arr_copy), lambda: f2(update))
+    update = update[:tf.size(arr_copy)]
+    update = tf.reshape(update,arr_shape)
+    print('rescale update : ', update)
+    return update
+
+def batch_histogram_match_tensor(input, batch_size, threshold = 'fuzzy', n_divide = 4, standard=False, scale=1,first=True):
+    # output = tf.zeros_like(input)
+    # print('output shape : ', output.get_shape())
+    landmarks_list = []
+    print('>>> get landmark')
+    for i in range(batch_size):
+        landmark_list = cal_hm_landmark_tensor(input[i],threshold=threshold, n_divide = n_divide, standard=standard, scale=scale)
+        landmarks_list.append(landmark_list)
+    stadard_list = tf.reduce_mean(landmarks_list, axis=0)
+    # update = tf.Variable(output,validate_shape=False)
+    # print('update shape : ', tf.shape(update))
+    print('>>> start rescale')
+    batch_match = hm_rescale_tensor(input[0], landmarks_list[0], stadard_list,first)
+    zeros = tf.zeros_like([batch_match])
+    zeros = tf.concat([zeros, [batch_match]], 0)
+    for idx in range(1,batch_size):
+        batch_match = hm_rescale_tensor(input[idx], landmarks_list[idx],stadard_list,first)
+        zeros = tf.concat([zeros, [batch_match]], 0)
+        # batch_match = tf.expand_dims(batch_match, 0)
+        # update = tf.scatter_nd_update(update,
+        #                               [idx],
+        #                               batch_match)
+
+    update = zeros[1:]
+    return update
+
+def batch_histogram_match_tensor_undefined(input, threshold = 'fuzzy', n_divide = 4, standard=False, scale=1,first=True):
+
+    landmarks_list = []
+    print('>>> get landmark')
+    batch_size = tf.shape(input)[0]
+    i = tf.constant(0)
+    def _cond(i, batches):
+        return tf.less(i, tf.cast(batch_size, tf.int32))
+
+    def _body(i, batches):
+        landmark_list = cal_hm_landmark_tensor(batches[i], threshold=threshold, n_divide=n_divide, standard=standard,scale=scale)
+        landmarks_list.append(landmark_list)
+        i = tf.add(i, 1)
+        return landmarks_list
+
+    landmarks_list = tf.while_loop(_cond, _body, [i, input])
+
+    stadard_list = tf.reduce_mean(landmarks_list, axis=0)
+    # update = tf.Variable(output,validate_shape=False)
+    # print('update shape : ', tf.shape(update))
+    print('>>> start rescale')
+    batch_match = hm_rescale_tensor(input[0], landmarks_list[0], stadard_list,first)
+    zeros = [batch_match]
+    # zeros = tf.concat([zeros, [batch_match]], 0)
+    idx = tf.constant(0)
+    def _cond1(idx, batches):
+        return tf.less(idx, tf.cast(batch_size, tf.int32))
+
+    def _body2(idx, batches):
+        batch_match = hm_rescale_tensor(batches[idx], landmarks_list[idx], stadard_list, first)
+        # zeros = tf.concat([zeros, [batch_match]], 0)
+        zeros = tf.concat([[batch_match], [batch_match]], 0)
+        idx = tf.add(idx, 1)
+        return idx, zeros
+
+    _, update = tf.while_loop(_cond1, _body2, [idx, input],
+                              shape_invariants=[idx.get_shape(), tf.TensorShape([None, None,None,None])])
+
+        # batch_match = tf.expand_dims(batch_match, 0)
+        # update = tf.scatter_nd_update(update,
+        #                               [idx],
+        #                               batch_match)
+
+    # update = zeros[1:]
+    return update
