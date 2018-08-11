@@ -63,6 +63,7 @@ class Model:
                 self.down_conv[i] = tf.identity(inputs)
                 print(inputs)
 
+                channel_n *= 2 
 
             for i in range(2, cfg.DEPTH):
                 channel_n *= 2
