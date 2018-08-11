@@ -66,7 +66,6 @@ class Model:
                 channel_n *= 2
 
             for i in range(2, cfg.DEPTH):
-                channel_n *= 2
                 for j in range(cfg.N_LAYERS[i]-1):
                     inputs = utils.xception_depthwise_separable_convlayer(name='dsconv_{}_{}'.format(str(i), str(j)),
                                                                           inputs=inputs,
@@ -76,6 +75,7 @@ class Model:
                                                                           training=self.training,
                                                                           shortcut_conv=True,
                                                                           atrous=False)
+                channel_n *= 2
                 inputs = utils.xception_depthwise_separable_convlayer(name='dsconv_{}_{}'.format(str(i), str(cfg.N_LAYERS[i] - 1)),
                                                                       inputs=inputs,
                                                                       channel_n=channel_n,
@@ -90,7 +90,7 @@ class Model:
 
             self.down_conv[-1] = utils.atrous_spatial_pyramid_pooling(name='aspp_layer',
                                                                       inputs=inputs,
-                                                                      channel_n=channel_n // 4,
+                                                                      channel_n=channel_n // 2,
                                                                       atrous_rate_list=[[8,8],[12,12],[16,16]],
                                                                       act_fn=cfg.ACTIVATION_FUNC,
                                                                       training=self.training)
