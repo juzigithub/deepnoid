@@ -100,7 +100,7 @@ class Model:
             pool_size_h = cfg.PATCH_SIZE
             pool_size_w = cfg.PATCH_SIZE
 
-            concated_conv = tf.concat([utils.conv2D('concated_conv_{}'.format(idx), dc, cfg.INIT_N_FILTER, [1, 1], [1, 1], padding='SAME')
+            concated_conv = tf.concat([utils.conv2D('concated_conv_{}'.format(idx), dc, cfg.INIT_N_FILTER // 2, [1, 1], [1, 1], padding='SAME')
                                        for idx, dc in enumerate(self.down_conv[1:], start=1)], axis=-1)
             print(concated_conv)
 
