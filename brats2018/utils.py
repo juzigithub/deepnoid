@@ -615,7 +615,7 @@ def generalised_wasserstein_dice_loss(prediction,
     print('one_hot', one_hot)
     true_pos = tf.reduce_sum(
         tf.multiply(tf.constant(M[0, :n_classes], dtype=tf.float64), one_hot),
-        axis=1)
+        axis=-1)
     print('true_pos', true_pos)
     true_pos = tf.reduce_sum(tf.multiply(true_pos, 1. - delta), axis=0)
     WGDL = 1. - (2. * true_pos) / (2. * true_pos + all_error)
