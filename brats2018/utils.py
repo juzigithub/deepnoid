@@ -528,6 +528,48 @@ def wasserstein_disagreement_map(
     wass_dis_map = tf.add_n(pairwise_correlations)
     return wass_dis_map
 
+def labels_to_one_hot(ground_truth, num_classes=1):
+    """
+    Converts ground truth labels to one-hot, sparse tensors.
+    Used extensively in segmentation losses.
+
+    :param ground_truth: ground truth categorical labels (rank `N`)
+    :param num_classes: A scalar defining the depth of the one hot dimension
+        (see `depth` of `tf.one_hot`)
+    :return: one-hot sparse tf tensor
+        (rank `N+1`; new axis appended at the end)
+    """
+    # read input/output shapes
+    if isinstance(num_classes, tf.Tensor):
+        num_classes_tf = tf.to_int32(num_classes)
+    else:
+        num_classes_tf = tf.constant(num_classes, tf.int32)
+    input_shape = tf.shape(ground_truth)
+    output_shape = tf.concat(
+        [input_shape, tf.reshape(num_classes_tf, (1,))], 0)
+
+    if num_classes == 1:
+        # need a sparse representation?
+        return tf.reshape(ground_truth, output_shape)
+
+    # squeeze the spatial shape
+    ground_truth = tf.reshape(ground_truth, (-1,))
+    # shape of squeezed output
+    dense_shape = tf.stack([tf.shape(ground_truth)[0], num_classes_tf], 0)
+
+    # create a rank-2 sparse tensor
+    ground_truth = tf.to_int64(ground_truth)
+    ids = tf.range(tf.to_int64(dense_shape[0]), dtype=tf.int64)
+    ids = tf.stack([ids, ground_truth], axis=1)
+    one_hot = tf.SparseTensor(
+        indices=ids,
+        values=tf.ones_like(ground_truth, dtype=tf.float32),
+        dense_shape=tf.to_int64(dense_shape))
+
+    # resume the spatial dims
+    one_hot = tf.sparse_reshape(one_hot, output_shape)
+    return one_hot
+
 def generalised_wasserstein_dice_loss(prediction,
                                       ground_truth,
                                       weight_map=None):
@@ -554,10 +596,13 @@ def generalised_wasserstein_dice_loss(prediction,
         tf.logging.warning('Weight map specified but not used.')
 
     prediction = tf.cast(prediction, tf.float32)
-    n_classes = prediction.shape[1].value
+    n_classes = prediction.shape[-1].value
+    # one_hot = labels_to_one_hot(ground_truth, tf.shape(prediction)[-1])
     one_hot = ground_truth
 
-    # one_hot = tf.sparse_tensor_to_dense(one_hot)
+    # labels_to_one_hot(ground_truth, tf.shape(prediction)[-1])
+
+    one_hot = tf.sparse_tensor_to_dense(one_hot)
     # M = tf.cast(M, dtype=tf.float64)
     # compute disagreement map (delta)
     M = M_tree
