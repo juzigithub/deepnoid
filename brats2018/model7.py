@@ -90,7 +90,7 @@ class Model:
 
             self.down_conv[-1] = utils.atrous_spatial_pyramid_pooling(name='aspp_layer',
                                                                       inputs=inputs,
-                                                                      channel_n=channel_n // 2,
+                                                                      channel_n=channel_n // 4,
                                                                       atrous_rate_list=[[8,8],[12,12],[16,16]],
                                                                       act_fn=cfg.ACTIVATION_FUNC,
                                                                       training=self.training)
