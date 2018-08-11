@@ -63,10 +63,9 @@ class Model:
                 self.down_conv[i] = tf.identity(inputs)
                 print(inputs)
 
-                channel_n *= 2
 
             for i in range(2, cfg.DEPTH):
-                channel_n *= (2 if channel_n <= 200 else 1)
+                channel_n *= 2
                 for j in range(cfg.N_LAYERS[i]-1):
                     inputs = utils.xception_depthwise_separable_convlayer(name='dsconv_{}_{}'.format(str(i), str(j)),
                                                                           inputs=inputs,
@@ -100,7 +99,7 @@ class Model:
             pool_size_h = cfg.PATCH_SIZE
             pool_size_w = cfg.PATCH_SIZE
 
-            concated_conv = tf.concat([utils.conv2D('concated_conv_{}'.format(idx), dc, cfg.INIT_N_FILTER // 2, [1, 1], [1, 1], padding='SAME')
+            concated_conv = tf.concat([utils.conv2D('concated_conv_{}'.format(idx), dc, cfg.INIT_N_FILTER, [1, 1], [1, 1], padding='SAME')
                                        for idx, dc in enumerate(self.down_conv[1:], start=1)], axis=-1)
             print(concated_conv)
 
