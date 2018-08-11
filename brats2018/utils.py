@@ -557,7 +557,7 @@ def generalised_wasserstein_dice_loss(prediction,
     n_classes = prediction.shape[1].value
     one_hot = ground_truth
 
-    one_hot = tf.sparse_tensor_to_dense(one_hot)
+    # one_hot = tf.sparse_tensor_to_dense(one_hot)
     # M = tf.cast(M, dtype=tf.float64)
     # compute disagreement map (delta)
     M = M_tree
