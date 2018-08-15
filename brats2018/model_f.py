@@ -99,7 +99,17 @@ class Model:
             # def depthwise_separable_convlayer(name, inputs, channel_n, width_mul, group_n, act_fn, norm_type, training,
             #                                   idx, rate=None):
 
-            concated_conv = utils.depthwise_separable_convlayer(name='usconv',
+            concated_conv = utils.depthwise_separable_convlayer(name='usconv0',
+                                                                inputs=concated_conv,
+                                                                channel_n=cfg.INIT_N_FILTER,
+                                                                width_mul=cfg.WIDTH_MULTIPLIER,
+                                                                group_n=cfg.GROUP_N,
+                                                                act_fn=cfg.ACTIVATION_FUNC,
+                                                                norm_type=cfg.NORMALIZATION_TYPE,
+                                                                training=self.training,
+                                                                idx=0)
+
+            concated_conv = utils.depthwise_separable_convlayer(name='usconv1',
                                                                 inputs=concated_conv,
                                                                 channel_n=cfg.N_CLASS,
                                                                 width_mul=cfg.WIDTH_MULTIPLIER,
