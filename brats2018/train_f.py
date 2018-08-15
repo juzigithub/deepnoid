@@ -93,10 +93,10 @@ class Train:
             wt_total_result_list = []
 
             X = np.array(
-                [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_whole_{}.npy'.format(i)) for i in
+                [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_selected_{}.npy'.format(i)) for i in
                  range(cfg.SPLITS)])
             Y = np.array(
-                [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_whole_{}.npy'.format(i)) for i in
+                [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_selected_{}.npy'.format(i)) for i in
                  range(cfg.SPLITS)])
 
             train_idx = [i for i in range(cfg.SPLITS) if i != cfg.CV_VAL_IDX]
@@ -213,9 +213,9 @@ class Train:
                                                                         [cfg.ET_LABEL, cfg.TC_LABEL, cfg.WT_LABEL],
                                                                         one_hot=False)
 
-                    et_one_batch_result = utils.cal_result2(pred_list[0], label_list[0], one_hot=False)
-                    tc_one_batch_result = utils.cal_result2(pred_list[1], label_list[1], one_hot=False)
-                    wt_one_batch_result = utils.cal_result2(pred_list[2], label_list[2], one_hot=False)
+                    et_one_batch_result = utils.cal_result(pred_list[0], label_list[0], one_hot=False)
+                    tc_one_batch_result = utils.cal_result(pred_list[1], label_list[1], one_hot=False)
+                    wt_one_batch_result = utils.cal_result(pred_list[2], label_list[2], one_hot=False)
 
                     et_one_epoch_result_list.append(et_one_batch_result)
                     tc_one_epoch_result_list.append(tc_one_batch_result)
