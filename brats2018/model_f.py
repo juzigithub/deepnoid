@@ -34,8 +34,8 @@ class Model:
 
             inputs = self.X  # iterator 변수 self.features 를 이용해 inputs 생성
             channel_n = cfg.INIT_N_FILTER
-            pool_size_h = cfg.PATCH_SIZE // 2
-            pool_size_w = cfg.PATCH_SIZE // 2
+            pool_size_h = (cfg.PATCH_SIZE // 2) if cfg.MULTI_VIEW_MODE == 'axial' else (cfg.IMG_SIZE[0] // 2)
+            pool_size_w = (cfg.PATCH_SIZE // 2) if cfg.MULTI_VIEW_MODE == 'axial' else (cfg.IMG_SIZE[1] // 2)
             print(inputs)
             for i in range(cfg.N_LAYERS[0]):
                 inputs = utils.xception_depthwise_separable_convlayer(name='dsconv_0_{}'.format(str(i)),
@@ -89,8 +89,8 @@ class Model:
                                                                       training=self.training)
             print(self.down_conv[-1])
         with tf.variable_scope('up'):
-            pool_size_h = cfg.PATCH_SIZE
-            pool_size_w = cfg.PATCH_SIZE
+            pool_size_h = cfg.PATCH_SIZE if cfg.MULTI_VIEW_MODE == 'axial' else cfg.IMG_SIZE[0]
+            pool_size_w = cfg.PATCH_SIZE if cfg.MULTI_VIEW_MODE == 'axial' else cfg.IMG_SIZE[1]
 
             concated_conv = tf.concat([utils.conv2D('concated_conv_{}'.format(idx), dc, cfg.INIT_N_FILTER, [1, 1], [1, 1], padding='SAME')
                                        for idx, dc in enumerate(self.down_conv)], axis=-1)
