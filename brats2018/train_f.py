@@ -93,10 +93,10 @@ class Train:
             wt_total_result_list = []
 
             X = np.array(
-                [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_selected_{}.npy'.format(i)) for i in
+                [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_whole_{}.npy'.format(i)) for i in
                  range(cfg.SPLITS)])
             Y = np.array(
-                [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_selected_{}.npy'.format(i)) for i in
+                [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_whole_{}.npy'.format(i)) for i in
                  range(cfg.SPLITS)])
 
             # MULTI_VIEW_MODE = 'axial'  # axial, sagittal, coronal
