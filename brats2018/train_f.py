@@ -98,6 +98,7 @@ class Train:
             Y = np.array(
                 [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_selected_{}.npy'.format(i)) for i in
                  range(cfg.SPLITS)])
+
             # MULTI_VIEW_MODE = 'axial'  # axial, sagittal, coronal
             if cfg.MULTI_VIEW_MODE == 'sagittal':
                 X = np.reshape(X, (-1, 155, 192, 192, cfg.N_INPUT_CHANNEL))
@@ -122,6 +123,7 @@ class Train:
 
             drop_rate = cfg.INIT_DROPOUT_RATE
             loss_ratio = np.array(cfg.LAMBDA)
+
             for epoch in range(cfg.EPOCHS):
                 split_training_time = 0
 
