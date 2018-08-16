@@ -101,28 +101,24 @@ class Train:
 
             # MULTI_VIEW_MODE = 'axial'  # axial, sagittal, coronal
             if cfg.MULTI_VIEW_MODE == 'sagittal':
-                print('X', X.shape)
-                print('Y', Y.shape)
-                print('X[i]', X[0].shape)
-                for i in range(5):
-                    X[i] = np.reshape(X[i], (-1, 155, 192, 192, cfg.N_INPUT_CHANNEL))
-                    Y[i] = np.reshape(Y[i], (-1, 155, 192, 192))
-                print(1)
-                X = np.transpose(X, (0, 2, 1, 3, 4))
-                Y = np.transpose(Y, (0, 2, 1, 3))
+                X = np.reshape(X, (5, -1, 155, 192, 192, cfg.N_INPUT_CHANNEL))
+                Y = np.reshape(Y, (5, -1, 155, 192, 192))
 
-                X = np.reshape(X, (-1, 155, 192, cfg.N_INPUT_CHANNEL))
-                Y = np.reshape(Y, (-1, 155, 192))
+                X = np.transpose(X, (0, 1, 3, 2, 4, 5))
+                Y = np.transpose(Y, (0, 1, 3, 2, 4))
+
+                X = np.reshape(X, (5, -1, 155, 192, cfg.N_INPUT_CHANNEL))
+                Y = np.reshape(Y, (5, -1, 155, 192))
 
             elif cfg.MULTI_VIEW_MODE == 'coronal':
-                X = np.reshape(X, (-1, 155, 192, 192, cfg.N_INPUT_CHANNEL))
-                Y = np.reshape(Y, (-1, 155, 192, 192))
+                X = np.reshape(X, (5, -1, 155, 192, 192, cfg.N_INPUT_CHANNEL))
+                Y = np.reshape(Y, (5, -1, 155, 192, 192))
 
-                X = np.transpose(X, (0, 3, 2, 1, 4))
-                Y = np.transpose(Y, (0, 3, 2, 1))
+                X = np.transpose(X, (0, 1, 4, 3, 2, 5))
+                Y = np.transpose(Y, (0, 1, 4, 3, 2))
 
-                X = np.reshape(X, (-1, 192, 155, cfg.N_INPUT_CHANNEL))
-                Y = np.reshape(Y, (-1, 192, 155))
+                X = np.reshape(X, (5, -1, 192, 155, cfg.N_INPUT_CHANNEL))
+                Y = np.reshape(Y, (5, -1, 192, 155))
 
 
             drop_rate = cfg.INIT_DROPOUT_RATE
