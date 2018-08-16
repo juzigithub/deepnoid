@@ -156,8 +156,8 @@ class Train:
                         train_X = np.concatenate([X[i] for i in train_idx], axis=0)
                         train_Y = np.concatenate([Y[i] for i in train_idx], axis=0)
                     else :
-                        train_X = np.concatenate([X[i][eval('non_zero_idx_{}'.format(i))] for i in train_idx], axis=0)
-                        train_Y = np.concatenate([Y[i][eval('non_zero_idx_{}'.format(i))] for i in train_idx], axis=0)
+                        train_X = np.concatenate([X[i][exec('non_zero_idx_{}'.format(i))] for i in train_idx], axis=0)
+                        train_Y = np.concatenate([Y[i][exec('non_zero_idx_{}'.format(i))] for i in train_idx], axis=0)
 
                     val_X = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_whole_{}.npy'.format(val_idx))
                     val_Y = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_whole_{}.npy'.format(val_idx))
