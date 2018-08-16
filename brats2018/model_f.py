@@ -89,8 +89,8 @@ class Model:
                                                                       training=self.training)
             print(self.down_conv[-1])
         with tf.variable_scope('up'):
-            pool_size_h *= 2
-            pool_size_w *= 2
+            pool_size_h = cfg.PATCH_SIZE
+            pool_size_w = cfg.PATCH_SIZE
 
             concated_conv = tf.concat([utils.conv2D('concated_conv_{}'.format(idx), dc, cfg.INIT_N_FILTER, [1, 1], [1, 1], padding='SAME')
                                        for idx, dc in enumerate(self.down_conv)], axis=-1)
