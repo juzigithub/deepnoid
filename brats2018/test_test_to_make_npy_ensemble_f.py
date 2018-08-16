@@ -40,7 +40,7 @@ class Test:
         self.model_path = '.{0}model{0}test{0}{1}_{2}_{3}_{4}_{5}'.format(cfg.PATH_SLASH,*self.train_start_time)
         self.ckpt_path = '.{0}best{0}'.format(cfg.PATH_SLASH)
         self.log_path = '.{0}logs{0}{1}_{2}_{3}_{4}_{5}'.format(cfg.PATH_SLASH,*self.train_start_time)
-        patient_path_list = tl.files.load_folder_list(cfg.VAL_DATA_PATH)
+        patient_path_list = tl.files.load_folder_list(cfg.TEST_DATA_PATH)
         self.patient_id_list = [os.path.basename(p) for p in patient_path_list]
         self._make_path()
 
