@@ -101,8 +101,11 @@ class Train:
 
             # MULTI_VIEW_MODE = 'axial'  # axial, sagittal, coronal
             if cfg.MULTI_VIEW_MODE == 'sagittal':
-                X = np.reshape(X, (-1, 155, 192, 192, cfg.N_INPUT_CHANNEL))
-                Y = np.reshape(Y, (-1, 155, 192, 192))
+                print('X', X.shape)
+                print('Y', Y.shape)
+
+                X = np.reshape(X, [-1, 155, 192, 192, cfg.N_INPUT_CHANNEL])
+                Y = np.reshape(Y, [-1, 155, 192, 192])
 
                 X = np.transpose(X, (0, 2, 1, 3, 4))
                 Y = np.transpose(Y, (0, 2, 1, 3))
