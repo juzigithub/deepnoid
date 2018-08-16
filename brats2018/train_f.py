@@ -103,6 +103,7 @@ class Train:
             if cfg.MULTI_VIEW_MODE == 'sagittal':
                 print('X', X.shape)
                 print('Y', Y.shape)
+                print('X[i]'. X[0].shape)
                 for i in range(5):
                     X[i] = np.reshape(X[i], (-1, 155, 192, 192, cfg.N_INPUT_CHANNEL))
                     Y[i] = np.reshape(Y[i], (-1, 155, 192, 192))
