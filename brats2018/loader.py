@@ -155,11 +155,14 @@ def get_normalized_img(data_sets, train, task1=True):
             vol = crop_volume_with_bounding_box(vol,b_min,b_max)
             total_list[idx].append(vol)
 
-    print('np.shape(total_list) : ' , np.shape(total_list)) # (5, 42, 160, 192, 150)
-    m, _, h, w, _ = np.shape(total_list)  # m : train 5(flair, t1, t1ce, t2, seg)/ validation or test 4(seg x), h,w : 240(img_size)
+    print('np.shape(total_list) : ' , np.shape(total_list)) # (5, 42, 192, 192, 155)
+    m, n, h, w, c = np.shape(total_list)  # m : train 5(flair, t1, t1ce, t2, seg)/ validation or test 4(seg x), h,w : 240(img_size)
+
+
+
 
     total_list = np.transpose(total_list, [0, 1, 4, 3, 2])
-    total_list = np.reshape(total_list, [m, -1, w, h])          # (5, 6300, 192, 160)
+    total_list = np.reshape(total_list, [m, -1, w, h])          # (5, 6300, 192, 192)
     print('np.shape(total_list) : ' , np.shape(total_list))
 
     if train:
@@ -169,16 +172,17 @@ def get_normalized_img(data_sets, train, task1=True):
         if train:
             imgset = imgset[nonzero_idx]
         # to avoid normalizing seg
-        if idx < cfg.N_INPUT_CHANNEL:
-            shape = np.shape(imgset)
-            imgset = imgset.reshape([len(imgset), -1])
-            # minmax_scale(imgset, axis=1, copy=False)
-            # scale(imgset, axis=1, copy=False)
-            # imgset = imgset / (np.max(imgset, axis=1) + 1e-6).reshape([-1,1])
-            imgset = imgset.reshape(shape)
-            total_norm_list[idx] = imgset
-        elif idx == cfg.N_INPUT_CHANNEL:
-            total_norm_list[idx] = imgset
+        # if idx < cfg.N_INPUT_CHANNEL:
+        #     shape = np.shape(imgset)
+        #     imgset = imgset.reshape([len(imgset), -1])
+        #     # minmax_scale(imgset, axis=1, copy=False)
+        #     # scale(imgset, axis=1, copy=False)
+        #     # imgset = imgset / (np.max(imgset, axis=1) + 1e-6).reshape([-1,1])
+        #     imgset = imgset.reshape(shape)
+        #     total_norm_list[idx] = imgset
+        # elif idx == cfg.N_INPUT_CHANNEL:
+        #     total_norm_list[idx] = imgset
+        total_norm_list[idx] = imgset
 
     X = np.transpose(total_norm_list[0:cfg.N_INPUT_CHANNEL], [1, 2, 3, 0])  # [n, img_size, img_size, 4(flair, t1, t1ce, t2)]
     Y = total_norm_list[cfg.N_INPUT_CHANNEL] if train else []
@@ -257,6 +261,9 @@ def survival_data_saver(data_path, csv_path, save_path, train=True):
         train_sets_X, train_sets_Y= get_normalized_img(file_list, train=train, task1=False)
         print('idx, chunk_x.shape, chunk_y.shape', np.shape(train_sets_X),np.shape(train_sets_Y))
 
+        train_sets_X = utils.extract_patches_from_batch(train_sets_X, (cfg.PATCH_SIZE, cfg.PATCH_SIZE, cfg.N_INPUT_CHANNEL), cfg.PATCH_STRIDE)
+        train_sets_Y = utils.extract_patches_from_batch(train_sets_Y, (cfg.PATCH_SIZE, cfg.PATCH_SIZE), cfg.PATCH_STRIDE)
+
         print('self.chunk_x.shape : ', train_sets_X.shape)  # shape :  (n, 240, 240, 4)
         print('self.chunk_y.shape : ', train_sets_Y.shape)  # shape :  (n, 240, 240, 4)
 
@@ -267,6 +274,7 @@ def survival_data_saver(data_path, csv_path, save_path, train=True):
     else:
         test_sets_X, _ = get_normalized_img(file_list, train=train, task1=False)
         print(np.shape(test_sets_X))
+        test_sets_X = utils.extract_patches_from_batch(test_sets_X, (cfg.PATCH_SIZE, cfg.PATCH_SIZE, cfg.N_INPUT_CHANNEL), cfg.PATCH_STRIDE)
         np.save(save_path + 'task2_val_image.npy', test_sets_X)
         print('saved')
 
