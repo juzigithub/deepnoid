@@ -1,4 +1,3 @@
-
 import numpy as np
 import tensorflow as tf
 import tensorlayer as tl
@@ -19,15 +18,15 @@ class Test:
         self.model = Model()
         self.restore = restore
 
-        if cfg.REBUILD_TASK1_VAL_DATA:
+        if cfg.REBUILD_TASK1_TEST_DATA:
             print('')
             print('>>> Task1 Data Saving Started')
             print('')
 
             dstime = time.time()
-            tl.files.exists_or_mkdir(cfg.SAVE_VALID_DATA_PATH)
+            tl.files.exists_or_mkdir(cfg.SAVE_TEST_DATA_PATH)
 
-            loader.data_saver([cfg.VAL_DATA_PATH], cfg.SAVE_VALID_DATA_PATH, cfg.SPLITS, train=False, shuffle=False)
+            loader.data_saver([cfg.TEST_DATA_PATH], cfg.SAVE_TEST_DATA_PATH, cfg.SPLITS, train=False, shuffle=False)
 
             detime = time.time()
 
@@ -70,7 +69,7 @@ class Test:
 
             print("BEGIN TESTING")
 
-            test_X = np.load(cfg.SAVE_VALID_DATA_PATH + 'brats_val_image.npy')
+            test_X = np.load(cfg.SAVE_TEST_DATA_PATH + 'brats_val_image.npy')
 
             img_idx = 0
             img_list = []
@@ -114,7 +113,6 @@ class Test:
                     zero_padded = np.pad(img_list, ((24, 24), (24, 24), (0, 0), (0, 0)), 'constant')
                     # zero_padded = np.flip(zero_padded,0)
                     # zero_padded = np.flip(zero_padded,1)
-
 
                     np.save('./img/test/for_nifti/{}.npy'.format(self.patient_id_list[save_idx]), zero_padded)
                     # utils.save_array_as_nifty_volume(zero_padded, './img/test/for_nifti/{}.nii.gz'.format(self.patient_id_list[save_idx]))
