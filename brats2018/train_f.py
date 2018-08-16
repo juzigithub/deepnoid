@@ -160,8 +160,14 @@ class Train:
                         train_X = np.concatenate([X[i][nonzero_dic[i]] for i in train_idx], axis=0)
                         train_Y = np.concatenate([Y[i][nonzero_dic[i]] for i in train_idx], axis=0)
 
-                    val_X = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_whole_{}.npy'.format(val_idx))
-                    val_Y = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_whole_{}.npy'.format(val_idx))
+                    if cfg.MULTI_VIEW_MODE == 'axial':
+
+                        val_X = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_whole_{}.npy'.format(val_idx))
+                        val_Y = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_whole_{}.npy'.format(val_idx))
+                    else :
+                        val_X = X[val_idx]
+                        val_Y = Y[val_idx]
+
                     val_selected_idx = np.random.randint(len(val_Y), size=int(cfg.VAL_PATCH_RATIO * len(val_Y)))
                     val_X = val_X[val_selected_idx]
                     val_Y = val_Y[val_selected_idx]
