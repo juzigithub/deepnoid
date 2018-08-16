@@ -110,15 +110,49 @@ class Train:
                 X = np.reshape(X, (5, -1, 155, 192, cfg.N_INPUT_CHANNEL))
                 Y = np.reshape(Y, (5, -1, 155, 192))
 
+                nonzero_idx_0 = np.where(Y[0].sum(axis=(1,2)) != 0.)
+                nonzero_idx_1 = np.where(Y[1].sum(axis=(1,2)) != 0.)
+                nonzero_idx_2 = np.where(Y[2].sum(axis=(1,2)) != 0.)
+                nonzero_idx_3 = np.where(Y[3].sum(axis=(1,2)) != 0.)
+                nonzero_idx_4 = np.where(Y[4].sum(axis=(1,2)) != 0.)
+
+                X[0] = X[0][nonzero_idx_0]
+                Y[0] = Y[0][nonzero_idx_0]
+                X[1] = X[1][nonzero_idx_1]
+                Y[1] = Y[1][nonzero_idx_1]
+                X[2] = X[2][nonzero_idx_2]
+                Y[2] = Y[2][nonzero_idx_2]
+                X[3] = X[3][nonzero_idx_3]
+                Y[3] = Y[3][nonzero_idx_3]
+                X[4] = X[4][nonzero_idx_4]
+                Y[4] = Y[4][nonzero_idx_4]
+
             elif cfg.MULTI_VIEW_MODE == 'coronal':
                 X = np.reshape(X, (5, -1, 155, 192, 192, cfg.N_INPUT_CHANNEL))
                 Y = np.reshape(Y, (5, -1, 155, 192, 192))
 
-                X = np.transpose(X, (0, 1, 4, 3, 2, 5))
-                Y = np.transpose(Y, (0, 1, 4, 3, 2))
+                X = np.transpose(X, (0, 1, 4, 2, 3, 5))
+                Y = np.transpose(Y, (0, 1, 4, 2, 3))
 
-                X = np.reshape(X, (5, -1, 192, 155, cfg.N_INPUT_CHANNEL))
-                Y = np.reshape(Y, (5, -1, 192, 155))
+                X = np.reshape(X, (5, -1, 155, 192, cfg.N_INPUT_CHANNEL))
+                Y = np.reshape(Y, (5, -1, 155, 192))
+
+                nonzero_idx_0 = np.where(Y[0].sum(axis=(1,2)) != 0.)
+                nonzero_idx_1 = np.where(Y[1].sum(axis=(1,2)) != 0.)
+                nonzero_idx_2 = np.where(Y[2].sum(axis=(1,2)) != 0.)
+                nonzero_idx_3 = np.where(Y[3].sum(axis=(1,2)) != 0.)
+                nonzero_idx_4 = np.where(Y[4].sum(axis=(1,2)) != 0.)
+
+                X[0] = X[0][nonzero_idx_0]
+                Y[0] = Y[0][nonzero_idx_0]
+                X[1] = X[1][nonzero_idx_1]
+                Y[1] = Y[1][nonzero_idx_1]
+                X[2] = X[2][nonzero_idx_2]
+                Y[2] = Y[2][nonzero_idx_2]
+                X[3] = X[3][nonzero_idx_3]
+                Y[3] = Y[3][nonzero_idx_3]
+                X[4] = X[4][nonzero_idx_4]
+                Y[4] = Y[4][nonzero_idx_4]
 
 
             drop_rate = cfg.INIT_DROPOUT_RATE
