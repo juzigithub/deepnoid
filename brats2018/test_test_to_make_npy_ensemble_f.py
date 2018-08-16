@@ -114,7 +114,7 @@ class Test:
                     # zero_padded = np.flip(zero_padded,0)
                     # zero_padded = np.flip(zero_padded,1)
 
-                    np.save('./img/test/for_nifti/{}.npy'.format(self.patient_id_list[save_idx]), zero_padded)
+                    np.save('./img/test/for_nifti_test/{}.npy'.format(self.patient_id_list[save_idx]), zero_padded)
                     # utils.save_array_as_nifty_volume(zero_padded, './img/test/for_nifti/{}.nii.gz'.format(self.patient_id_list[save_idx]))
                     # np.save('./img/test/for_nifti/{}.npy'.format(self.patient_id_list[save_idx]), zero_padded)
                     img_list = []
@@ -125,7 +125,7 @@ class Test:
 
     def _make_path(self):
         # create if there is no such file in a saving path
-        tl.files.exists_or_mkdir('./img/test/for_nifti/')
+        tl.files.exists_or_mkdir('./img/test/for_nifti_test/')
 
 if __name__ == "__main__":
     tester = Test(restore=True)
