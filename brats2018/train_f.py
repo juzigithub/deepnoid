@@ -271,11 +271,7 @@ class Train:
                         pred_list, label_list = utils.convert_to_subregions(pred, label,
                                                                             [cfg.ET_LABEL, cfg.TC_LABEL, cfg.WT_LABEL],
                                                                             one_hot=False)
-                        print('pred', pred.shape)
-                        print('label', label.shape)
-                        print('pred_list', pred_list.shape)
-                        print('label_list', label_list.shape)
-
+                       
                         et_one_batch_result = utils.cal_result(pred_list[0], label_list[0], one_hot=False)
                         tc_one_batch_result = utils.cal_result(pred_list[1], label_list[1], one_hot=False)
                         wt_one_batch_result = utils.cal_result(pred_list[2], label_list[2], one_hot=False)
