@@ -99,6 +99,7 @@ class Train:
                 [np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_whole_{}.npy'.format(i)) for i in
                  range(cfg.SPLITS)])
 
+            nonzero_dic = {}
             # MULTI_VIEW_MODE = 'axial'  # axial, sagittal, coronal
             if cfg.MULTI_VIEW_MODE == 'sagittal':
                 X = np.reshape(X, (5, -1, 155, 192, 192, cfg.N_INPUT_CHANNEL))
@@ -110,11 +111,11 @@ class Train:
                 X = np.reshape(X, (5, -1, 155, 192, cfg.N_INPUT_CHANNEL))
                 Y = np.reshape(Y, (5, -1, 155, 192))
 
-                nonzero_idx_0 = np.where(Y[0].sum(axis=(1,2)) != 0.)
-                nonzero_idx_1 = np.where(Y[1].sum(axis=(1,2)) != 0.)
-                nonzero_idx_2 = np.where(Y[2].sum(axis=(1,2)) != 0.)
-                nonzero_idx_3 = np.where(Y[3].sum(axis=(1,2)) != 0.)
-                nonzero_idx_4 = np.where(Y[4].sum(axis=(1,2)) != 0.)
+                nonzero_dic[0] = np.where(Y[0].sum(axis=(1,2)) != 0.)
+                nonzero_dic[1] = np.where(Y[1].sum(axis=(1,2)) != 0.)
+                nonzero_dic[2] = np.where(Y[2].sum(axis=(1,2)) != 0.)
+                nonzero_dic[3] = np.where(Y[3].sum(axis=(1,2)) != 0.)
+                nonzero_dic[4] = np.where(Y[4].sum(axis=(1,2)) != 0.)
 
             elif cfg.MULTI_VIEW_MODE == 'coronal':
                 X = np.reshape(X, (5, -1, 155, 192, 192, cfg.N_INPUT_CHANNEL))
@@ -126,11 +127,11 @@ class Train:
                 X = np.reshape(X, (5, -1, 155, 192, cfg.N_INPUT_CHANNEL))
                 Y = np.reshape(Y, (5, -1, 155, 192))
 
-                nonzero_idx_0 = np.where(Y[0].sum(axis=(1,2)) != 0.)
-                nonzero_idx_1 = np.where(Y[1].sum(axis=(1,2)) != 0.)
-                nonzero_idx_2 = np.where(Y[2].sum(axis=(1,2)) != 0.)
-                nonzero_idx_3 = np.where(Y[3].sum(axis=(1,2)) != 0.)
-                nonzero_idx_4 = np.where(Y[4].sum(axis=(1,2)) != 0.)
+                nonzero_dic[0] = np.where(Y[0].sum(axis=(1,2)) != 0.)
+                nonzero_dic[1] = np.where(Y[1].sum(axis=(1,2)) != 0.)
+                nonzero_dic[2] = np.where(Y[2].sum(axis=(1,2)) != 0.)
+                nonzero_dic[3] = np.where(Y[3].sum(axis=(1,2)) != 0.)
+                nonzero_dic[4] = np.where(Y[4].sum(axis=(1,2)) != 0.)
 
             drop_rate = cfg.INIT_DROPOUT_RATE
             loss_ratio = np.array(cfg.LAMBDA)
@@ -156,8 +157,8 @@ class Train:
                         train_X = np.concatenate([X[i] for i in train_idx], axis=0)
                         train_Y = np.concatenate([Y[i] for i in train_idx], axis=0)
                     else :
-                        train_X = np.concatenate([X[i][exec('nonzero_idx_{}'.format(i))] for i in train_idx], axis=0)
-                        train_Y = np.concatenate([Y[i][exec('nonzero_idx_{}'.format(i))] for i in train_idx], axis=0)
+                        train_X = np.concatenate([X[i][nonzero_dic[i]] for i in train_idx], axis=0)
+                        train_Y = np.concatenate([Y[i][nonzero_dic[i]] for i in train_idx], axis=0)
 
                     val_X = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_whole_{}.npy'.format(val_idx))
                     val_Y = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_whole_{}.npy'.format(val_idx))
