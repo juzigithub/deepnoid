@@ -90,7 +90,7 @@ class Task2_label_maker:
                 pred_list, _ = utils.convert_to_subregions(pred, pred,
                                                            [cfg.ET_LABEL, cfg.TC_LABEL, cfg.WT_LABEL],
                                                            one_hot=False)
-                img_cnt += cfg.BATCH_SIZE
+                img_cnt += 1
 
                 task2_et_list.append(pred_list[0])
                 task2_tc_list.append(pred_list[1])
