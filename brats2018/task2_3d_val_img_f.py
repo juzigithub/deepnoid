@@ -82,10 +82,10 @@ class Task2_label_maker:
                                  self.model.training: False,
                                  self.model.drop_rate: 0}
 
-                pred = sess.run([self.model.pred], feed_dict=val_feed_dict)
-                patch_list = utils.reconstruct_from_patches_nd(pred, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], cfg.N_CLASS), cfg.PATCH_STRIDE)
+                pred = sess.run(self.model.pred, feed_dict=val_feed_dict)
+                pred = utils.reconstruct_from_patches_nd(pred, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], cfg.N_CLASS), cfg.PATCH_STRIDE)
 
-                pred = np.argmax(patch_list, axis=-1)
+                pred = np.argmax(pred, axis=-1)
 
                 pred_list, _ = utils.convert_to_subregions(pred, pred,
                                                            [cfg.ET_LABEL, cfg.TC_LABEL, cfg.WT_LABEL],
