@@ -116,17 +116,6 @@ class Train:
                 nonzero_idx_3 = np.where(Y[3].sum(axis=(1,2)) != 0.)
                 nonzero_idx_4 = np.where(Y[4].sum(axis=(1,2)) != 0.)
 
-                X[0] = X[0][nonzero_idx_0]
-                Y[0] = Y[0][nonzero_idx_0]
-                X[1] = X[1][nonzero_idx_1]
-                Y[1] = Y[1][nonzero_idx_1]
-                X[2] = X[2][nonzero_idx_2]
-                Y[2] = Y[2][nonzero_idx_2]
-                X[3] = X[3][nonzero_idx_3]
-                Y[3] = Y[3][nonzero_idx_3]
-                X[4] = X[4][nonzero_idx_4]
-                Y[4] = Y[4][nonzero_idx_4]
-
             elif cfg.MULTI_VIEW_MODE == 'coronal':
                 X = np.reshape(X, (5, -1, 155, 192, 192, cfg.N_INPUT_CHANNEL))
                 Y = np.reshape(Y, (5, -1, 155, 192, 192))
@@ -142,18 +131,6 @@ class Train:
                 nonzero_idx_2 = np.where(Y[2].sum(axis=(1,2)) != 0.)
                 nonzero_idx_3 = np.where(Y[3].sum(axis=(1,2)) != 0.)
                 nonzero_idx_4 = np.where(Y[4].sum(axis=(1,2)) != 0.)
-
-                X[0] = X[0][nonzero_idx_0]
-                Y[0] = Y[0][nonzero_idx_0]
-                X[1] = X[1][nonzero_idx_1]
-                Y[1] = Y[1][nonzero_idx_1]
-                X[2] = X[2][nonzero_idx_2]
-                Y[2] = Y[2][nonzero_idx_2]
-                X[3] = X[3][nonzero_idx_3]
-                Y[3] = Y[3][nonzero_idx_3]
-                X[4] = X[4][nonzero_idx_4]
-                Y[4] = Y[4][nonzero_idx_4]
-
 
             drop_rate = cfg.INIT_DROPOUT_RATE
             loss_ratio = np.array(cfg.LAMBDA)
@@ -175,8 +152,13 @@ class Train:
                     print('data preparing at epoch {0} step {1}...'.format(epoch+1, idx+1))
                     train_idx = [i for i in range(cfg.SPLITS) if i != val_idx]
 
-                    train_X = np.concatenate([X[i] for i in train_idx], axis=0)
-                    train_Y = np.concatenate([Y[i] for i in train_idx], axis=0)
+                    if cfg.MULTI_VIEW_MODE == 'axial':
+                        train_X = np.concatenate([X[i] for i in train_idx], axis=0)
+                        train_Y = np.concatenate([Y[i] for i in train_idx], axis=0)
+                    else :
+                        train_X = np.concatenate([X[i][eval('non_zero_idx_{}'.format(i))] for i in train_idx], axis=0)
+                        train_Y = np.concatenate([Y[i][eval('non_zero_idx_{}'.format(i))] for i in train_idx], axis=0)
+
                     val_X = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_image_whole_{}.npy'.format(val_idx))
                     val_Y = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'brats_label_whole_{}.npy'.format(val_idx))
                     val_selected_idx = np.random.randint(len(val_Y), size=int(cfg.VAL_PATCH_RATIO * len(val_Y)))
