@@ -95,12 +95,12 @@ class Task2_label_maker:
                 task2_et_list.append(pred_list[0])
                 task2_tc_list.append(pred_list[1])
                 task2_wt_list.append(pred_list[2])
-                
+
                 if img_cnt == 155:
                     img_cnt = 0
-                    task2_et_list = np.array(task2_et_list).transpose([1,0,2,3,4]).reshape([1,-1,192,192])
-                    task2_tc_list = np.array(task2_tc_list).transpose([1,0,2,3,4]).reshape([1,-1,192,192])
-                    task2_wt_list = np.array(task2_wt_list).transpose([1,0,2,3,4]).reshape([1,-1,192,192])
+                    task2_et_list = np.array(task2_et_list).reshape([1,-1,192,192])
+                    task2_tc_list = np.array(task2_tc_list).reshape([1,-1,192,192])
+                    task2_wt_list = np.array(task2_wt_list).reshape([1,-1,192,192])
 
                     ########### 192 160 150 ##########
                     # survival_img = np.concatenate([task2_et_list, task2_tc_list, task2_wt_list], axis=0).transpose([0,2,3,1])
