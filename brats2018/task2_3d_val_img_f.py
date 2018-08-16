@@ -73,7 +73,7 @@ class Task2_label_maker:
             print_img_idx = 0
 
             for batch in tl.iterate.minibatches(inputs=task2_X, targets=task2_X,
-                                                batch_size=cfg.BATCH_SIZE, shuffle=False):
+                                                batch_size=cfg.N_PATCH_TO_IMG, shuffle=False):
                 print_img_idx += 1
                 batch_x, _ = batch
 
@@ -83,6 +83,8 @@ class Task2_label_maker:
                                  self.model.drop_rate: 0}
 
                 pred = sess.run([self.model.pred], feed_dict=val_feed_dict)
+                pred = utils.reconstruct_from_patches_nd(pred, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], cfg.N_CLASS), cfg.PATCH_STRIDE)
+
                 pred = np.argmax(pred, axis=-1)
 
                 pred_list, _ = utils.convert_to_subregions(pred, pred,
