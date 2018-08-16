@@ -169,8 +169,8 @@ def get_normalized_img(data_sets, train, task1=True):
         nonzero_idx = np.where(total_list[cfg.N_INPUT_CHANNEL].sum(axis=(1, 2)) != 0.) if task1 else np.arange(len(total_list[0]), dtype=np.int32)
 
     for idx, imgset in enumerate(total_list):
-        if train:
-            imgset = imgset[nonzero_idx]
+        # if train:
+        #     imgset = imgset[nonzero_idx]
         # to avoid normalizing seg
         # if idx < cfg.N_INPUT_CHANNEL:
         #     shape = np.shape(imgset)
@@ -284,7 +284,6 @@ def data_saver(data_path, save_path, splits, train, shuffle=True):
     if cfg.REBUILD_HM_DATA:
         test_sets = nii_names(data_path, train=train)
         get_hm_landmarks(test_sets, n_divide=cfg.LANDMARK_DIVIDE, scale=255, save_path=save_path)
-        pass
 
     if train:
         _, test_sets = cv(data_path, splits, shuffle=shuffle)
@@ -298,7 +297,6 @@ def data_saver(data_path, save_path, splits, train, shuffle=True):
             # def extract_patches_from_batch(imgs, patch_shape, stride):
             # def reconstruct_from_patches_nd(patches, image_shape, stride):
             # def discard_patch_idx(input, cut_line):
-            #############
             chunk_X = utils.extract_patches_from_batch(chunk_X, (cfg.PATCH_SIZE, cfg.PATCH_SIZE, cfg.N_INPUT_CHANNEL), cfg.PATCH_STRIDE)
             chunk_Y = utils.extract_patches_from_batch(chunk_Y, (cfg.PATCH_SIZE, cfg.PATCH_SIZE), cfg.PATCH_STRIDE)
 
@@ -310,20 +308,21 @@ def data_saver(data_path, save_path, splits, train, shuffle=True):
 
             print('whole_patch{}.saved'.format(idx))
 
-            n_ncr = np.count_nonzero(chunk_Y==1, axis=tuple(i for i in range(chunk_Y.ndim) if not i == 0)) / np.prod(chunk_Y.shape[1:])
-            n_non_zero = np.count_nonzero(chunk_Y, axis=tuple(i for i in range(chunk_Y.ndim) if not i == 0)) / np.prod(chunk_Y.shape[1:])
-
-            passed_idx = np.where((n_ncr >= cfg.PATCH_NCR_CUTLINE) * (n_non_zero >= cfg.PATCH_WT_CUTLINE))
-            random_idx = np.random.choice(len(chunk_Y), len(passed_idx[0] // 9), replace=False)
-            passed_idx = np.unique(np.append(passed_idx, random_idx))
-
-            # passed_idx = utils.discard_patch_idx(chunk_Y, cfg.PATCH_CUTLINE)
-            # print('passed', passed_idx)
-            print('passed_chunk_x.shape', chunk_X[passed_idx].shape)
-            print('passed_chunk_y.shape', chunk_Y[passed_idx].shape)
-
-            np.save(save_path + 'brats_image_selected_{}.npy'.format(idx), chunk_X[passed_idx])
-            np.save(save_path + 'brats_label_selected_{}.npy'.format(idx), chunk_Y[passed_idx])
+            ################################
+            # n_ncr = np.count_nonzero(chunk_Y==1, axis=tuple(i for i in range(chunk_Y.ndim) if not i == 0)) / np.prod(chunk_Y.shape[1:])
+            # n_non_zero = np.count_nonzero(chunk_Y, axis=tuple(i for i in range(chunk_Y.ndim) if not i == 0)) / np.prod(chunk_Y.shape[1:])
+            #
+            # passed_idx = np.where((n_ncr >= cfg.PATCH_NCR_CUTLINE) * (n_non_zero >= cfg.PATCH_WT_CUTLINE))
+            # random_idx = np.random.choice(len(chunk_Y), len(passed_idx[0] // 9), replace=False)
+            # passed_idx = np.unique(np.append(passed_idx, random_idx))
+            #
+            # # passed_idx = utils.discard_patch_idx(chunk_Y, cfg.PATCH_CUTLINE)
+            # # print('passed', passed_idx)
+            # print('passed_chunk_x.shape', chunk_X[passed_idx].shape)
+            # print('passed_chunk_y.shape', chunk_Y[passed_idx].shape)
+            #
+            # np.save(save_path + 'brats_image_selected_{}.npy'.format(idx), chunk_X[passed_idx])
+            # np.save(save_path + 'brats_label_selected_{}.npy'.format(idx), chunk_Y[passed_idx])
             #########################
             print('selected_patch{}.saved'.format(idx))
     else :
