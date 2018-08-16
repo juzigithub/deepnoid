@@ -91,11 +91,11 @@ class Task2_label_maker:
                                                            [cfg.ET_LABEL, cfg.TC_LABEL, cfg.WT_LABEL],
                                                            one_hot=False)
                 img_cnt += 1
-
+                print('pred_list', np.shape(pred_list))
                 task2_et_list.append(pred_list[0])
                 task2_tc_list.append(pred_list[1])
                 task2_wt_list.append(pred_list[2])
-
+                
                 if img_cnt == 155:
                     img_cnt = 0
                     task2_et_list = np.array(task2_et_list).transpose([1,0,2,3,4]).reshape([1,-1,192,192])
