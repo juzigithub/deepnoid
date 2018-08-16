@@ -25,7 +25,7 @@ class Task2_label_maker:
             print('')
 
             dstime = time.time()
-            tl.files.exists_or_mkdir(cfg.SAVE_SURVIVAL_DATA_PATH)
+            tl.files.exists_or_mkdir(cfg.SAVE_VAL_SURVIVAL_DATA_PATH)
 
             self.survival_id_list = loader.survival_data_saver(cfg.VAL_DATA_PATH, cfg.VAL_SURVIVAL_CSV_PATH, cfg.SAVE_VAL_SURVIVAL_DATA_PATH, train=False)
 
