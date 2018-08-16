@@ -19,7 +19,7 @@ class Task2_label_maker:
         self.p_eval = pe.performance()
         self.restore = restore
 
-        if cfg.REBUILD_TASK2_VAL_DATA:
+        if cfg.REBUILD_TASK2_TEST_DATA:
             print('')
             print('>>> Task2 Data Saving Started')
             print('')
@@ -27,7 +27,7 @@ class Task2_label_maker:
             dstime = time.time()
             tl.files.exists_or_mkdir(cfg.SAVE_SURVIVAL_DATA_PATH)
 
-            self.survival_id_list = loader.survival_data_saver(cfg.VAL_DATA_PATH, cfg.VAL_SURVIVAL_CSV_PATH, cfg.SAVE_VAL_SURVIVAL_DATA_PATH, train=False)
+            self.survival_id_list = loader.survival_data_saver(cfg.TEST_DATA_PATH, cfg.TEST_SURVIVAL_CSV_PATH, cfg.SAVE_TEST_SURVIVAL_DATA_PATH, train=False)
 
             detime = time.time()
 
@@ -35,7 +35,7 @@ class Task2_label_maker:
             print('>>> Task2 Data Saving Complete. Consumption Time :', detime - dstime)
             print('')
         else:
-            self.survival_id_list = loader.survival_id_extractor(cfg.VAL_SURVIVAL_CSV_PATH, train=False)
+            self.survival_id_list = loader.survival_id_extractor(cfg.TEST_SURVIVAL_CSV_PATH, train=False)
 
         # make paths
         *self.train_start_time, _, _, _, _ = time.localtime()
@@ -63,7 +63,7 @@ class Task2_label_maker:
                 saver.restore(sess, self.ckpt_path + 'brats.ckpt')
 
             print("BEGIN TESTING")
-            task2_X = np.load(cfg.SAVE_VAL_SURVIVAL_DATA_PATH + 'task2_val_image.npy')
+            task2_X = np.load(cfg.SAVE_TEST_SURVIVAL_DATA_PATH + 'task2_val_image.npy')
 
             task2_et_list = []
             task2_tc_list = []
@@ -116,14 +116,14 @@ class Task2_label_maker:
                     task2_et_list = []
                     task2_tc_list = []
                     task2_wt_list = []
-                    np.save((cfg.SAVE_VAL_SURVIVAL_DATA_PATH + 'validation/{}.npy').format(self.survival_id_list[survival_id_idx]), survival_img)
+                    np.save((cfg.SAVE_TEST_SURVIVAL_DATA_PATH + 'validation/{}.npy').format(self.survival_id_list[survival_id_idx]), survival_img)
                     survival_id_idx += 1
 
             print("TESTING COMPLETED")
 
     def _make_path(self):
         # create if there is no such file in a saving path
-        tl.files.exists_or_mkdir(cfg.SAVE_VAL_SURVIVAL_DATA_PATH + 'validation/')
+        tl.files.exists_or_mkdir(cfg.SAVE_TEST_SURVIVAL_DATA_PATH + 'validation/')
 
 if __name__ == "__main__":
     tester = Task2_label_maker(restore=True)
