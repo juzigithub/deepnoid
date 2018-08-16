@@ -104,8 +104,8 @@ class Test:
                     # img_list[img_list == 3] = 4
                     # img_list.astype(np.float32)
 
-                    img_list = np.transpose(img_list, [2,1,0])
-                    zero_padded = np.pad(img_list, ((24, 24), (24, 24), (0, 0)), 'constant')
+                    img_list = np.transpose(img_list, [2,1,0,3])
+                    zero_padded = np.pad(img_list, ((24, 24), (24, 24), (0, 0), (0, 0)), 'constant')
                     # zero_padded = np.flip(zero_padded,0)
                     # zero_padded = np.flip(zero_padded,1)
 
