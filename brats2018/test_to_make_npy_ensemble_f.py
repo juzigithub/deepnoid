@@ -72,6 +72,17 @@ class Test:
 
             test_X = np.load(cfg.SAVE_VALID_DATA_PATH + 'brats_val_image.npy')
 
+            if cfg.MULTI_VIEW_MODE == 'sagittal':
+                test_X = np.reshape(test_X, (-1, 155, 192, 192, cfg.N_INPUT_CHANNEL))
+                test_X = np.transpose(test_X, (0, 2, 1, 3, 4))
+                test_X = np.reshape(test_X, (-1, 155, 192, cfg.N_INPUT_CHANNEL))
+
+            elif cfg.MULTI_VIEW_MODE == 'coronal':
+                test_X = np.reshape(test_X, (-1, 155, 192, 192, cfg.N_INPUT_CHANNEL))
+                test_X = np.transpose(test_X, (0, 3, 1, 2, 4))
+                test_X = np.reshape(test_X, (-1, 155, 192, cfg.N_INPUT_CHANNEL))
+
+
             img_idx = 0
             img_list = []
             # patch_list = []
