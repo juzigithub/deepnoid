@@ -89,7 +89,7 @@ class Test:
             # patch_list = []
             save_idx = 0
             for batch in tl.iterate.minibatches(inputs=test_X, targets=test_X,
-                                                batch_size=cfg.N_PATCH_TO_IMG, shuffle=False):
+                                                batch_size=cfg.N_PATCH_TO_IMG if cfg.MULTI_VIEW_MODE =='axial' else 1, shuffle=False):
                 img_idx += 1
                 batch_x, _ = batch
 
