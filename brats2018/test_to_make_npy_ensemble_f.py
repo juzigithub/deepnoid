@@ -71,6 +71,7 @@ class Test:
             print("BEGIN TESTING")
 
             test_X = np.load(cfg.SAVE_VALID_DATA_PATH + 'brats_val_image.npy')
+            print(test_X.shape)
 
             if cfg.MULTI_VIEW_MODE == 'sagittal':
                 test_X = np.reshape(test_X, (-1, 155, 192, 192, cfg.N_INPUT_CHANNEL))
