@@ -88,7 +88,7 @@ class Test:
             # patch_list = []
             save_idx = 0
             for batch in tl.iterate.minibatches(inputs=test_X, targets=test_X,
-                                                batch_size=cfg.N_PATCH_TO_IMG, shuffle=False):
+                                                batch_size=cfg.N_PATCH_TO_IMG if cfg.MULTI_VIEW_MODE =='axial' else 1, shuffle=False):
                 img_idx += 1
                 batch_x, _ = batch
 
@@ -126,7 +126,7 @@ class Test:
                     # zero_padded = np.flip(zero_padded,0)
                     # zero_padded = np.flip(zero_padded,1)
 
-                    np.save('./img/test/for_nifti_test/{}.npy'.format(self.patient_id_list[save_idx]), zero_padded)
+                    np.save('/mnt/sdb/mspark/data/brats2018/npy/ensemble_test/{}.npy'.format(self.patient_id_list[save_idx]), zero_padded)
                     # utils.save_array_as_nifty_volume(zero_padded, './img/test/for_nifti/{}.nii.gz'.format(self.patient_id_list[save_idx]))
                     # np.save('./img/test/for_nifti/{}.npy'.format(self.patient_id_list[save_idx]), zero_padded)
                     img_list = []
