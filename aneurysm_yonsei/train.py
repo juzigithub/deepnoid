@@ -270,7 +270,6 @@ class Train:
         tl.files.exists_or_mkdir(self.model_path + '{0}{1}'.format(cfg.PATH_SLASH, str(epoch + 1)))
         tl.files.exists_or_mkdir('./img/epoch{}/result/'.format(str(epoch + 1)))
         tl.files.exists_or_mkdir('./img/epoch{}/mask/'.format(str(epoch + 1)))
-        tl.files.exists_or_mkdir('./img/epoch{}/survival/'.format(str(epoch + 1)))
         if epoch == 0:
             tl.files.exists_or_mkdir('./img/epoch{}/original/'.format(str(epoch + 1)))
 
