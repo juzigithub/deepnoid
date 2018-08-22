@@ -86,12 +86,9 @@ class Train:
             total_training_time = 0
 
             whole = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'aneurysm_train.npy')
-            print('whole',np.shape(whole))
             train_ratio = int(len(whole) * 0.8)
             train_sets = whole[:train_ratio]
-            print('train_sets', train_sets.shape)
             train_sets = np.transpose(train_sets, (1, 0, 2, 3))
-            print('train_sets2', train_sets.shape)
             val_sets = whole[train_ratio:]
             val_sets = np.transpose(val_sets, (1, 0, 2, 3))
 
