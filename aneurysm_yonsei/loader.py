@@ -31,18 +31,18 @@ def save_resized_dcm_as_npy(data_path, save_path, filename):
 
     for x, y in zip(x_path_list, y_path_list):
         x_img = cv2.imread(x, cv2.IMREAD_GRAYSCALE)
-        x_img = cv2.resize(x_img, (cfg.IMG_SIZE, cfg.IMG_SIZE), interpolation=cv2.INTER_AREA)
+        x_img = cv2.resize(x_img, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), interpolation=cv2.INTER_AREA)
 
         x_img = (x_img - np.mean(x_img)) / np.max(x_img)
         x_img = np.expand_dims(x_img, axis=0)
 
         y_img = cv2.imread(y, cv2.IMREAD_GRAYSCALE)
-        y_img = cv2.resize(y_img, (cfg.IMG_SIZE, cfg.IMG_SIZE), interpolation=cv2.INTER_AREA)
+        y_img = cv2.resize(y_img, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), interpolation=cv2.INTER_AREA)
 
         y_img_fg = cv2.threshold(y_img, 30, 1, cv2.THRESH_BINARY)[1]
-        y_img_fg = y_img_fg.reshape((1, cfg.IMG_SIZE, cfg.IMG_SIZE, 1))
+        y_img_fg = y_img_fg.reshape((1, cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 1))
         y_img_bg = cv2.threshold(y_img, 30, 1, cv2.THRESH_BINARY_INV)[1]
-        y_img_bg = y_img_bg.reshape((1, cfg.IMG_SIZE, cfg.IMG_SIZE, 1))
+        y_img_bg = y_img_bg.reshape((1, cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 1))
 
         y_img = np.concatenate((y_img_bg, y_img_fg), axis=-1)
         y_img = np.argmax(y_img, axis=-1)
