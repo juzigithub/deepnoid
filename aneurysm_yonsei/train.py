@@ -91,12 +91,13 @@ class Train:
             train_sets = whole[:train_ratio]
             print('train_sets', train_sets.shape)
             train_sets = np.transpose(train_sets, (1, 0, 2, 3))
+            print('train_sets2', train_sets.shape)
             val_sets = whole[train_ratio:]
             val_sets = np.transpose(val_sets, (1, 0, 2, 3))
 
-            train_X = train_sets[0].reshape(-1, cfg.IMG_SIZE, cfg.IMG_SIZE, 1)
+            train_X = np.expand_dims(train_sets[0], axis=-1)
             train_Y = train_sets[1]
-            val_X = val_sets[0].reshape(-1, cfg.IMG_SIZE, cfg.IMG_SIZE, 1)
+            val_X = np.expand_dims(val_sets[0], axis=-1)
             val_Y = val_sets[1]
 
 
