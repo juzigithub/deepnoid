@@ -10,7 +10,7 @@ def get_file_path_list(data_path):
    y_path_list = []
    for root, dirs, files in os.walk(data_path, topdown=False):
        for name in files:
-           if root[-len('/x') : ] == '/x':
+           if root[-len('/dcm') : ] == '/dcm':
                # print('x_name : ', name)
                # print('x_root : ', root)
                path = os.path.join(root, name)
