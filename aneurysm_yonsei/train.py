@@ -258,8 +258,6 @@ class Train:
                     print(">>> Model SAVED")
                     print('')
 
-                print(self.result)
-                utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 
     def _make_path(self, epoch):
         # Absolute path for model saving. save as 'file_name'.ckpt

@@ -25,7 +25,7 @@ TRAIN_FILE_NAME = 'aneurysm_train.npy'
 # DATA_FILE_TYPE = 'npy'
 # REBUILD_HM_DATA = False
 # HM_THRESHOLD_TYPE = 'fuzzy_log'
-REBUILD_TRAIN_DATA = True     # train_mobile.py
+REBUILD_TRAIN_DATA = False     # train_mobile.py
 REBUILD_VAL_DATA = False      # train_mobile.py
 # REBUILD_TASK1_VAL_DATA = False
 # REBUILD_TASK2_VAL_DATA = False
@@ -36,8 +36,8 @@ PATH_SLASH = '/' if MODE == 'linux' else '\\'
 
 ### Data info ###
 IMG_SIZE = [256, 256]         # axial : [192, 192], sagittal : [155, 192], coronal : [155, 192]
-# PATCH_SIZE = 128
-# PATCH_STRIDE = 16
+PATCH_SIZE = 128
+PATCH_STRIDE = 16
 # PATCH_NCR_CUTLINE = 1e-10  # 0.05
 # PATCH_WT_CUTLINE = 0       # 0.20
 # VAL_PATCH_RATIO = 0.25      # 0.05

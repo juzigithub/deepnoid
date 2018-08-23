@@ -2,7 +2,7 @@ import os
 import numpy as np
 import cv2
 import config as cfg
-
+import utils
 
 def get_file_path_list(data_path):
    x_path_list = []
@@ -33,11 +33,16 @@ def save_resized_dcm_as_npy(data_path, save_path, filename):
         x_img = cv2.imread(x, cv2.IMREAD_GRAYSCALE)
         x_img = cv2.resize(x_img, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), interpolation=cv2.INTER_AREA)
 
-        # x_img = (x_img - np.mean(x_img)) / np.max(x_img)
+        x_img = (x_img - np.mean(x_img)) / np.max(x_img)
         x_img = np.expand_dims(x_img, axis=0)
 
         y_img = cv2.imread(y, cv2.IMREAD_GRAYSCALE)
         y_img = cv2.resize(y_img, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), interpolation=cv2.INTER_AREA)
+
+
+        x_img = utils.extract_patches_from_batch(x_img, (cfg.PATCH_SIZE, cfg.PATCH_SIZE), cfg.PATCH_STRIDE)
+        y_img = utils.extract_patches_from_batch(y_img, (cfg.PATCH_SIZE, cfg.PATCH_SIZE), cfg.PATCH_STRIDE)
+
 
         y_img_fg = cv2.threshold(y_img, 50, 1, cv2.THRESH_BINARY)[1]
         y_img_fg = y_img_fg.reshape((1, cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 1))
