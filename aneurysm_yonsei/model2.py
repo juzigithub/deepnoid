@@ -10,6 +10,8 @@ class Model:
         self.training = tf.placeholder(tf.bool, name='training')
         self.X = tf.placeholder(tf.float32, [None, None, None, cfg.N_INPUT_CHANNEL], name='X')
         self.Y = tf.placeholder(tf.float32, [None, None, None, cfg.N_CLASS], name='Y')
+        self.loss_ratio = tf.placeholder(tf.float32, [len(cfg.LAMBDA)], name='loss_ratio')
+
         self.logit = self.mobilenet()
 
         self.pred = tf.nn.softmax(logits=self.logit)
@@ -23,7 +25,7 @@ class Model:
         if cfg.LOSS_FUNC == 'g_dice':
             self.loss = utils.generalised_dice_loss(self.pred, self.Y)
         else :
-            self.loss = cfg.LAMBDA[0] * self.bg_loss + cfg.LAMBDA[1] * self.fg_loss
+            self.loss = self.loss_ratio[0] * self.bg_loss + self.loss_ratio[1] * self.fg_loss
 
     def mobilenet(self):
         # start down sampling by depth n.
