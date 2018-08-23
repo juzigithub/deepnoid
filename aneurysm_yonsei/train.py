@@ -202,22 +202,22 @@ class Train:
                     one_epoch_result_list.append(one_batch_result)
 
                     ## masking results ###
-                    if save_yn:
-                        # make img
-                        for i in range(0, cfg.BATCH_SIZE, cfg.BATCH_SIZE//2):
-                            pred_mask = utils.masking_rgb(pred_print[1][i], color='red')
-                            label_mask = utils.masking_rgb(label_print[1][i], color='green')
-                            ori = np.transpose(batch_x, [-1, 0, 1, 2])
-                            ori = utils.masking_rgb(ori[0][i], color=None)
-
-                            result_image = 0.7 * (ori + pred_mask)
-                            compare_image = pred_mask + label_mask
-
-
-                            cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
-                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_mask.jpg'.format(epoch+1, print_img_idx, i+1), pred_mask)
-                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_compare.jpg'.format(epoch+1, print_img_idx, i+1), compare_image)
-                            cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
+                    # if save_yn:
+                    #     # make img
+                    #     for i in range(0, cfg.BATCH_SIZE, cfg.BATCH_SIZE//2):
+                    #         pred_mask = utils.masking_rgb(pred_print[1][i], color='red')
+                    #         label_mask = utils.masking_rgb(label_print[1][i], color='green')
+                    #         ori = np.transpose(batch_x, [-1, 0, 1, 2])
+                    #         ori = utils.masking_rgb(ori[0][i], color=None)
+                    #
+                    #         result_image = 0.7 * (ori + pred_mask)
+                    #         compare_image = pred_mask + label_mask
+                    #
+                    #
+                    #         cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
+                    #         cv2.imwrite('./img/epoch{}/mask/batch{}_{}_mask.jpg'.format(epoch+1, print_img_idx, i+1), pred_mask)
+                    #         cv2.imwrite('./img/epoch{}/mask/batch{}_{}_compare.jpg'.format(epoch+1, print_img_idx, i+1), compare_image)
+                    #         cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
 
                 one_epoch_mean = np.mean(np.array(one_epoch_result_list), axis=0)
 
