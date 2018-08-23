@@ -23,7 +23,7 @@ class Model:
         if cfg.LOSS_FUNC == 'g_dice':
             self.loss = utils.generalised_dice_loss(self.pred, self.Y)
         else :
-            self.loss = cfg.LAMBDA[0] * self.bg_loss + cfg.LABDA[1] * self.fg_loss
+            self.loss = cfg.LAMBDA[0] * self.bg_loss + cfg.LAMBDA[1] * self.fg_loss
 
     def mobilenet(self):
         # start down sampling by depth n.
