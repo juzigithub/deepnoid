@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import cv2
-import pydicom as dicom
 import aneurysm_yonsei.config as cfg
 import aneurysm_yonsei.utils as utils
 
@@ -28,46 +27,19 @@ def get_file_path_list(data_path):
 
 
 def save_resized_dcm_as_npy(data_path, save_path, filename):
-
-    if cfg.REBUILD_HM_DATA :
-        clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
-        dcm_path_list, _ = get_file_path_list(data_path)
-
-        n = len(dcm_path_list)
-
-        total_hm_std_arr = np.zeros([n, cfg.LANDMARK_DIVIDE + 1])
-
-        for dcm in dcm_path_list:
-            dic = dicom.read_file(dcm)
-            dcm_img = dic.pixel_array
-            dcm_img = cv2.resize(dcm_img, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), interpolation=cv2.INTER_AREA)
-            dcm_img = clahe.apply(dcm_img)
-            landmark_list = utils.cal_hm_landmark(dcm_img, threshold=cfg.HM_THRESHOLD_TYPE, n_divide=cfg.LANDMARK_DIVIDE, standard=True)
-            total_hm_std_arr += np.array(landmark_list)
-
-        total_hm_std_arr /= n
-
-        np.save(save_path + 'std_landmark.npy', total_hm_std_arr[:cfg.N_INPUT_CHANNEL].astype(int))
-
-
-    standard_landmark_list = np.load(save_path + 'std_landmark.npy')
-    clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
-
     x_path_list, y_path_list = get_file_path_list(data_path)
     npy_list = []
 
     for x, y in zip(x_path_list, y_path_list):
-        x_img = dicom.read_file(x)
-        x_img = x_img.pixel_array
+        x_img = cv2.imread(x, cv2.IMREAD_GRAYSCALE)
         x_img = cv2.resize(x_img, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), interpolation=cv2.INTER_AREA)
-        x_img = clahe.apply(x_img)
-        landmark_list = utils.cal_hm_landmark(x_img, threshold=cfg.HM_THRESHOLD_TYPE, n_divide=cfg.LANDMARK_DIVIDE)
 
-        x_img = utils.hm_rescale(x_img, landmark_list, standard_landmark_list)
-
+        x_img = (x_img - np.mean(x_img)) / np.max(x_img)
         x_img = np.expand_dims(x_img, axis=0)
+
         y_img = cv2.imread(y, cv2.IMREAD_GRAYSCALE)
         y_img = cv2.resize(y_img, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), interpolation=cv2.INTER_AREA)
+
 
         x_img = utils.extract_patches_from_batch(x_img, (cfg.PATCH_SIZE, cfg.PATCH_SIZE), cfg.PATCH_STRIDE)
 
