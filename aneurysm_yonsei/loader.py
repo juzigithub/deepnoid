@@ -2,8 +2,8 @@ import os
 import numpy as np
 import cv2
 import pydicom as dicom
-import aneurysm_yonsei.config as cfg
-import aneurysm_yonsei.utils as utils
+import config as cfg
+import utils as utils
 
 def get_file_path_list(data_path):
    x_path_list = []
