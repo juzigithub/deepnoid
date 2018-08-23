@@ -23,7 +23,10 @@ class Model:
 
         self.bg_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.bg_pred, target=self.bg_label)
         self.fg_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.fg_pred, target=self.fg_label)
-        self.loss = utils.generalised_dice_loss(self.pred, self.Y)
+        if cfg.LOSS_FUNC == 'g_dice':
+            self.loss = utils.generalised_dice_loss(self.pred, self.Y)
+        else :
+            self.loss = cfg.LAMBDA[0] * self.bg_loss + cfg.LABDA[1] * self.fg_loss
 
 
     def BeVEAM_NET(self):
