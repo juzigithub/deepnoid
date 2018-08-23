@@ -46,8 +46,10 @@ def save_resized_dcm_as_npy(data_path, save_path, filename):
             total_hm_std_arr += np.array(landmark_list)
 
         total_hm_std_arr /= n
+        print('total_hm_std_arr', total_hm_std_arr)
 
-        np.save(save_path + 'std_landmark.npy', total_hm_std_arr[:cfg.N_INPUT_CHANNEL].astype(int))
+        np.save(save_path + 'std_landmark.npy', total_hm_std_arr.astype(int))
+        print('landmark_saved')
 
 
     standard_landmark_list = np.load(save_path + 'std_landmark.npy')
