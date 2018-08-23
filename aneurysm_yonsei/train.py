@@ -90,11 +90,10 @@ class Train:
             train_sets = whole[:train_ratio]
             train_sets = train_sets.reshape((-1, cfg.PATCH_SIZE, cfg.PATCH_SIZE, 2))
             train_sets = np.transpose(train_sets, (3, 0, 1, 2))
-            print('train_sets', train_sets.shape)
             val_sets = whole[train_ratio:]
             val_sets = val_sets.reshape((-1, cfg.PATCH_SIZE, cfg.PATCH_SIZE, 2))
             val_sets = np.transpose(val_sets, (3, 0, 1, 2))
-            print('train_sets', train_sets.shape)
+
             train_X = np.expand_dims(train_sets[0], axis=-1)
             train_Y = train_sets[1]
             val_X = np.expand_dims(val_sets[0], axis=-1)
@@ -131,7 +130,6 @@ class Train:
                     # make_one_hot
                     key = np.array([0, 1])
                     _, index = np.unique(batch_y, return_inverse=True)
-                    print('idx',index)
                     seg = key[index].reshape(batch_y.shape)
                     batch_y = np.eye(2)[seg]
 
