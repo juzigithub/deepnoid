@@ -647,7 +647,7 @@ def weighted_categorical_cross_entropy(output, target, weights, epsilon=1e-6):
     return tf.reduce_sum(w * cross_entropies)
 
 def select_loss(mode, output, target, smooth=1e-6, weight=1, epsilon=1e-6, delta=1.0):
-    if mode == 'dice':
+    if mode == 'dice' or 'g_dice':
         return dice_loss(output, target, smooth=smooth)
     elif mode == 'focal':
         return focal_loss(output, target, epsilon=epsilon)
