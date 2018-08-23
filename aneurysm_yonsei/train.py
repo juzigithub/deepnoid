@@ -89,10 +89,6 @@ class Train:
             train_ratio = int(len(whole) * 0.8)
             train_sets = whole[:train_ratio]
             train_sets = train_sets.reshape((-1, cfg.PATCH_SIZE, cfg.PATCH_SIZE, 2))
-            #####
-            nonzero_idx = np.where(train_sets.sum(axis=(1, 2)) != 0.)
-            train_sets = train_sets[nonzero_idx]
-            #####
             train_sets = np.transpose(train_sets, (3, 0, 1, 2))
 
             val_sets = whole[train_ratio:]
@@ -101,6 +97,13 @@ class Train:
 
             train_X = np.expand_dims(train_sets[0], axis=-1)
             train_Y = train_sets[1]
+
+            #######################
+            nonzero_idx = np.where(train_Y.sum(axis=(1, 2)) != 0.)
+            train_X = train_X[nonzero_idx]
+            train_Y = train_Y[nonzero_idx]
+            #######################
+
             val_X = np.expand_dims(val_sets[0], axis=-1)
             val_Y = val_sets[1]
 
