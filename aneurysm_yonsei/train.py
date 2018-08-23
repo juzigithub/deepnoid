@@ -88,9 +88,12 @@ class Train:
             whole = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'aneurysm_train.npy')
             train_ratio = int(len(whole) * 0.8)
             train_sets = whole[:train_ratio]
-            train_sets = np.transpose(train_sets, (1, 0, 2, 3))
+            print('train_sets', train_sets.shape)
+            train_sets = train_sets.reshape((-1, cfg.PATCH_SIZE, cfg.PATCH_SIZE, 2))
+            train_sets = np.transpose(train_sets, (3, 0, 1, 2))
             val_sets = whole[train_ratio:]
-            val_sets = np.transpose(val_sets, (1, 0, 2, 3))
+            val_sets = val_sets.reshape((-1, cfg.PATCH_SIZE, cfg.PATCH_SIZE, 2))
+            val_sets = np.transpose(val_sets, (3, 0, 1, 2))
 
             train_X = np.expand_dims(train_sets[0], axis=-1)
             train_Y = train_sets[1]
