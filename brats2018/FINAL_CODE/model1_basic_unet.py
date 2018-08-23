@@ -10,20 +10,22 @@ class Model:
         self.training = tf.placeholder(tf.bool, name='training')
         self.X = tf.placeholder(tf.float32, [None, None, None, cfg.N_INPUT_CHANNEL], name='X')
         self.Y = tf.placeholder(tf.float32, [None, None, None, cfg.N_CLASS], name='Y')
+        self.loss_ratio = tf.placeholder(tf.float32, [len(cfg.LAMBDA)], name='loss_ratio')
         self.logit = self.mobilenet()
 
         self.pred = tf.nn.softmax(logits=self.logit)
 
-        self.bg_pred, self.fg_pred = tf.split(self.pred, [1,1], axis=3)
-        self.bg_label, self.fg_label = tf.split(self.Y, [1,1], axis=3)
+        self.bg_pred, self.ncr_pred, self.ed_pred, self.et_pred = tf.split(self.pred, [1,1,1,1], axis=3)
+        self.bg_label, self.ncr_label, self.ed_label, self.et_label = tf.split(self.Y, [1,1,1,1], axis=3)
 
         self.bg_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.bg_pred, target=self.bg_label)
-        self.fg_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.fg_pred, target=self.fg_label)
+        self.ncr_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.ncr_pred, target=self.ncr_label)
+        self.ed_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.ed_pred, target=self.ed_label)
+        self.et_loss = utils.select_loss(mode=cfg.LOSS_FUNC, output=self.et_pred, target=self.et_label)
+        self.loss = self.loss_ratio[0] * self.bg_loss + self.loss_ratio[1] * self.ncr_loss + \
+                    self.loss_ratio[2] * self.ed_loss + self.loss_ratio[3] * self.et_loss
 
-        if cfg.LOSS_FUNC == 'g_dice':
-            self.loss = utils.generalised_dice_loss(self.pred, self.Y)
-        else :
-            self.loss = cfg.LAMBDA[0] * self.bg_loss + cfg.LAMBDA[1] * self.fg_loss
+
 
     def mobilenet(self):
         # start down sampling by depth n.
@@ -53,6 +55,7 @@ class Model:
                                                                                norm_type=cfg.NORMALIZATION_TYPE,
                                                                                training=self.training,
                                                                                idx=i)
+
                 self.down_conv[i] = tf.identity(inputs)
 
                 print('down_conv', self.down_conv[i])
