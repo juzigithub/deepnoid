@@ -125,6 +125,8 @@ class Train:
                                                     batch_size=cfg.BATCH_SIZE, shuffle=True):
                     batch_x, batch_y = batch
 
+                    print('bbbx', batch_x.shape)
+                    print('bbby', batch_y.shape)
 
                     # make_one_hot
                     key = np.array([0, 1])
