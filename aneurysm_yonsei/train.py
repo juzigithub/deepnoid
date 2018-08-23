@@ -125,12 +125,10 @@ class Train:
                                                     batch_size=cfg.BATCH_SIZE, shuffle=True):
                     batch_x, batch_y = batch
 
-                    print('bbbx', batch_x.shape)
-                    print('bbby', batch_y.shape)
-
                     # make_one_hot
                     key = np.array([0, 1])
                     _, index = np.unique(batch_y, return_inverse=True)
+                    print('idx',index)
                     seg = key[index].reshape(batch_y.shape)
                     batch_y = np.eye(2)[seg]
 
