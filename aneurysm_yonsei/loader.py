@@ -41,7 +41,7 @@ def save_resized_dcm_as_npy(data_path, save_path, filename):
 
 
         x_img = utils.extract_patches_from_batch(x_img, (cfg.PATCH_SIZE, cfg.PATCH_SIZE), cfg.PATCH_STRIDE)
-
+        print('x_img', x_img.shape)
 
         y_img_fg = cv2.threshold(y_img, 50, 1, cv2.THRESH_BINARY)[1]
         y_img_fg = y_img_fg.reshape((1, cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 1))
@@ -52,7 +52,7 @@ def save_resized_dcm_as_npy(data_path, save_path, filename):
         y_img = np.argmax(y_img, axis=-1)
 
         y_img = utils.extract_patches_from_batch(y_img, (cfg.PATCH_SIZE, cfg.PATCH_SIZE), cfg.PATCH_STRIDE)
-
+        print('y_img', y_img.shape)
         x_y_img = np.concatenate((x_img, y_img), axis=0)
 
         npy_list.append(x_y_img)
