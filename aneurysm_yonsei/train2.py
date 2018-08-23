@@ -90,6 +90,12 @@ class Train:
             train_sets = whole[:train_ratio]
             train_sets = train_sets.reshape((-1, cfg.PATCH_SIZE, cfg.PATCH_SIZE, 2))
             train_sets = np.transpose(train_sets, (3, 0, 1, 2))
+
+            #####
+            nonzero_idx = np.where(train_sets.sum(axis=(2, 3)) != 0.)
+            train_sets = train_sets[nonzero_idx]
+            #####
+            
             val_sets = whole[train_ratio:]
             val_sets = val_sets.reshape((-1, cfg.PATCH_SIZE, cfg.PATCH_SIZE, 2))
             val_sets = np.transpose(val_sets, (3, 0, 1, 2))
