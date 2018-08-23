@@ -263,7 +263,7 @@ class Train:
 
     def _make_path(self, epoch):
         # Absolute path for model saving. save as 'file_name'.ckpt
-        self.model_save_path = self.model_path + '{0}{1}{0}brats.ckpt'.format(cfg.PATH_SLASH,
+        self.model_save_path = self.model_path + '{0}{1}{0}weights.ckpt'.format(cfg.PATH_SLASH,
                                                                              str(epoch + 1))
 
         # create if there is no such file in a saving path
