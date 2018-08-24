@@ -66,7 +66,7 @@ def save_resized_dcm_as_npy(data_path, save_path, filename):
         x_img = clahe.apply(x_img)
         landmark_list = utils.cal_hm_landmark(x_img, threshold=cfg.HM_THRESHOLD_TYPE, n_divide=cfg.LANDMARK_DIVIDE, scale=1000)
 
-        x_img = utils.hm_rescale(x_img, landmark_list, standard_landmark_list) / 100
+        x_img = utils.hm_rescale(x_img, landmark_list, standard_landmark_list).astype(float) / 100
 
         x_img = np.expand_dims(x_img, axis=0)
         y_img = cv2.imread(y, cv2.IMREAD_GRAYSCALE)
@@ -91,7 +91,7 @@ def save_resized_dcm_as_npy(data_path, save_path, filename):
 
         npy_list.append(x_y_img)
     np.save(save_path + filename, npy_list)
-
+    print('data_saved')
 
 # if __name__ == '__main__':
 #     data_path = 'C:\\Users\\sunki\\PycharmProjects\\deepnoid\\aneurysm_yonsei'
