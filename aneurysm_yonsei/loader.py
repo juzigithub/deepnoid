@@ -44,11 +44,10 @@ def save_resized_dcm_as_npy(data_path, save_path, filename):
             dcm_img = cv2.resize(dcm_img, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), interpolation=cv2.INTER_AREA)
             dcm_img = clahe.apply(dcm_img)
             landmark_list = utils.cal_hm_landmark(dcm_img, threshold=cfg.HM_THRESHOLD_TYPE, n_divide=cfg.LANDMARK_DIVIDE, standard=True, scale=1000)
-            print('landmark_list', landmark_list)
             total_hm_std_arr += np.array(landmark_list)
 
         total_hm_std_arr /= n
-        print('total_hm_std_arr', total_hm_std_arr)
+        print('total_hm_std_arr', total_hm_std_arr.astype(int))
 
         np.save(save_path + 'std_landmark.npy', total_hm_std_arr.astype(int))
         print('landmark_saved')
@@ -67,9 +66,7 @@ def save_resized_dcm_as_npy(data_path, save_path, filename):
         x_img = clahe.apply(x_img)
         landmark_list = utils.cal_hm_landmark(x_img, threshold=cfg.HM_THRESHOLD_TYPE, n_divide=cfg.LANDMARK_DIVIDE, scale=1000)
 
-        x_img = utils.hm_rescale(x_img, landmark_list, standard_landmark_list)
-
-        x_img /= 100
+        x_img = utils.hm_rescale(x_img, landmark_list, standard_landmark_list) / 100
 
         x_img = np.expand_dims(x_img, axis=0)
         y_img = cv2.imread(y, cv2.IMREAD_GRAYSCALE)
