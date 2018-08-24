@@ -242,7 +242,7 @@ class Train:
 
                 Loss = total_cost / train_step
                 print('one_epoch_mean', one_epoch_mean)
-
+                #
                 # print and save result of each epoch
                 self.result = '\nEpoch: {} / {}, Loss : {}, Training time: {:.2f}' \
                               '\nResults >>> ' \
