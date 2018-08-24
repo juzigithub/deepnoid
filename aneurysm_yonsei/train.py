@@ -130,47 +130,47 @@ class Train:
                     # Make folder in the saving path for qualified epochs
                     self._make_path(epoch)
 
-                # train
-                for batch in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
-                                                    batch_size=cfg.BATCH_SIZE, shuffle=True):
-                    batch_x, batch_y = batch
-
-                    # make_one_hot
-                    key = np.array([0, 1])
-                    _, index = np.unique(batch_y, return_inverse=True)
-                    seg = key[index].reshape(batch_y.shape)
-                    batch_y = np.eye(2)[seg]
-
-                    tr_feed_dict = {self.model.X: batch_x,
-                                    self.model.Y: batch_y,
-                                    self.model.training: True,
-                                    self.model.loss_ratio: loss_ratio,
-                                    self.model.drop_rate: drop_rate}
-
-                    cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
-
-                    bg, fg = sess.run([self.model.bg_loss, self.model.fg_loss], feed_dict=tr_feed_dict)
-
-                    s = bg + fg
-                    print('bg loss ratio : ', (bg/s) * 100)
-                    print('fg loss ratio : ', (fg/s) * 100)
-
-                    # Update Loss Ratio for next step
-                    loss_ratio = loss_ratio * np.sqrt([bg, fg])
-                    loss_ratio = loss_ratio / np.sum(loss_ratio)
-
-                    total_cost += cost
-                    step += 1
-
-                    # print out current epoch, step and batch loss value
-                    self.result = 'Epoch: {} / {}, ' \
-                                  'Step: {} / {}, Batch loss: {}'.format(epoch + 1,
-                                                                            cfg.EPOCHS,
-                                                                            step,
-                                                                            train_step,
-                                                                            cost)
-
-                    print(self.result)
+                # # train
+                # for batch in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
+                #                                     batch_size=cfg.BATCH_SIZE, shuffle=True):
+                #     batch_x, batch_y = batch
+                #
+                #     # make_one_hot
+                #     key = np.array([0, 1])
+                #     _, index = np.unique(batch_y, return_inverse=True)
+                #     seg = key[index].reshape(batch_y.shape)
+                #     batch_y = np.eye(2)[seg]
+                #
+                #     tr_feed_dict = {self.model.X: batch_x,
+                #                     self.model.Y: batch_y,
+                #                     self.model.training: True,
+                #                     self.model.loss_ratio: loss_ratio,
+                #                     self.model.drop_rate: drop_rate}
+                #
+                #     cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
+                #
+                #     bg, fg = sess.run([self.model.bg_loss, self.model.fg_loss], feed_dict=tr_feed_dict)
+                #
+                #     s = bg + fg
+                #     print('bg loss ratio : ', (bg/s) * 100)
+                #     print('fg loss ratio : ', (fg/s) * 100)
+                #
+                #     # Update Loss Ratio for next step
+                #     loss_ratio = loss_ratio * np.sqrt([bg, fg])
+                #     loss_ratio = loss_ratio / np.sum(loss_ratio)
+                #
+                #     total_cost += cost
+                #     step += 1
+                #
+                #     # print out current epoch, step and batch loss value
+                #     self.result = 'Epoch: {} / {}, ' \
+                #                   'Step: {} / {}, Batch loss: {}'.format(epoch + 1,
+                #                                                             cfg.EPOCHS,
+                #                                                             step,
+                #                                                             train_step,
+                #                                                             cost)
+                #
+                #     print(self.result)
 
                 one_epoch_result_list = []
 

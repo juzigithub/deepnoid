@@ -263,12 +263,12 @@ def cal_result3(pred, label, one_hot=False, e=1e-6):
         # FN = cm[1][0].astype(np.float32)
         # TN = cm[0][0].astype(np.float32)
 
-
         TP = 1. if (cm[1][1] != 0 and l.sum() != 0 and p.sum() != 0) else 0.
         FP = 1. if (cm[1][1] == 0 and l.sum() != 0 and p.sum() != 0) or (l.sum() == 0 and p.sum() != 0) else 0.
         FN = 1. if (l.sum() != 0 and p.sum() == 0) else 0.
         TN = 1. if (l.sum() == 0 and p.sum() == 0) else 0.
-
+        print('cm, lsum, psum', [cm[1][1], l.sum(), p.sum()])
+        print('TP/FP/FN/TN', [TP, FP, FN, TN])
         # accuracy, sensitivity, specificity, mean iou, dice coefficient, hausdorff
         acc = (TP + TN + e)  / (TP + FP + FN + TN + e)
         sens = (TP + e) / (TP + FN + e)
