@@ -101,7 +101,7 @@ class Train:
             #######################
             nonzero_idx = np.where(train_Y.sum(axis=(1, 2)) != 0.)
 
-            random_idx = np.random.choice(len(train_Y), (3 * len(nonzero_idx[0])) // 7 , replace=False)
+            random_idx = np.random.choice(len(train_Y), (len(nonzero_idx[0])) // 9 , replace=False)
             nonzero_idx = np.unique(np.append(nonzero_idx, random_idx))
             train_X = train_X[nonzero_idx]
             train_Y = train_Y[nonzero_idx]
