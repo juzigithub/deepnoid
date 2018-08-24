@@ -224,12 +224,12 @@ class Train:
                             ori = ori / np.max(ori)
                             ori = utils.masking_rgb(ori[0][i], color=None)
 
-                            result_image = 0.7 * (ori + pred_mask)
+                            result_image = 1.0 * (ori + pred_mask)
                             compare_image = pred_mask + label_mask
 
 
                             cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
-                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_mask.jpg'.format(epoch+1, print_img_idx, i+1), pred_mask)
+                            # cv2.imwrite('./img/epoch{}/mask/batch{}_{}_mask.jpg'.format(epoch+1, print_img_idx, i+1), pred_mask)
                             cv2.imwrite('./img/epoch{}/mask/batch{}_{}_compare.jpg'.format(epoch+1, print_img_idx, i+1), compare_image)
                             cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
 
