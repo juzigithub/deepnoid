@@ -250,11 +250,8 @@ def cal_result3(pred, label, one_hot=False, e=1e-6):
 
     _pred = _pred.reshape(np.shape(_pred)[0], -1)
     _label = _label.reshape(np.shape(_label)[0], -1)
-    acc_list = []
-    sens_list = []
-    spec_list = []
-    miou_list = []
-    dice_list = []
+
+    TP, FP, FN, TN = 0, 0, 0, 0
 
     for p, l in zip(_pred, _label):
         cm = confusion_matrix(l, p, labels=[0, 1])
@@ -263,30 +260,16 @@ def cal_result3(pred, label, one_hot=False, e=1e-6):
         # FN = cm[1][0].astype(np.float32)
         # TN = cm[0][0].astype(np.float32)
 
-        TP = 1. if (cm[1][1] != 0 and l.sum() != 0 and p.sum() != 0) else 0.
-        FP = 1. if (cm[1][1] == 0 and l.sum() != 0 and p.sum() != 0) or (l.sum() == 0 and p.sum() != 0) else 0.
-        FN = 1. if (l.sum() != 0 and p.sum() == 0) else 0.
-        TN = 1. if (l.sum() == 0 and p.sum() == 0) else 0.
-        print('cm, lsum, psum', [cm[1][1], l.sum(), p.sum()])
-        print('TP/FP/FN/TN', [TP, FP, FN, TN])
-        # accuracy, sensitivity, specificity, mean iou, dice coefficient, hausdorff
-        acc = (TP + TN + e)  / (TP + FP + FN + TN + e)
-        sens = (TP + e) / (TP + FN + e)
-        spec = (TN + e) / (TN + FP + e)
-        miou = (TP + e) / (FP + FN + TP + e)
-        dice = (2 * TP + e)  / (2 * TP + FP + FN + e)
+        TP += 1. if (cm[1][1] != 0 and l.sum() != 0 and p.sum() != 0) else 0.
+        FP += 1. if (cm[1][1] == 0 and l.sum() != 0 and p.sum() != 0) or (l.sum() == 0 and p.sum() != 0) else 0.
+        FN += 1. if (l.sum() != 0 and p.sum() == 0) else 0.
+        TN += 1. if (l.sum() == 0 and p.sum() == 0) else 0.
 
-        acc_list.append(acc)
-        sens_list.append(sens)
-        spec_list.append(spec)
-        miou_list.append(miou)
-        dice_list.append(dice)
-
-    mean_acc = np.mean(np.array(acc_list))
-    mean_sens = np.mean(np.array(sens_list))
-    mean_spec = np.mean(np.array(spec_list))
-    mean_miou = np.mean(np.array(miou_list))
-    mean_dice = np.mean(np.array(dice_list))
+    mean_acc = (TP + TN + e) / (TP + FP + FN + TN + e)
+    mean_sens = (TP + e) / (TP + FN + e)
+    mean_spec = (TN + e) / (TN + FP + e)
+    mean_miou = (TP + e) / (FP + FN + TP + e)
+    mean_dice = (2 * TP + e) / (2 * TP + FP + FN + e)
 
     hdorff = max(directed_hausdorff(_pred, _label)[0], directed_hausdorff(_label, _pred)[0])
 
