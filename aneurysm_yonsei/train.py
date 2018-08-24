@@ -207,7 +207,7 @@ class Train:
                     pred_print = np.eye(2)[seg]
                     pred_print = np.transpose(pred_print, [-1, 0, 1, 2])
 
-                    one_batch_result = utils.cal_result2(pred, label, one_hot=False)
+                    one_batch_result = utils.cal_result3(pred, label, one_hot=False)
 
                     one_epoch_result_list.append(one_batch_result)
 
