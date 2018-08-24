@@ -36,6 +36,7 @@ def save_resized_dcm_as_npy(data_path, save_path, filename):
         n = len(dcm_path_list)
 
         total_hm_std_arr = np.zeros(cfg.LANDMARK_DIVIDE + 1)
+        print('total_hm_std_arr_before', total_hm_std_arr)
 
         for dcm in dcm_path_list:
             dic = dicom.read_file(dcm)
@@ -43,6 +44,7 @@ def save_resized_dcm_as_npy(data_path, save_path, filename):
             dcm_img = cv2.resize(dcm_img, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), interpolation=cv2.INTER_AREA)
             dcm_img = clahe.apply(dcm_img)
             landmark_list = utils.cal_hm_landmark(dcm_img, threshold=cfg.HM_THRESHOLD_TYPE, n_divide=cfg.LANDMARK_DIVIDE, standard=True)
+            print('landmark_list', landmark_list)
             total_hm_std_arr += np.array(landmark_list)
 
         total_hm_std_arr /= n
