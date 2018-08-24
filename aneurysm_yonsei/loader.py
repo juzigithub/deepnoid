@@ -35,7 +35,7 @@ def save_resized_dcm_as_npy(data_path, save_path, filename):
 
         n = len(dcm_path_list)
 
-        total_hm_std_arr = np.zeros([n, cfg.LANDMARK_DIVIDE + 1])
+        total_hm_std_arr = np.zeros(cfg.LANDMARK_DIVIDE + 1)
 
         for dcm in dcm_path_list:
             dic = dicom.read_file(dcm)
