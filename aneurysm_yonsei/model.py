@@ -43,14 +43,15 @@ class Model:
             pool_size_w = cfg.PATCH_SIZE // 2
             print(inputs)
             for i in range(cfg.N_LAYERS[0]):
-                inputs = utils.xception_depthwise_separable_convlayer(name='dsconv_0_{}'.format(str(i)),
-                                                                      inputs=inputs,
-                                                                      channel_n=channel_n,
-                                                                      last_stride=1,
-                                                                      act_fn=cfg.ACTIVATION_FUNC,
-                                                                      training=self.training,
-                                                                      shortcut_conv=True,
-                                                                      atrous=False)
+                inputs = utils.xception_depthwise_separable_convlayer_dr(name='dsconv_0_{}'.format(str(i)),
+                                                                         inputs=inputs,
+                                                                         channel_n=channel_n,
+                                                                         last_stride=1,
+                                                                         drop_rate=self.drop_rate,
+                                                                         act_fn=cfg.ACTIVATION_FUNC,
+                                                                         training=self.training,
+                                                                         shortcut_conv=True,
+                                                                         atrous=False)
 
             inputs = utils.select_downsampling(name='0_downsampling',
                                                down_conv=inputs,
@@ -66,23 +67,25 @@ class Model:
             for i in range(1, cfg.DEPTH):
                 channel_n *= 2
                 for j in range(cfg.N_LAYERS[i]-1):
-                    inputs = utils.xception_depthwise_separable_convlayer(name='dsconv_{}_{}'.format(str(i), str(j)),
-                                                                          inputs=inputs,
-                                                                          channel_n=channel_n,
-                                                                          last_stride=1,
-                                                                          act_fn=cfg.ACTIVATION_FUNC,
-                                                                          training=self.training,
-                                                                          shortcut_conv=True,
-                                                                          atrous=False)
-                inputs = utils.xception_depthwise_separable_convlayer(name='dsconv_{}_{}'.format(str(i), str(cfg.N_LAYERS[i] - 1)),
-                                                                      inputs=inputs,
-                                                                      channel_n=channel_n,
-                                                                      last_stride=1,
-                                                                      act_fn=cfg.ACTIVATION_FUNC,
-                                                                      training=self.training,
-                                                                      shortcut_conv=True,
-                                                                      atrous=True,
-                                                                      atrous_rate=2)
+                    inputs = utils.xception_depthwise_separable_convlayer_dr(name='dsconv_{}_{}'.format(str(i), str(j)),
+                                                                             inputs=inputs,
+                                                                             channel_n=channel_n,
+                                                                             last_stride=1,
+                                                                             drop_rate=self.drop_rate,
+                                                                             act_fn=cfg.ACTIVATION_FUNC,
+                                                                             training=self.training,
+                                                                             shortcut_conv=True,
+                                                                             atrous=False)
+                inputs = utils.xception_depthwise_separable_convlayer_dr(name='dsconv_{}_{}'.format(str(i), str(cfg.N_LAYERS[i] - 1)),
+                                                                         inputs=inputs,
+                                                                         channel_n=channel_n,
+                                                                         last_stride=1,
+                                                                         drop_rate=self.drop_rate,
+                                                                         act_fn=cfg.ACTIVATION_FUNC,
+                                                                         training=self.training,
+                                                                         shortcut_conv=True,
+                                                                         atrous=True,
+                                                                         atrous_rate=2)
                 self.down_conv[i] = tf.identity(inputs)
                 print(inputs)
 
@@ -101,25 +104,27 @@ class Model:
                                        for idx, dc in enumerate(self.down_conv)], axis=-1)
             print(concated_conv)
 
-            concated_conv = utils.depthwise_separable_convlayer(name='usconv0',
-                                                                inputs=concated_conv,
-                                                                channel_n=cfg.INIT_N_FILTER,
-                                                                width_mul=cfg.WIDTH_MULTIPLIER,
-                                                                group_n=cfg.GROUP_N,
-                                                                act_fn=cfg.ACTIVATION_FUNC,
-                                                                norm_type=cfg.NORMALIZATION_TYPE,
-                                                                training=self.training,
-                                                                idx=0)
+            concated_conv = utils.depthwise_separable_convlayer_dr(name='usconv0',
+                                                                   inputs=concated_conv,
+                                                                   channel_n=cfg.INIT_N_FILTER,
+                                                                   width_mul=cfg.WIDTH_MULTIPLIER,
+                                                                   group_n=cfg.GROUP_N,
+                                                                   drop_rate=self.drop_rate,
+                                                                   act_fn=cfg.ACTIVATION_FUNC,
+                                                                   norm_type=cfg.NORMALIZATION_TYPE,
+                                                                   training=self.training,
+                                                                   idx=0)
 
-            concated_conv = utils.depthwise_separable_convlayer(name='usconv1',
-                                                                inputs=concated_conv,
-                                                                channel_n=cfg.N_CLASS,
-                                                                width_mul=cfg.WIDTH_MULTIPLIER,
-                                                                group_n=cfg.GROUP_N,
-                                                                act_fn=cfg.ACTIVATION_FUNC,
-                                                                norm_type=cfg.NORMALIZATION_TYPE,
-                                                                training=self.training,
-                                                                idx=0)
+            concated_conv = utils.depthwise_separable_convlayer_dr(name='usconv1',
+                                                                   inputs=concated_conv,
+                                                                   channel_n=cfg.N_CLASS,
+                                                                   width_mul=cfg.WIDTH_MULTIPLIER,
+                                                                   group_n=cfg.GROUP_N,
+                                                                   drop_rate=self.drop_rate,
+                                                                   act_fn=cfg.ACTIVATION_FUNC,
+                                                                   norm_type=cfg.NORMALIZATION_TYPE,
+                                                                   training=self.training,
+                                                                   idx=0)
 
             print(concated_conv)
             final_conv = utils.select_upsampling(name='upsampling',

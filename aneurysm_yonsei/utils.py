@@ -1526,6 +1526,53 @@ def xception_depthwise_separable_convlayer(name, inputs, channel_n, last_stride,
 
     return l
 
+def xception_depthwise_separable_convlayer_dr(name, inputs, channel_n, last_stride, drop_rate, act_fn, training, shortcut_conv=False, atrous=False, atrous_rate=2):
+    rate = [atrous_rate, atrous_rate] if atrous else None
+    # shortcut layer
+    shortcut = tf.identity(inputs)
+
+    if shortcut_conv:
+        shortcut = conv2D(name + '_shortcut', shortcut, channel_n, [1,1], [last_stride, last_stride], padding='SAME')
+        shortcut = Normalization(shortcut, 'batch', training, name + '_shortcut_norm')
+        shortcut = activation(name + '_shortcut_act', shortcut, act_fn)
+
+    in_channel = inputs.get_shape().as_list()[-1]
+    width_mul = int(channel_n / in_channel)
+
+    depthwise_filter1 = tf.get_variable(name = name + '_depthwise_filter1',
+                                        shape = [3, 3, in_channel, width_mul],
+                                        dtype = tf.float32,
+                                        initializer = initializer)
+
+    depthwise_filter2 = tf.get_variable(name = name + '_depthwise_filter2',
+                                        shape = [3, 3, channel_n, 1],
+                                        dtype = tf.float32,
+                                        initializer = initializer)
+    # conv layer 1
+    l = tf.nn.depthwise_conv2d(inputs, depthwise_filter1, [1, 1, 1, 1], 'SAME', rate = None, name = name + '_sep1')
+    l = Normalization(l, 'batch', training, name + '_sep_norm1')
+    l = activation(name + '_sep_act1', l, act_fn)
+    l = dropout(name + '_dropout1', l, drop_rate, training)
+
+    # conv layer 2
+    l = tf.nn.depthwise_conv2d(l, depthwise_filter2, [1, 1, 1, 1], 'SAME', rate = None, name = name + '_sep2')
+    l = Normalization(l, 'batch', training, name + '_sep_norm2')
+    l = activation(name + '_sep_act2', l, act_fn)
+    l = dropout(name + '_dropout1', l, drop_rate, training)
+
+    # conv layer 3
+    l = tf.nn.depthwise_conv2d(l, depthwise_filter2, [1, last_stride, last_stride, 1], 'SAME', rate = rate, name = name + '_sep3')
+    l = Normalization(l, 'batch', training, name + '_sep_norm3')
+    l = activation(name + '_sep_act3', l, act_fn)
+    l = dropout(name + '_dropout1', l, drop_rate, training)
+
+    # add layer
+    l = l + shortcut
+
+    return l
+
+
+
 def xception_depthwise_separable_convlayer2(name, inputs, channel_n, last_stride, act_fn, training, batch_size, threshold = 'fuzzy',n_divide = 4,standard=False, scale=1, shortcut_conv=False, atrous=False, atrous_rate=2):
     rate = [atrous_rate, atrous_rate] if atrous else None
     # shortcut layer
