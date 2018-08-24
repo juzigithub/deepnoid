@@ -218,6 +218,7 @@ class Train:
                             pred_mask = utils.masking_rgb(pred_print[1][i], color='red')
                             label_mask = utils.masking_rgb(label_print[1][i], color='green')
                             ori = np.transpose(batch_x, [-1, 0, 1, 2])
+                            ori = ori / np.max(ori)
                             ori = utils.masking_rgb(ori[0][i], color=None)
 
                             result_image = 0.7 * (ori + pred_mask)
