@@ -147,7 +147,7 @@ def save_val_resized_dcm_as_npy(data_path, save_path, filename):
 
         x_img = utils.hm_rescale(x_img, landmark_list, standard_landmark_list)
         ### scale ###
-        x_img = (x_img - np.mean(x_img)) / np.max(x_img)
+        # x_img = (x_img - np.mean(x_img)) / np.max(x_img)
         #############
         x_img = np.expand_dims(x_img, axis=0)
         # y_img = cv2.imread(y, cv2.IMREAD_GRAYSCALE)
