@@ -85,15 +85,17 @@ class Test:
                                  self.model.training: False,
                                  self.model.drop_rate: 0}
 
-                pred = sess.run(self.model.fg_pred, feed_dict=test_feed_dict)
+                pred = sess.run(self.model.pred, feed_dict=test_feed_dict)
 
                 pred_patch_list = utils.reconstruct_from_patches_nd(pred, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 1), cfg.PATCH_STRIDE)
                 ori_patch_list = utils.reconstruct_from_patches_nd(batch_x, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 1), cfg.PATCH_STRIDE)
 
-                num_labels, markers, states, cent = cv2.connectedComponentsWithStats(np.uint8(pred_patch_list * 255))
+                pred_patch_list = np.argmax(pred_patch_list, axis=-1)
+                
+                num_labels, markers, states, cent = cv2.connectedComponentsWithStats(np.uint8(pred_patch_list))
                 print('states', states)
                 for state in states:
-                    pred_patch_list = cv2.rectangle(np.uint8(pred_patch_list * 255), tuple(state[0:2] - 10), tuple(state[0:2] + state[2:4] + 10), (0, 255, 0), 2)
+                    pred_patch_list = cv2.rectangle(np.uint8(pred_patch_list), tuple(state[0:2] - 10), tuple(state[0:2] + state[2:4] + 10), (0, 255, 0), 2)
 
 
 
