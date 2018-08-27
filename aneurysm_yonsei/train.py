@@ -217,7 +217,7 @@ class Train:
                     ### masking results ###
                     if save_yn:
                         # make img
-                        for i in range(0, cfg.BATCH_SIZE, cfg.BATCH_SIZE//2):
+                        for i in range(0, cfg.BATCH_SIZE):
                             pred_mask = utils.masking_rgb(pred_print[1][i], color='red')
                             label_mask = utils.masking_rgb(label_print[1][i], color='green')
                             ori = np.transpose(batch_x, [-1, 0, 1, 2])
