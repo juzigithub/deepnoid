@@ -91,6 +91,7 @@ class Test:
                 ori_patch_list = utils.reconstruct_from_patches_nd(batch_x, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 1), cfg.PATCH_STRIDE)
 
                 pred_patch_list = np.argmax(pred_patch_list, axis=-1)
+                print('pred_patch_list.shape',pred_patch_list.shape)
                 for i in range(256):
                     for j in range(256):
                         if pred_patch_list[i][j] != 0:
