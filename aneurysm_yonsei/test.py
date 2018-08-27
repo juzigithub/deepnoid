@@ -87,8 +87,8 @@ class Test:
 
                 pred = sess.run(self.model.fg_pred, feed_dict=test_feed_dict)
 
-                pred_patch_list = utils.reconstruct_from_patches_nd(pred, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], cfg.N_CLASS), cfg.PATCH_STRIDE)
-                ori_patch_list = utils.reconstruct_from_patches_nd(batch_x, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], cfg.N_CLASS), cfg.PATCH_STRIDE)
+                pred_patch_list = utils.reconstruct_from_patches_nd(pred, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 1), cfg.PATCH_STRIDE)
+                ori_patch_list = utils.reconstruct_from_patches_nd(batch_x, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 1), cfg.PATCH_STRIDE)
 
                 print('pred_patch_list_before',pred_patch_list.shape)
                 print('ori_patch_list',ori_patch_list.shape)
