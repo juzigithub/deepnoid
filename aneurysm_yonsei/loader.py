@@ -132,7 +132,7 @@ def save_val_resized_dcm_as_npy(data_path, save_path, filename):
         print('landmark_saved')
 
 
-    standard_landmark_list = np.load(save_path + 'val_std_landmark.npy')
+    # standard_landmark_list = np.load(save_path + 'val_std_landmark.npy')
     clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
 
     x_path_list = get_val_file_path_list(data_path)
