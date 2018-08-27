@@ -27,7 +27,7 @@ class Test:
             dstime = time.time()
             tl.files.exists_or_mkdir(cfg.SAVE_VALID_DATA_PATH)
 
-            loader.save_resized_dcm_as_npy(cfg.VAL_DATA_PATH, cfg.SAVE_VALID_DATA_PATH, cfg.VAL_FILE_NAME)
+            loader.save_val_resized_dcm_as_npy(cfg.VAL_DATA_PATH, cfg.SAVE_VALID_DATA_PATH, cfg.VAL_FILE_NAME)
 
             detime = time.time()
 
