@@ -70,7 +70,7 @@ class Test:
             print("BEGIN TESTING")
 
             test_X = np.load(cfg.SAVE_VALID_DATA_PATH + cfg.VAL_FILE_NAME)
-
+            print('text_X', test_X.shape)
             img_idx = 0
             # patch_list = []
             for batch in tl.iterate.minibatches(inputs=test_X, targets=test_X,
