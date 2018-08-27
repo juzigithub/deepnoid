@@ -10,18 +10,6 @@ def get_file_path_list(data_path):
    y_path_list = []
    for root, dirs, files in os.walk(data_path, topdown=False):
        for name in files:
-           print('x_name : ', name)
-           print('x_root : ', root)
-           path = os.path.join(root, name)
-           print('x_path : ', path)
-           x_path_list.append(path)
-
-   return x_path_list, y_path_list
-
-def get_val_file_path_list(data_path):
-   x_path_list = []
-   for root, dirs, files in os.walk(data_path, topdown=False):
-       for name in files:
            if root[-len('/dcm') : ] == '/dcm':
                # print('x_name : ', name)
                # print('x_root : ', root)
@@ -33,6 +21,19 @@ def get_val_file_path_list(data_path):
                # print('y_root : ', root)
                path = os.path.join(root, name)
                # print('y_path : ', path)
+               y_path_list.append(path)
+
+   return x_path_list, y_path_list
+
+def get_val_file_path_list(data_path):
+   x_path_list = []
+   for root, dirs, files in os.walk(data_path, topdown=False):
+       for name in files:
+           print('x_name : ', name)
+           print('x_root : ', root)
+           path = os.path.join(root, name)
+           print('x_path : ', path)
+           x_path_list.append(path)
 
    return x_path_list
 
