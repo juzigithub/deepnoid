@@ -72,9 +72,10 @@ class Test:
             test_X = np.load(cfg.SAVE_VALID_DATA_PATH + cfg.VAL_FILE_NAME)
             print('text_X', test_X.shape)
             test_X = test_X.reshape((-1, cfg.PATCH_SIZE, cfg.PATCH_SIZE, 1))
+            test_Y = np.concatenate((test_X, test_X), axis=-1)
             img_idx = 0
             # patch_list = []
-            for batch in tl.iterate.minibatches(inputs=test_X, targets=test_X,
+            for batch in tl.iterate.minibatches(inputs=test_X, targets=test_Y,
                                                 batch_size=cfg.N_PATCH_TO_IMG, shuffle=False):
                 img_idx += 1
                 batch_x, _ = batch
