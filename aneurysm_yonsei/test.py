@@ -91,6 +91,9 @@ class Test:
                 ori_patch_list = utils.reconstruct_from_patches_nd(batch_x, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 1), cfg.PATCH_STRIDE)
 
                 pred_patch_list = np.argmax(pred_patch_list, axis=-1)
+                cv2.imwrite('./img/test/for_nifti/before_pred_{}.jpg'.format(img_idx), utils.masking_rgb(pred_patch_list, color='blue'))
+
+
                 print('pred_patch_list.shape',pred_patch_list.shape)
 
                 num_labels, markers, states, cent = cv2.connectedComponentsWithStats(np.uint8(pred_patch_list))
