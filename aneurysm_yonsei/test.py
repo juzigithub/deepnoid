@@ -100,7 +100,7 @@ class Test:
                 print('pred_patch_list.shape2', pred_patch_list.shape)
 
                 pred_patch_list = utils.masking_rgb(pred_patch_list, color='red')
-                ori = utils.masking_rgb(ori_patch_list, color=None)
+                ori = utils.masking_rgb(ori_patch_list / np.max(ori_patch_list), color=None)
 
                 cv2.imwrite('./img/test/for_nifti/ori_{}.jpg'.format(img_idx), ori)
                 cv2.imwrite('./img/test/for_nifti/pred_{}.jpg'.format(img_idx), pred_patch_list + ori)
