@@ -231,7 +231,8 @@ class Train:
                             cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
                             # cv2.imwrite('./img/epoch{}/mask/batch{}_{}_mask.jpg'.format(epoch+1, print_img_idx, i+1), pred_mask)
                             cv2.imwrite('./img/epoch{}/mask/batch{}_{}_compare.jpg'.format(epoch+1, print_img_idx, i+1), compare_image)
-                            cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
+                            if epoch == 0 :
+                                cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
 
                 one_epoch_mean = np.mean(np.array(one_epoch_result_list), axis=0)
 
