@@ -78,10 +78,10 @@ class Test:
             for batch in tl.iterate.minibatches(inputs=test_X, targets=test_Y,
                                                 batch_size=cfg.N_PATCH_TO_IMG, shuffle=False):
                 img_idx += 1
-                batch_x, _ = batch
+                batch_x, batch_y = batch
 
                 test_feed_dict = {self.model.X: batch_x,
-                                 self.model.Y: batch_x,
+                                 self.model.Y: batch_y,
                                  self.model.training: False,
                                  self.model.drop_rate: 0}
 
@@ -90,6 +90,8 @@ class Test:
                 pred_patch_list = utils.reconstruct_from_patches_nd(pred, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], cfg.N_CLASS), cfg.PATCH_STRIDE)
                 ori_patch_list = utils.reconstruct_from_patches_nd(batch_x, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], cfg.N_CLASS), cfg.PATCH_STRIDE)
 
+                print('pred_patch_list_before',pred_patch_list.shape)
+                print('ori_patch_list',ori_patch_list.shape)
 
                 num_labels, markers, states, cent = cv2.connectedComponentsWithStats(pred_patch_list)
                 for state in states:
