@@ -91,8 +91,9 @@ class Test:
                 ori_patch_list = utils.reconstruct_from_patches_nd(batch_x, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 1), cfg.PATCH_STRIDE)
 
                 num_labels, markers, states, cent = cv2.connectedComponentsWithStats(np.uint8(pred_patch_list * 255))
+                print('states', states)
                 for state in states:
-                    pred_patch_list = cv2.rectangle(np.uint8(pred_patch_list * 255), tuple(state[0:2] - 10), tuple(state[0:2] + state[2:4] + 10), (0, 255, 0), 1)
+                    pred_patch_list = cv2.rectangle(np.uint8(pred_patch_list * 255), tuple(state[0:2] - 10), tuple(state[0:2] + state[2:4] + 10), (0, 255, 0), 2)
 
 
 
