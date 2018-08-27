@@ -86,7 +86,7 @@ class Train:
             total_training_time = 0
 
             whole = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'aneurysm_train.npy')
-            train_ratio = int(len(whole) * 0.8)
+            train_ratio = int(len(whole) * 0.9)
             train_sets = whole[:train_ratio]
             train_sets = train_sets.reshape((-1, cfg.PATCH_SIZE, cfg.PATCH_SIZE, 2))
             train_sets = np.transpose(train_sets, (3, 0, 1, 2))
@@ -100,6 +100,9 @@ class Train:
 
             #######################
             nonzero_idx = np.where(train_Y.sum(axis=(1, 2)) != 0.)
+
+            random_idx = np.random.choice(len(train_Y), (len(nonzero_idx[0])) // 9 , replace=False)
+            nonzero_idx = np.unique(np.append(nonzero_idx, random_idx))
             train_X = train_X[nonzero_idx]
             train_Y = train_Y[nonzero_idx]
             #######################
@@ -207,27 +210,29 @@ class Train:
                     pred_print = np.eye(2)[seg]
                     pred_print = np.transpose(pred_print, [-1, 0, 1, 2])
 
-                    one_batch_result = utils.cal_result2(pred, label, one_hot=False)
+                    one_batch_result = utils.cal_result3(pred, label, one_hot=False)
 
                     one_epoch_result_list.append(one_batch_result)
 
-                    # masking results ###
+                    ### masking results ###
                     if save_yn:
                         # make img
-                        for i in range(0, cfg.BATCH_SIZE, cfg.BATCH_SIZE//2):
+                        for i in range(0, cfg.BATCH_SIZE):
                             pred_mask = utils.masking_rgb(pred_print[1][i], color='red')
                             label_mask = utils.masking_rgb(label_print[1][i], color='green')
                             ori = np.transpose(batch_x, [-1, 0, 1, 2])
+                            ori = ori / np.max(ori)
                             ori = utils.masking_rgb(ori[0][i], color=None)
 
-                            result_image = 0.7 * (ori + pred_mask)
+                            result_image = 1.0 * (ori + pred_mask)
                             compare_image = pred_mask + label_mask
 
 
                             cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
-                            cv2.imwrite('./img/epoch{}/mask/batch{}_{}_mask.jpg'.format(epoch+1, print_img_idx, i+1), pred_mask)
+                            # cv2.imwrite('./img/epoch{}/mask/batch{}_{}_mask.jpg'.format(epoch+1, print_img_idx, i+1), pred_mask)
                             cv2.imwrite('./img/epoch{}/mask/batch{}_{}_compare.jpg'.format(epoch+1, print_img_idx, i+1), compare_image)
-                            cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
+                            if epoch == 0 :
+                                cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
 
                 one_epoch_mean = np.mean(np.array(one_epoch_result_list), axis=0)
 
@@ -238,7 +243,7 @@ class Train:
 
                 Loss = total_cost / train_step
                 print('one_epoch_mean', one_epoch_mean)
-
+                #
                 # print and save result of each epoch
                 self.result = '\nEpoch: {} / {}, Loss : {}, Training time: {:.2f}' \
                               '\nResults >>> ' \
