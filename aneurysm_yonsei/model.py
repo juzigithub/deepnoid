@@ -85,7 +85,7 @@ class Model:
                                                                          training=self.training,
                                                                          shortcut_conv=True,
                                                                          atrous=True,
-                                                                         atrous_rate=2)
+                                                                         atrous_rate=2**i)
                 self.down_conv[i] = tf.identity(inputs)
                 print(inputs)
 
