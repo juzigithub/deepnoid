@@ -96,13 +96,10 @@ class Test:
 
 
 
-                pred_patch_list = utils.masking_rgb(pred_patch_list, color='green')
                 ori = utils.masking_rgb(ori_patch_list, color=None)
-                print('pred_patch_list',pred_patch_list.shape)
-                print('ori_patch_list', ori.shape)
 
                 cv2.imwrite('./img/test/for_nifti/ori_{}.jpg'.format(img_idx), ori)
-                cv2.imwrite('./img/test/for_nifti/pred_{}.jpg'.format(img_idx), pred_patch_list)
+                cv2.imwrite('./img/test/for_nifti/pred_{}.jpg'.format(img_idx), pred_patch_list + ori)
 
                 # utils.save_array_as_nifty_volume(patch_list, './img/test/for_nifti/{}.nii.gz'.format(img_idx))
 
