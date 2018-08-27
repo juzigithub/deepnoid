@@ -37,13 +37,15 @@ class Model:
 
         with tf.variable_scope('down'):
             inputs = self.X
-            channel_n = cfg.INIT_N_FILTER
+            channel_n = cfg.INIT_N_FILTER // 2
             print(inputs)
-            pool_size_h = cfg.PATCH_SIZE // 2
-            pool_size_w = cfg.PATCH_SIZE // 2
+            pool_size_h = cfg.PATCH_SIZE
+            pool_size_w = cfg.PATCH_SIZE
 
             for i in range(2):
-
+                pool_size_h //= 2
+                pool_size_w //= 2
+                channel_n *= 2
 
                 for j in range(cfg.N_LAYERS[0]):
                     inputs = utils.xception_depthwise_separable_convlayer_dr(name='dsconv_{}_{}'.format(str(i), str(j)),
@@ -66,9 +68,6 @@ class Model:
 
                 self.down_conv[i] = tf.identity(inputs)
 
-                channel_n *= 2
-                pool_size_h //= 2
-                pool_size_w //= 2
                 print(inputs)
 
             for i in range(2, cfg.DEPTH):
