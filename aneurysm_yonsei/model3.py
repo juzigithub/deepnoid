@@ -65,10 +65,11 @@ class Model:
                                                    mode=cfg.DOWNSAMPLING_TYPE)
 
                 self.down_conv[i] = tf.identity(inputs)
-                print(inputs)
+
                 channel_n *= 2
                 pool_size_h //= 2
                 pool_size_w //= 2
+                print(inputs)
 
             for i in range(2, cfg.DEPTH):
                 channel_n *= 2
