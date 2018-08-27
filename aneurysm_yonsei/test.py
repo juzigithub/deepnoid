@@ -90,18 +90,19 @@ class Test:
                 pred_patch_list = utils.reconstruct_from_patches_nd(pred, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 1), cfg.PATCH_STRIDE)
                 ori_patch_list = utils.reconstruct_from_patches_nd(batch_x, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 1), cfg.PATCH_STRIDE)
 
-                print('pred_patch_list_before',pred_patch_list.shape)
-                print('ori_patch_list',ori_patch_list.shape)
                 num_labels, markers, states, cent = cv2.connectedComponentsWithStats(np.uint8(pred_patch_list * 255))
                 for state in states:
                     pred_patch_list = cv2.rectangle(np.uint8(pred_patch_list * 255), tuple(state[0:2] - 10), tuple(state[0:2] + state[2:4] + 10), (0, 255, 0), 1)
 
 
-                print('pred_patch_list',pred_patch_list.shape)
 
+                pred_patch_list = utils.masking_rgb(pred_patch_list, color='green')
                 ori = utils.masking_rgb(ori_patch_list, color=None)
+                print('pred_patch_list',pred_patch_list.shape)
                 print('ori_patch_list', ori.shape)
 
+                cv2.imwrite('./img/test/for_nifti/ori_{}.jpg'.format(img_idx), ori)
+                cv2.imwrite('./img/test/for_nifti/pred_{}.jpg'.format(img_idx), pred_patch_list)
 
                 # utils.save_array_as_nifty_volume(patch_list, './img/test/for_nifti/{}.nii.gz'.format(img_idx))
 
