@@ -67,7 +67,9 @@ def save_resized_dcm_as_npy(data_path, save_path, filename):
         landmark_list = utils.cal_hm_landmark(x_img, threshold=cfg.HM_THRESHOLD_TYPE, n_divide=cfg.LANDMARK_DIVIDE, scale=1000)
 
         x_img = utils.hm_rescale(x_img, landmark_list, standard_landmark_list)
-
+        ### scale ###
+        x_img = (x_img - np.mean(x_img)) / np.max(x_img)
+        #############
         x_img = np.expand_dims(x_img, axis=0)
         y_img = cv2.imread(y, cv2.IMREAD_GRAYSCALE)
         y_img = cv2.resize(y_img, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), interpolation=cv2.INTER_AREA)
