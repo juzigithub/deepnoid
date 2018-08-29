@@ -133,7 +133,7 @@ infosource.iterables = [('subject_id', [11,12,13,14,15,16])]
 
 
 # anat_file = opj('freesurfer', '{subject_id}', 'mri/brain.mgz')
-func_file = '/home/mspark/project/aneurysm/nipype{}_out.nii.gz'.format('{subject_id}')
+func_file = '/home/mspark/project/aneurysm/nipype/{}_out.nii.gz'.format('{subject_id}')
 func_orig_file = '/home/mspark/project/aneurysm/nipype/{}.nii.gz'.format('{subject_id}')
 # mean_file = opj(input_dir_1st, 'preprocout', '{subject_id}', 'mean*.nii')
 
