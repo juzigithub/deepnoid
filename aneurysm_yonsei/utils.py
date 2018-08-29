@@ -1833,25 +1833,67 @@ def extract_patches_from_batch(imgs, patch_shape, stride):
 def reconstruct_from_patches_nd(patches, image_shape, stride):
     # modified version of sklearn.feature_extraction.image.reconstruct_from_patches_2d
     # It can make only one image
-    i_h, i_w = image_shape[:2]
-    p_h, p_w = patches.shape[1:3]
-    img = np.zeros(image_shape)
-    img_overlapped = np.zeros(image_shape)
+    assert len(image_shape) < 4, 'image_shape must be [image_height, image_width, image_depth]'
 
-    n_h = i_h - p_h + 1
-    n_w = i_w - p_w + 1
-    for p, (i, j) in zip(patches, product(range(0,n_h,stride), range(0,n_w,stride))):
-        if patches.ndim == 3:
-            img[i:i + p_h, j:j + p_w] += p
-            img_overlapped[i:i + p_h, j:j + p_w] += 1
-        elif patches.ndim == 4:
-            img[i:i + p_h, j:j + p_w, :] += p
-            img_overlapped[i:i + p_h, j:j + p_w, :] += 1
+    if len(stride) == 1 :
+        i_h, i_w = image_shape[:2]
+        p_h, p_w = patches.shape[1:3]
+        img = np.zeros(image_shape)
+        img_overlapped = np.zeros(image_shape)
+
+        n_h = i_h - p_h + 1
+        n_w = i_w - p_w + 1
+        for p, (i, j) in zip(patches, product(range(0,n_h,stride), range(0,n_w,stride))):
+            if patches.ndim == 3:
+                img[i:i + p_h, j:j + p_w] += p
+                img_overlapped[i:i + p_h, j:j + p_w] += 1
+            elif patches.ndim == 4:
+                img[i:i + p_h, j:j + p_w, :] += p
+                img_overlapped[i:i + p_h, j:j + p_w, :] += 1
+
+    else :
+        assert len(stride) == 4, 'stride.shape must be stride or [1, x_stride, y_stride, z_stride] '
+        i_h, i_w, i_d = image_shape
+        p_h, p_w, p_d = patches.shape[1:]
+        img = np.zeros(image_shape)
+        img_overlapped = np.zeros(image_shape)
+
+        n_h = i_h - p_h + 1
+        n_w = i_w - p_w + 1
+        n_d = i_d - p_d + 1
+
+        for p, (i, j, k) in zip(patches, product(range(0,n_h,stride[1]), range(0,n_w,stride[2]), range(0,n_d,stride[3]))):
+            img[i:i + p_h, j:j + p_w, k:k + p_d] += p
+            img_overlapped[i:i + p_h, j:j + p_w, k:k + p_d] += 1
 
 
-    img /= img_overlapped
+        img /= img_overlapped
 
     return img
+
+
+# def reconstruct_from_patches_nd(patches, image_shape, stride):
+#     # modified version of sklearn.feature_extraction.image.reconstruct_from_patches_2d
+#     # It can make only one image
+#     i_h, i_w = image_shape[:2]
+#     p_h, p_w = patches.shape[1:3]
+#     img = np.zeros(image_shape)
+#     img_overlapped = np.zeros(image_shape)
+#
+#     n_h = i_h - p_h + 1
+#     n_w = i_w - p_w + 1
+#     for p, (i, j) in zip(patches, product(range(0,n_h,stride), range(0,n_w,stride))):
+#         if patches.ndim == 3:
+#             img[i:i + p_h, j:j + p_w] += p
+#             img_overlapped[i:i + p_h, j:j + p_w] += 1
+#         elif patches.ndim == 4:
+#             img[i:i + p_h, j:j + p_w, :] += p
+#             img_overlapped[i:i + p_h, j:j + p_w, :] += 1
+#
+#
+#     img /= img_overlapped
+#
+#     return img
 
 def discard_patch_idx(input, cut_line):
     n_non_zero = np.count_nonzero(input, axis=tuple(i for i in range(input.ndim) if not i == 0)) / np.prod(input.shape[1:])
