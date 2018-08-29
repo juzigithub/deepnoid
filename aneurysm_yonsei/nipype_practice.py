@@ -143,7 +143,7 @@ func_orig_file = '/home/mspark/project/aneurysm/nipype/{}.nii.gz'.format('{subje
 #              'func_orig': func_orig_file,
 #              'mean': mean_file,
 #              }
-templates = {
+templates = {'anat' : '/home/mspark/project/aneurysm/nipype/11.nii.gz',
 
              'func_orig': func_orig_file,
 
@@ -176,8 +176,8 @@ datasink.inputs.substitutions = substitutions
 # Connect SelectFiles and DataSink to the workflow
 normflow.connect([(infosource, selectfiles, [('subject_id', 'subject_id')]),
                   (selectfiles, apply2con, [('func', 'input_image')]),
-                  (selectfiles, apply2mean, [('mean', 'moving_image')]),
-                  # (selectfiles, antsreg, [('anat', 'moving_image')]),
+                  (selectfiles, apply2mean, [('mean', 'input_image')]),
+                  (selectfiles, antsreg, [('anat', 'moving_image')]),
                   (antsreg, datasink, [('warped_image',
                                         'antsreg.@warped_image'),
                                        ('inverse_warped_image',
