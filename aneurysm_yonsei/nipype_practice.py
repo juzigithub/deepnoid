@@ -161,7 +161,7 @@ selectfiles = Node(SelectFiles(templates,
 #                          container=output_dir),
 #                 name="datasink")
 
-datasink = Node(DataSink(base_directory='/home/mspark/project/aneurysm/nipype',
+datasink = Node(DataSink(base_directory='/home/mspark/project/aneurysm/nipype/',
                          container='/home/mspark/project/aneurysm/nipypeout/'),
                 name="datasink")
 
