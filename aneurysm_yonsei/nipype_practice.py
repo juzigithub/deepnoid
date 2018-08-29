@@ -176,7 +176,7 @@ datasink.inputs.substitutions = substitutions
 # Connect SelectFiles and DataSink to the workflow
 normflow.connect([(infosource, selectfiles, [('subject_id', 'subject_id')]),
                   (selectfiles, apply2con, [('func', 'input_image')]),
-                  (selectfiles, apply2mean, [('mean', 'input_image')]),
+                  (selectfiles, apply2mean, [('mean', 'moving_image')]),
                   # (selectfiles, antsreg, [('anat', 'moving_image')]),
                   (antsreg, datasink, [('warped_image',
                                         'antsreg.@warped_image'),
