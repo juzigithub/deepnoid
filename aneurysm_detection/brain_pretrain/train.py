@@ -47,6 +47,7 @@ class Train:
         with open('.{}config.py'.format(cfg.PATH_SLASH), 'rt') as f:
             tl.files.exists_or_mkdir(self.model_path)
             tl.files.exists_or_mkdir(self.ckpt_path)
+            tl.files.exists_or_mkdir(self.img_path)
             self.result = f.read()
             utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 
@@ -174,8 +175,8 @@ class Train:
                     logit = np.reshape(logit, (-1, 32, 32, 3 ))
 
 
-                    cv2.imwrite('d:\\{}_{}_original.png'.format(epoch, print_img_idx), batch_x[0])
-                    cv2.imwrite('d:\\{}_{}_reconstruction.png'.format(epoch, print_img_idx), logit[0])
+                    cv2.imwrite(self.img_path + '/{}_{}_original.png'.format(epoch, print_img_idx), batch_x[0]/np.max(batch_x[0]))
+                    cv2.imwrite(self.img_path + '/{}_{}_reconstruction.png'.format(epoch, print_img_idx), logit[0]/np.max(logit[0]))
 
                     # label_print = np.transpose(label, [-1, 0, 1, 2])
                     #
