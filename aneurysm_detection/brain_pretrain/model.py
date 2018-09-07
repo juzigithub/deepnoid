@@ -37,6 +37,7 @@ class Model:
                                       strides=[2, 2],
                                       padding='same')
                     channel_n *= 2
+                print(l)
         return l
 
     def reconstructor(self, inputs, output_channel, n_layer):
@@ -67,6 +68,7 @@ class Model:
                                                  pool_size_h=h,
                                                  pool_size_w=w,
                                                  mode=cfg.UPSAMPLING_TYPE)
+                print(l)
 
             l = utils.residual_block_dw_dr(name='outconv',
                                            inputs=l,
@@ -78,6 +80,7 @@ class Model:
                                            norm_type=cfg.NORMALIZATION_TYPE,
                                            training=self.training,
                                            idx=0)
+            print(l)
         return l
 
 
