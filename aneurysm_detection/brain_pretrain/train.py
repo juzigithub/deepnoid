@@ -174,11 +174,11 @@ class Train:
                     loss, logit = sess.run([self.model.loss, self.model.logit], feed_dict=val_feed_dict)
 
                     print('loss', loss)
-                    logit = np.reshape(logit, (-1, 32, 32, 3 ))
-
-
-                    cv2.imwrite(self.img_path + '/{}_{}_original.png'.format(epoch, print_img_idx), batch_x[0]/np.max(batch_x[0]))
-                    cv2.imwrite(self.img_path + '/{}_{}_reconstruction.png'.format(epoch, print_img_idx), logit[0]/np.max(logit[0]))
+                    # logit = np.reshape(logit, (-1, 32, 32, 3))
+                    #
+                    #
+                    # cv2.imwrite(self.img_path + '/{}_{}_original.png'.format(epoch, print_img_idx), batch_x[0]/np.max(batch_x[0]))
+                    # cv2.imwrite(self.img_path + '/{}_{}_reconstruction.png'.format(epoch, print_img_idx), logit[0]/np.max(logit[0]))
 
                     # label_print = np.transpose(label, [-1, 0, 1, 2])
                     #
