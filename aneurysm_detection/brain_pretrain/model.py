@@ -10,12 +10,12 @@ class Model:
 
         self.logit, self.mean, self.gamma = self.model()
         # tf.reduce_sum(tf.squared_difference(unreshaped, Y_flat), 1)
-        self.reconstruction_loss = tf.losses.mean_squared_error(utils.flatten('X_flatten', self.X), self.logit)
-        # self.reconstruction_loss = tf.reduce_sum(tf.squared_difference(self.logit, utils.flatten('X_flatten', self.X)))
-        self.latent_loss = 0.5 * tf.reduce_sum(tf.exp(self.gamma) + tf.square(self.mean) -1 - self.gamma)
-
+        # self.reconstruction_loss = tf.losses.mean_squared_error(utils.flatten('X_flatten', self.X), self.logit)
+        self.reconstruction_loss = tf.reduce_sum(tf.squared_difference(self.logit, utils.flatten('X_flatten', self.X)), 1)
+        self.latent_loss = 0.5 * tf.reduce_sum(tf.exp(self.gamma) + tf.square(self.mean) - 1 - self.gamma, 1)
         # self.reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-        self.loss = self.reconstruction_loss + self.latent_loss
+
+        self.loss = tf.reduce_mean(self.reconstruction_loss + self.latent_loss)
 
     def feature_extractor(self, inputs, channel_n, n_layer):
         with tf.variable_scope('pretrain'):
