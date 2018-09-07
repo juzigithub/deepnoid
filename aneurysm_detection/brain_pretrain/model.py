@@ -6,7 +6,7 @@ class Model:
     def __init__(self):
         self.drop_rate = tf.placeholder(tf.float32, name='drop_rate')
         self.training = tf.placeholder(tf.bool, name='training')
-        self.X = tf.placeholder(tf.float32, [None, None, None, 3], name='X')
+        self.X = tf.placeholder(tf.float32, [None, 32, 32, 3], name='X')
 
         self.logit, self.mean, self.gamma = self.model()
         # tf.reduce_sum(tf.squared_difference(unreshaped, Y_flat), 1)
