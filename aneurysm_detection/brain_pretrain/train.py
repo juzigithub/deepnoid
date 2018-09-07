@@ -90,6 +90,8 @@ class Train:
             total_training_time = 0
 
             tot_data, tot_label = cifar10.load_training_data()
+
+            tot_data = (tot_data - np.mean(tot_data)) / np.std(tot_data)
             train_X = tot_data[:45000]
             train_Y = tot_label[:45000]
             val_X = tot_data[45000:]
