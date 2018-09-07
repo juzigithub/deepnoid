@@ -60,7 +60,7 @@ class Model:
                     h *= 2
                     w *= 2
                     channel_n //= 2
-                    l = utils.select_upsampling(name='upsampling',
+                    l = utils.select_upsampling(name='upsampling_{}'.format(idx),
                                                  up_conv=l,
                                                  up_pool=[],
                                                  channel_n=channel_n,
