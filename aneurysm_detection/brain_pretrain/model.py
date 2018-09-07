@@ -42,7 +42,9 @@ class Model:
     def reconstructor(self, inputs, output_channel, n_layer):
         with tf.variable_scope('non_pretrain'):
             l = inputs
-            _, h, w, channel_n = tf.shape(l)
+            # _, h, w, channel_n = tf.shape(l)
+            _, h, w, channel_n = l.get_shape().as_list()
+
             for idx in range(n_layer):
                 l = utils.residual_block_dw_dr(name='upconv_{}'.format(idx),
                                                inputs=l,
