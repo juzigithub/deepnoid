@@ -13,8 +13,8 @@ class Model:
         self.reconstruction_loss = tf.reduce_sum(tf.squared_difference(self.logit, utils.flatten('X_flatten', self.X)), 1)
         self.latent_loss = 0.5 * tf.reduce_sum(tf.exp(self.gamma) + tf.square(self.mean) -1 - self.gamma)
 
-        self.reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-        self.loss = tf.add_n([self.reconstruction_loss + self.latent_loss] + self.reg_loss)
+        # self.reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
+        self.loss = self.reconstruction_loss + self.latent_loss
 
     def feature_extractor(self, inputs, channel_n, n_layer):
         with tf.variable_scope('pretrain'):
