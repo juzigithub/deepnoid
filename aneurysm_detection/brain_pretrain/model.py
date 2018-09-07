@@ -86,6 +86,7 @@ class Model:
         inputs = self.feature_extractor(inputs, channel_n, cfg.PRETRAIN_N_LAYERS)
 
         inputs_shape = tf.shape(inputs)
+        print(inputs_shape)
         reshaped_dim = [-1, inputs_shape[1], inputs_shape[2], inputs_shape[3]]
 
         inputs_flatten = utils.flatten('flatten1', inputs)
