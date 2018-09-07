@@ -70,16 +70,9 @@ class Model:
                                                  mode=cfg.UPSAMPLING_TYPE)
                 print(l)
 
-            l = utils.residual_block_dw_dr(name='outconv',
-                                           inputs=l,
-                                           channel_n=output_channel,
-                                           width_mul=1.0,
-                                           group_n=cfg.GROUP_N,
-                                           drop_rate=self.drop_rate,
-                                           act_fn=cfg.ACTIVATION_FUNC,
-                                           norm_type=cfg.NORMALIZATION_TYPE,
-                                           training=self.training,
-                                           idx=0)
+            l = utils.conv2D('outconv', l, 3, [1, 1], [1, 1], 'SAME')
+            l = utils.Normalization(l, cfg.NORMALIZATION_TYPE, self.training, 'outconv_norm', G=cfg.GROUP_N)
+            l = utils.activation('outconv_act', l, cfg.ACTIVATION_FUNC)
             print(l)
         return l
 
