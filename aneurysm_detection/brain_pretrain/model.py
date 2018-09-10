@@ -9,10 +9,17 @@ class Model:
         self.X = tf.placeholder(tf.float32, [None, 32, 32, 3], name='X')
 
         self.logit, self.mean, self.gamma = self.model()
+
         # tf.reduce_sum(tf.squared_difference(unreshaped, Y_flat), 1)
         # self.reconstruction_loss = tf.losses.mean_squared_error(utils.flatten('X_flatten', self.X), self.logit)
-        self.reconstruction_loss = tf.reduce_sum(tf.squared_difference(self.logit, utils.flatten('X_flatten', self.X)), 1)
+
+        self.reconstruction_loss = tf.reduce_sum(tf.squared_difference(tf.sigmoid(self.logit), utils.flatten('X_flatten', tf.sigmoid(self.X))), 1)
         self.latent_loss = 0.5 * tf.reduce_sum(tf.exp(self.gamma) + tf.square(self.mean) - 1 - self.gamma, 1)
+
+        # self.reconstruction_loss = tf.nn.sigmoid_cross_entropy_with_logits
+
+
+
         # self.reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
 
         self.loss = tf.reduce_mean(self.reconstruction_loss + self.latent_loss)
@@ -71,7 +78,7 @@ class Model:
                                                  mode=cfg.UPSAMPLING_TYPE)
                 print(l)
 
-            l = utils.conv2D('outconv', l, 3, [1, 1], [1, 1], 'SAME')
+            l = utils.conv2D('outconv', l, output_channel, [1, 1], [1, 1], 'SAME')
             l = utils.Normalization(l, cfg.NORMALIZATION_TYPE, self.training, 'outconv_norm', G=cfg.GROUP_N)
             l = utils.activation('outconv_act', l, cfg.ACTIVATION_FUNC)
             print(l)
