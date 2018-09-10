@@ -91,7 +91,13 @@ class Train:
 
             tot_data, tot_label = cifar10.load_training_data()
 
-            tot_data = (tot_data - np.mean(tot_data)) / np.std(tot_data)
+            
+            tot_data_shape = np.shape(tot_data)
+            tot_data = tot_data.reshape(len(tot_data), -1)
+            tot_data = (tot_data - np.mean(tot_data, axis=1)) / np.std(tot_data, axis=1)
+            tot_data = tot_data.reshape(tot_data_shape)
+
+
             train_X = tot_data[:45000]
             train_Y = tot_label[:45000]
             val_X = tot_data[45000:]
