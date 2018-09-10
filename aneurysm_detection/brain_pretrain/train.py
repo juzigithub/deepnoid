@@ -9,7 +9,7 @@ import cv2
 import config as cfg
 import performance_eval as pe
 from model import Model        # choose model
-
+from sklearn.preprocessing import scale
 
 # tot_data, tot_label = cifar10.load_training_data()
 
@@ -91,10 +91,11 @@ class Train:
 
             tot_data, tot_label = cifar10.load_training_data()
 
-            
+
             tot_data_shape = np.shape(tot_data)
             tot_data = tot_data.reshape(len(tot_data), -1)
-            tot_data = (tot_data - np.mean(tot_data, axis=1)) / np.std(tot_data, axis=1)
+            tot_data = scale(tot_data)
+            # tot_data = (tot_data - np.mean(tot_data, axis=1)) / np.std(tot_data, axis=1)
             tot_data = tot_data.reshape(tot_data_shape)
 
 
