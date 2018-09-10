@@ -178,9 +178,10 @@ class Train:
                                      self.model.training: False,
                                      self.model.drop_rate: 0}
 
-                    loss, logit = sess.run([self.model.loss, self.model.logit], feed_dict=val_feed_dict)
+                    loss, logit, re_loss, la_loss = sess.run([self.model.loss, self.model.logit, self.model.restruction_loss, self.model.latent_loss], feed_dict=val_feed_dict)
 
                     print('loss', loss)
+                    print(re_loss, la_loss)
                     # logit = np.reshape(logit, (-1, 32, 32, 3))
                     #
                     #
