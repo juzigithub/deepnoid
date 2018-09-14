@@ -5,7 +5,7 @@ import os
 # path = 'd:\\prac\\*\\*\\*\\'
 path = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/label/*/*/*/'
 data_list = glob.glob(path + '*.png')
-print(data_list)
+# print(data_list)
 
 for data in data_list:
     path = os.path.split(data)[0]
@@ -36,3 +36,4 @@ for data in data_list:
             for label in label_list:
                 f.write('{} {} {} {} {}\n'.format(1, str(label[0]), str(label[1]), str(label[2]), str(label[3])))
         cv2.imwrite(path + 'detection_' + fn + '.png', img)
+        print(path + fn + ' saved')
