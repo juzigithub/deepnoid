@@ -13,7 +13,9 @@ class Model:
         # tf.reduce_sum(tf.squared_difference(unreshaped, Y_flat), 1)
         # self.reconstruction_loss = tf.losses.mean_squared_error(utils.flatten('X_flatten', self.X), self.logit)
 
-        self.reconstruction_loss = tf.reduce_sum(tf.squared_difference(tf.sigmoid(self.logit), utils.flatten('X_flatten', tf.sigmoid(self.X))), 1)
+        self.reconstruction_loss = tf.reduce_sum(tf.squared_difference(utils.flatten('logit_flatten', tf.sigmoid(self.logit)),
+                                                                       utils.flatten('X_flatten', tf.sigmoid(self.X))),
+                                                 1)
         self.latent_loss = 0.5 * tf.reduce_sum(tf.exp(self.gamma) + tf.square(self.mean) - 1 - self.gamma, 1)
 
         # self.reconstruction_loss = tf.nn.sigmoid_cross_entropy_with_logits
@@ -108,11 +110,11 @@ class Model:
         inputs = tf.layers.dense(inputs, inputs_shape[1]*inputs_shape[2]*inputs_shape[3], activation=tf.nn.elu)
         inputs = tf.reshape(inputs, reshaped_dim)
 
-        inputs = self.reconstructor(inputs, 3, cfg.PRETRAIN_N_LAYERS)
+        outputs = self.reconstructor(inputs, 3, cfg.PRETRAIN_N_LAYERS)
 
 
-        inputs = utils.flatten('flatten2', inputs)
-        outputs = tf.sigmoid(inputs)
+        # outputs = utils.flatten('flatten2', inputs)
+        # outputs = tf.sigmoid(inputs)
 
         # with tf.variable_scope('new'):
         #     outputs = utils.fully_connected('fc3', outputs, 10)
