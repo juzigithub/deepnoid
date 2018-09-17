@@ -97,22 +97,22 @@ class Model:
         print(inputs_shape)
         reshaped_dim = [-1, inputs_shape[1], inputs_shape[2], inputs_shape[3]]
 
-        inputs_flatten = utils.flatten('flatten1', inputs)
+        inputs = utils.flatten('flatten1', inputs)
 
-        mean = utils.fully_connected('mean', inputs_flatten, 30)
-        gamma = utils.fully_connected('gamma', inputs_flatten, 30)
+        mean = utils.fully_connected('mean', inputs, 30)
+        gamma = utils.fully_connected('gamma', inputs, 30)
         noise = tf.random_normal(tf.shape(gamma), dtype=tf.float32)
-        inputs_flatten = mean + tf.exp(0.5 * gamma) * noise
+        inputs = mean + tf.exp(0.5 * gamma) * noise
 
-        inputs_flatten = tf.layers.dense(inputs_flatten, inputs_shape[1]*inputs_shape[2]*inputs_shape[3]/2, activation=tf.nn.elu)
-        inputs_flatten = tf.layers.dense(inputs_flatten, inputs_shape[1]*inputs_shape[2]*inputs_shape[3], activation=tf.nn.elu)
-        inputs = tf.reshape(inputs_flatten, reshaped_dim)
+        inputs = tf.layers.dense(inputs, inputs_shape[1]*inputs_shape[2]*inputs_shape[3]/2, activation=tf.nn.elu)
+        inputs = tf.layers.dense(inputs, inputs_shape[1]*inputs_shape[2]*inputs_shape[3], activation=tf.nn.elu)
+        inputs = tf.reshape(inputs, reshaped_dim)
 
         inputs = self.reconstructor(inputs, 3, cfg.PRETRAIN_N_LAYERS)
 
 
-        inputs_flatten = utils.flatten('flatten2', inputs)
-        outputs = tf.sigmoid(inputs_flatten)
+        inputs = utils.flatten('flatten2', inputs)
+        outputs = tf.sigmoid(inputs)
 
         # with tf.variable_scope('new'):
         #     outputs = utils.fully_connected('fc3', outputs, 10)
