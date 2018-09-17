@@ -90,178 +90,179 @@ class Train:
             total_training_time = 0
 
             # tot_data, tot_label = cifar10.load_training_data()
-            tot_data = np.load(os.path.join(cfg.NPZ_PATH, 'feature_extractor_pretrain_input_ori_{}.npz'.format(cfg.IMG_SIZE[0])))['all']
-            len_tot_data = np.shape(tot_data)[0]
+
             # tot_data_shape = np.shape(tot_data)
             # tot_data = tot_data.reshape(len(tot_data), -1)
             # tot_data = scale(tot_data)
             # tot_data = (tot_data - np.mean(tot_data, axis=1)) / np.std(tot_data, axis=1)
             # tot_data = tot_data.reshape(tot_data_shape)
-
-            train_X = tot_data[:int(len_tot_data*0.8)]
-            val_X = tot_data[int(len_tot_data*0.8):]
-            del tot_data
-
             drop_rate = cfg.INIT_DROPOUT_RATE
 
             for epoch in range(cfg.EPOCHS):
+                for i in range(5):
+                    tot_data = np.load(os.path.join(cfg.NPZ_PATH, 'feature_extractor_pretrain_input_ori_{}_{}.npz'.format(cfg.IMG_SIZE[0], i)))['chunk{}'.format(i)]
+                    len_tot_data = np.shape(tot_data)[0]
+                    train_X = tot_data[:int(len_tot_data * 0.8)]
+                    val_X = tot_data[int(len_tot_data * 0.8):]
+                    del tot_data
 
-                # dynamic dropout rate
-                drop_rate *= cfg.DROPOUT_INCREASE_RATE
+                    # dynamic dropout rate
 
-                train_step = train_X.shape[0] // cfg.BATCH_SIZE
+                    drop_rate *= cfg.DROPOUT_INCREASE_RATE
 
-                # epoch_start = time.time()
-                # create variables to save results
-                total_cost, step = 0, 0
+                    train_step = train_X.shape[0] // cfg.BATCH_SIZE
 
-                # save image and model at the first epoch, final epoch and multiples of SAVING_EPOCH
-                save_yn = (epoch == 0 or epoch + 1 == cfg.EPOCHS or epoch % cfg.SAVING_EPOCH == 0)
+                    # epoch_start = time.time()
+                    # create variables to save results
+                    total_cost, step = 0, 0
 
-                if save_yn:
-                    # Make folder in the saving path for qualified epochs
-                    self._make_path(epoch)
+                    # save image and model at the first epoch, final epoch and multiples of SAVING_EPOCH
+                    save_yn = (epoch == 0 or epoch + 1 == cfg.EPOCHS or epoch % cfg.SAVING_EPOCH == 0)
 
-                # train
-                for batch in tl.iterate.minibatches(inputs=train_X, targets=train_X,
-                                                    batch_size=cfg.BATCH_SIZE, shuffle=True):
-                    batch_x, _ = batch
-                    batch_x = np.expand_dims(batch_x, axis=-1)
-                    batch_x = np.concatenate((0.8 * batch_x, batch_x, 1.2 * batch_x), axis=-1)
-                    # # make_one_hot
-                    # key = np.array([0, 1])
-                    # _, index = np.unique(batch_y, return_inverse=True)
-                    # seg = key[index].reshape(batch_y.shape)
-                    # batch_y = np.eye(2)[seg]
+                    if save_yn:
+                        # Make folder in the saving path for qualified epochs
+                        self._make_path(epoch)
 
-                    tr_feed_dict = {self.model.X: batch_x,
-                                    self.model.training: True,
-                                    self.model.drop_rate: drop_rate}
+                    # train
+                    for batch in tl.iterate.minibatches(inputs=train_X, targets=train_X,
+                                                        batch_size=cfg.BATCH_SIZE, shuffle=True):
+                        batch_x, _ = batch
+                        batch_x = np.expand_dims(batch_x, axis=-1)
+                        batch_x = np.concatenate((0.8 * batch_x, batch_x, 1.2 * batch_x), axis=-1)
+                        # # make_one_hot
+                        # key = np.array([0, 1])
+                        # _, index = np.unique(batch_y, return_inverse=True)
+                        # seg = key[index].reshape(batch_y.shape)
+                        # batch_y = np.eye(2)[seg]
 
-                    cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
+                        tr_feed_dict = {self.model.X: batch_x,
+                                        self.model.training: True,
+                                        self.model.drop_rate: drop_rate}
 
-                    print(cost)
+                        cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
 
-                    # Update Loss Ratio for next step
+                        print(cost)
 
-                    total_cost += cost
-                    step += 1
+                        # Update Loss Ratio for next step
 
-                    # print out current epoch, step and batch loss value
-                    self.result = 'Epoch: {} / {}, ' \
-                                  'Step: {} / {}, Batch loss: {}'.format(epoch + 1,
-                                                                            cfg.EPOCHS,
-                                                                            step,
-                                                                            train_step,
-                                                                            cost)
+                        total_cost += cost
+                        step += 1
 
-                    print(self.result)
+                        # print out current epoch, step and batch loss value
+                        self.result = 'Epoch: {} / {}, ' \
+                                      'Step: {} / {}, Batch loss: {}'.format(epoch + 1,
+                                                                                cfg.EPOCHS,
+                                                                                step,
+                                                                                train_step,
+                                                                                cost)
 
-                # one_epoch_result_list = []
+                        print(self.result)
 
-                print_img_idx = 0
+                    # one_epoch_result_list = []
 
-                # validation test
-                for batch in tl.iterate.minibatches(inputs=val_X, targets=val_X,
-                                                    batch_size=cfg.BATCH_SIZE, shuffle=False):
-                    print_img_idx += 1
-                    batch_x, _ = batch
-                    batch_x = np.expand_dims(batch_x, axis=-1)
-                    batch_x = np.concatenate((0.8 * batch_x, batch_x, 1.2 * batch_x), axis=-1)
+                    print_img_idx = 0
 
-                    # # make_one_hot
-                    # key = np.array([0, 1])
-                    # _, index = np.unique(batch_y, return_inverse=True)
-                    # seg = key[index].reshape(batch_y.shape)
-                    # batch_y = np.eye(2)[seg]
+                    # validation test
+                    for batch in tl.iterate.minibatches(inputs=val_X, targets=val_X,
+                                                        batch_size=cfg.BATCH_SIZE, shuffle=False):
+                        print_img_idx += 1
+                        batch_x, _ = batch
+                        batch_x = np.expand_dims(batch_x, axis=-1)
+                        batch_x = np.concatenate((0.8 * batch_x, batch_x, 1.2 * batch_x), axis=-1)
 
-                    val_feed_dict = {self.model.X: batch_x,
-                                     self.model.training: False,
-                                     self.model.drop_rate: 0}
+                        # # make_one_hot
+                        # key = np.array([0, 1])
+                        # _, index = np.unique(batch_y, return_inverse=True)
+                        # seg = key[index].reshape(batch_y.shape)
+                        # batch_y = np.eye(2)[seg]
 
-                    loss, logit = sess.run([self.model.loss, self.model.logit], feed_dict=val_feed_dict)
+                        val_feed_dict = {self.model.X: batch_x,
+                                         self.model.training: False,
+                                         self.model.drop_rate: 0}
 
-                    print('loss', loss)
+                        loss, logit = sess.run([self.model.loss, self.model.logit], feed_dict=val_feed_dict)
 
-
-                    if epoch % 5 == 0 :
-                        logit = np.reshape(logit, (-1, cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 3))
+                        print('loss', loss)
 
 
-                        cv2.imwrite(self.img_path + '/{}_{}_original.png'.format(epoch, print_img_idx), batch_x[0,:,:,1])
-                        cv2.imwrite(self.img_path + '/{}_{}_reconstruction.png'.format(epoch, print_img_idx), logit[0,:,:,1])
+                        if epoch % 5 == 0 :
+                            logit = np.reshape(logit, (-1, cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 3))
 
-                    # label_print = np.transpose(label, [-1, 0, 1, 2])
+
+                            cv2.imwrite(self.img_path + '/{}_{}_{}_original.png'.format(epoch, i, print_img_idx), batch_x[0,:,:,1])
+                            cv2.imwrite(self.img_path + '/{}_{}_{}_reconstruction.png'.format(epoch, i, print_img_idx), logit[0,:,:,1])
+
+                        # label_print = np.transpose(label, [-1, 0, 1, 2])
+                        #
+                        # pred = np.argmax(pred, axis=-1)
+                        # label = np.argmax(label, axis=-1)
+
+                        # change label value : [bg, fg] = [0, 1, 2, 4] -> [0, 1, 2, 3]
+
+                        ###############################################
+                    #     _, index = np.unique(pred, return_inverse=True)
+                    #     seg = key[index].reshape(pred.shape)
+                    #     pred_print = np.eye(2)[seg]
+                    #     pred_print = np.transpose(pred_print, [-1, 0, 1, 2])
                     #
-                    # pred = np.argmax(pred, axis=-1)
-                    # label = np.argmax(label, axis=-1)
+                    #     one_batch_result = utils.cal_result3(pred, label, one_hot=False)
+                    #
+                    #     one_epoch_result_list.append(one_batch_result)
+                    #
+                    #     ### masking results ###
+                    #     if save_yn:
+                    #         # make img
+                    #         for i in range(0, cfg.BATCH_SIZE):
+                    #             pred_mask = utils.masking_rgb(pred_print[1][i], color='red')
+                    #             label_mask = utils.masking_rgb(label_print[1][i], color='green')
+                    #             ori = np.transpose(batch_x, [-1, 0, 1, 2])
+                    #             ori = ori / np.max(ori)
+                    #             ori = utils.masking_rgb(ori[0][i], color=None)
+                    #
+                    #             result_image = 1.0 * (ori + pred_mask)
+                    #             compare_image = pred_mask + label_mask
+                    #
+                    #
+                    #             cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
+                    #             # cv2.imwrite('./img/epoch{}/mask/batch{}_{}_mask.jpg'.format(epoch+1, print_img_idx, i+1), pred_mask)
+                    #             cv2.imwrite('./img/epoch{}/mask/batch{}_{}_compare.jpg'.format(epoch+1, print_img_idx, i+1), compare_image)
+                    #             if epoch == 0 :
+                    #                 cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
+                    #
+                    # one_epoch_mean = np.mean(np.array(one_epoch_result_list), axis=0)
+                    #
+                    # epoch_end = time.time()
+                    # training_time = epoch_end - epoch_start
+                    # split_training_time += training_time
+                    # total_training_time += training_time
+                    #
+                    # Loss = total_cost / train_step
+                    # print('one_epoch_mean', one_epoch_mean)
+                    # #
+                    # # print and save result of each epoch
+                    # self.result = '\nEpoch: {} / {}, Loss : {}, Training time: {:.2f}' \
+                    #               '\nResults >>> ' \
+                    #               '\n\t Accuracy : {:.4f}, Sensitivity : {:.4f}, Specificity : {:.4f}' \
+                    #               '\n\t mean_IoU : {:.4f}, Dice_score : {:.4f}, Hausdorff : {:.4f}'.format((epoch + 1),
+                    #                                                                               cfg.EPOCHS,
+                    #                                                                               Loss,
+                    #                                                                               training_time,
+                    #                                                                               *one_epoch_mean)
+                    # print(self.result)
+                    # utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
+                    #
+                    # result_dict = {self.p_eval.acc: one_epoch_mean[0],
+                    #                self.p_eval.sens: one_epoch_mean[1],
+                    #                self.p_eval.spec: one_epoch_mean[2],
+                    #                self.p_eval.miou: one_epoch_mean[3],
+                    #                self.p_eval.dice: one_epoch_mean[4],
+                    #                self.p_eval.hdorff: one_epoch_mean[5]}
 
-                    # change label value : [bg, fg] = [0, 1, 2, 4] -> [0, 1, 2, 3]
+                    # TB
+                    # summary = sess.run(self.merged_summary, feed_dict=result_dict)
+                    # self.writer.add_summary(summary, global_step=epoch)
 
-                    ###############################################
-                #     _, index = np.unique(pred, return_inverse=True)
-                #     seg = key[index].reshape(pred.shape)
-                #     pred_print = np.eye(2)[seg]
-                #     pred_print = np.transpose(pred_print, [-1, 0, 1, 2])
-                #
-                #     one_batch_result = utils.cal_result3(pred, label, one_hot=False)
-                #
-                #     one_epoch_result_list.append(one_batch_result)
-                #
-                #     ### masking results ###
-                #     if save_yn:
-                #         # make img
-                #         for i in range(0, cfg.BATCH_SIZE):
-                #             pred_mask = utils.masking_rgb(pred_print[1][i], color='red')
-                #             label_mask = utils.masking_rgb(label_print[1][i], color='green')
-                #             ori = np.transpose(batch_x, [-1, 0, 1, 2])
-                #             ori = ori / np.max(ori)
-                #             ori = utils.masking_rgb(ori[0][i], color=None)
-                #
-                #             result_image = 1.0 * (ori + pred_mask)
-                #             compare_image = pred_mask + label_mask
-                #
-                #
-                #             cv2.imwrite('./img/epoch{}/result/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), result_image)
-                #             # cv2.imwrite('./img/epoch{}/mask/batch{}_{}_mask.jpg'.format(epoch+1, print_img_idx, i+1), pred_mask)
-                #             cv2.imwrite('./img/epoch{}/mask/batch{}_{}_compare.jpg'.format(epoch+1, print_img_idx, i+1), compare_image)
-                #             if epoch == 0 :
-                #                 cv2.imwrite('./img/epoch{}/original/batch{}_{}.jpg'.format(epoch+1, print_img_idx, i+1), ori)
-                #
-                # one_epoch_mean = np.mean(np.array(one_epoch_result_list), axis=0)
-                #
-                # epoch_end = time.time()
-                # training_time = epoch_end - epoch_start
-                # split_training_time += training_time
-                # total_training_time += training_time
-                #
-                # Loss = total_cost / train_step
-                # print('one_epoch_mean', one_epoch_mean)
-                # #
-                # # print and save result of each epoch
-                # self.result = '\nEpoch: {} / {}, Loss : {}, Training time: {:.2f}' \
-                #               '\nResults >>> ' \
-                #               '\n\t Accuracy : {:.4f}, Sensitivity : {:.4f}, Specificity : {:.4f}' \
-                #               '\n\t mean_IoU : {:.4f}, Dice_score : {:.4f}, Hausdorff : {:.4f}'.format((epoch + 1),
-                #                                                                               cfg.EPOCHS,
-                #                                                                               Loss,
-                #                                                                               training_time,
-                #                                                                               *one_epoch_mean)
-                # print(self.result)
-                # utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
-                #
-                # result_dict = {self.p_eval.acc: one_epoch_mean[0],
-                #                self.p_eval.sens: one_epoch_mean[1],
-                #                self.p_eval.spec: one_epoch_mean[2],
-                #                self.p_eval.miou: one_epoch_mean[3],
-                #                self.p_eval.dice: one_epoch_mean[4],
-                #                self.p_eval.hdorff: one_epoch_mean[5]}
-
-                # TB
-                # summary = sess.run(self.merged_summary, feed_dict=result_dict)
-                # self.writer.add_summary(summary, global_step=epoch)
-
-                # save model ckpt
+                    # save model ckpt
                 if save_yn:
                     saver.save(sess, self.model_save_path)
                     print(">>> Model SAVED")
