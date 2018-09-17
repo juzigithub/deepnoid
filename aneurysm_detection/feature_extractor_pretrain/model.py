@@ -6,7 +6,7 @@ class Model:
     def __init__(self):
         self.drop_rate = tf.placeholder(tf.float32, name='drop_rate')
         self.training = tf.placeholder(tf.bool, name='training')
-        self.X = tf.placeholder(tf.float32, [None, 32, 32, 3], name='X')
+        self.X = tf.placeholder(tf.float32, [None, cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 3], name='X')
 
         self.logit, self.mean, self.gamma = self.model()
 
@@ -25,7 +25,7 @@ class Model:
         self.loss = tf.reduce_mean(self.reconstruction_loss + self.latent_loss)
 
     def feature_extractor(self, inputs, channel_n, n_layer):
-        with tf.variable_scope('pretrain'):
+        with tf.variable_scope('feature_extractor_pretrain'):
             l = inputs
             for idx in range(n_layer):
                 l = utils.residual_block_dw_dr(name='downconv_{}'.format(idx),

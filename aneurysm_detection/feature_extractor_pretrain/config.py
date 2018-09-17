@@ -5,6 +5,8 @@
 # Linux #
 MODE = 'linux'
 GPU = '6'
+DCM_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/input_dcm/*/*/*/'
+NPZ_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/npz/'
 # SAVE_TRAIN_DATA_PATH = '/mnt/sdb/mspark/data/brain_aneurysm_yonsei/'      # train
 # SAVE_VALID_DATA_PATH ##################################################
 # DATA_PATH = '/mnt/sdb/bjh/Brain_Aneurysm_dataset/'

@@ -1,4 +1,4 @@
-import cifar10_pickle as cifar10
+# import cifar10_pickle as cifar10
 import utils as utils
 import tensorflow as tf
 import tensorlayer as tl
@@ -75,7 +75,7 @@ class Train:
 
             #  Saving a model is saving variables such as weights, ans we call it as ckpt(check point file) in tensorflow
             # It's a tensorflow class saving ckpt file
-            saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='pretrain'))
+            saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain'))
 
             # save graphs from tensorboard
             self.writer.add_graph(sess.graph)
@@ -84,25 +84,22 @@ class Train:
             sess.run(tf.global_variables_initializer())
 
             if self.restore:
-                saver.restore(sess, self.ckpt_path + 'weights.ckpt')
+                saver.restore(sess, self.ckpt_path + 'feature_extractor_weights.ckpt')
 
             print("BEGIN TRAINING")
             total_training_time = 0
 
-            tot_data, tot_label = cifar10.load_training_data()
-
-
-            tot_data_shape = np.shape(tot_data)
-            tot_data = tot_data.reshape(len(tot_data), -1)
-            tot_data = scale(tot_data)
+            # tot_data, tot_label = cifar10.load_training_data()
+            tot_data = np.load(os.path.join(cfg.NPZ_PATH, 'feature_extractor_pretrain_input_ori_{}.npz'.format(cfg.IMG_SIZE[0])))['all']
+            len_tot_data = np.shape(tot_data)[0]
+            # tot_data_shape = np.shape(tot_data)
+            # tot_data = tot_data.reshape(len(tot_data), -1)
+            # tot_data = scale(tot_data)
             # tot_data = (tot_data - np.mean(tot_data, axis=1)) / np.std(tot_data, axis=1)
-            tot_data = tot_data.reshape(tot_data_shape)
+            # tot_data = tot_data.reshape(tot_data_shape)
 
-
-            train_X = tot_data[:45000]
-            train_Y = tot_label[:45000]
-            val_X = tot_data[45000:]
-            val_Y = tot_label[45000:]
+            train_X = tot_data[:int(len_tot_data*0.8)]
+            val_X = tot_data[int(len_tot_data*0.8):]
 
             drop_rate = cfg.INIT_DROPOUT_RATE
 
@@ -125,10 +122,11 @@ class Train:
                     self._make_path(epoch)
 
                 # train
-                for batch in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
+                for batch in tl.iterate.minibatches(inputs=train_X, targets=train_X,
                                                     batch_size=cfg.BATCH_SIZE, shuffle=True):
-                    batch_x, batch_y = batch
-
+                    batch_x, _ = batch
+                    batch_x = np.expand_dims(batch_x, axis=-1)
+                    batch_x = np.concatenate((0.8 * batch_x, batch_x, 1.2 * batch_x), axis=-1)
                     # # make_one_hot
                     # key = np.array([0, 1])
                     # _, index = np.unique(batch_y, return_inverse=True)
@@ -158,15 +156,17 @@ class Train:
 
                     print(self.result)
 
-                one_epoch_result_list = []
+                # one_epoch_result_list = []
 
                 print_img_idx = 0
 
                 # validation test
-                for batch in tl.iterate.minibatches(inputs=val_X, targets=val_Y,
+                for batch in tl.iterate.minibatches(inputs=val_X, targets=val_X,
                                                     batch_size=cfg.BATCH_SIZE, shuffle=False):
                     print_img_idx += 1
-                    batch_x, batch_y = batch
+                    batch_x, _ = batch
+                    batch_x = np.expand_dims(batch_x, axis=-1)
+                    batch_x = np.concatenate((0.8 * batch_x, batch_x, 1.2 * batch_x), axis=-1)
 
                     # # make_one_hot
                     # key = np.array([0, 1])
@@ -182,11 +182,13 @@ class Train:
 
                     print('loss', loss)
 
-                    # logit = np.reshape(logit, (-1, 32, 32, 3))
-                    #
-                    #
-                    # cv2.imwrite(self.img_path + '/{}_{}_original.png'.format(epoch, print_img_idx), batch_x[0]/np.max(batch_x[0]))
-                    # cv2.imwrite(self.img_path + '/{}_{}_reconstruction.png'.format(epoch, print_img_idx), logit[0]/np.max(logit[0]))
+
+                    if epoch % 5 == 0 :
+                        logit = np.reshape(logit, (-1, cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 3))
+
+
+                        cv2.imwrite(self.img_path + '/{}_{}_original.png'.format(epoch, print_img_idx), batch_x[0,:,:,1])
+                        cv2.imwrite(self.img_path + '/{}_{}_reconstruction.png'.format(epoch, print_img_idx), logit[0,:,:,1])
 
                     # label_print = np.transpose(label, [-1, 0, 1, 2])
                     #
@@ -267,7 +269,7 @@ class Train:
 
     def _make_path(self, epoch):
         # Absolute path for model saving. save as 'file_name'.ckpt
-        self.model_save_path = self.model_path + '{0}{1}{0}weights.ckpt'.format(cfg.PATH_SLASH,
+        self.model_save_path = self.model_path + '{0}{1}{0}feature_extractor_weights.ckpt'.format(cfg.PATH_SLASH,
                                                                              str(epoch + 1))
 
         # create if there is no such file in a saving path
