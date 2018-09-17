@@ -38,7 +38,7 @@ RESTORE = False                 # load weights file
 PATH_SLASH = '/' if MODE == 'linux' else '\\'
 
 ### Data info ###
-IMG_SIZE = [32, 32]         # axial : [192, 192], sagittal : [155, 192], coronal : [155, 192]
+IMG_SIZE = [256, 256]         # axial : [192, 192], sagittal : [155, 192], coronal : [155, 192]
 # PATCH_SIZE = 128
 # PATCH_STRIDE = 16
 # PATCH_NCR_CUTLINE = 1e-10  # 0.05

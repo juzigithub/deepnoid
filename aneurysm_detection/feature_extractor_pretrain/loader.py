@@ -4,7 +4,7 @@ import cv2
 import os
 import tensorlayer as tl
 import numpy as np
-import aneurysm_detection.feature_extractor_pretrain.config as cfg
+import config as cfg
 
 
 dcm_path = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/input_dcm/*/*/*/'
