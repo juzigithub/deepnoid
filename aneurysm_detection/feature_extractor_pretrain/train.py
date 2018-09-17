@@ -100,7 +100,8 @@ class Train:
 
             for epoch in range(cfg.EPOCHS):
                 for i in range(5):
-                    tot_data = np.load(os.path.join(cfg.NPZ_PATH, 'feature_extractor_pretrain_input_ori_{}_{}.npz'.format(cfg.IMG_SIZE[0], i)))['chunk{}'.format(i)]
+                    # tot_data = np.load(os.path.join(cfg.NPZ_PATH, 'feature_extractor_pretrain_input_ori_{}_{}.npz'.format(cfg.IMG_SIZE[0], i)))['chunk{}'.format(i)]
+                    tot_data = np.load(os.path.join(cfg.NPZ_PATH, 'feature_extractor_pretrain_input_ori_{}_{}.npy'.format(cfg.IMG_SIZE[0], i)))
                     len_tot_data = np.shape(tot_data)[0]
                     train_X = tot_data[:int(len_tot_data * 0.8)]
                     val_X = tot_data[int(len_tot_data * 0.8):]
