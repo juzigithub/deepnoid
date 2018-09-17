@@ -12,7 +12,8 @@ npz_path = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/npz/'
 tl.files.exists_or_mkdir(npz_path)
 
 data_list = glob.glob(dcm_path + '*.dcm')
-sorted(data_list)
+data_list = sorted(data_list)
+# data_list.sort(key=lambda f: int(filter(str.isdigit, f)))
 
 clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8,8))
 npy_list = []
