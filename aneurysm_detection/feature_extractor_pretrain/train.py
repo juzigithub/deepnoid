@@ -100,6 +100,7 @@ class Train:
 
             train_X = tot_data[:int(len_tot_data*0.8)]
             val_X = tot_data[int(len_tot_data*0.8):]
+            del tot_data
 
             drop_rate = cfg.INIT_DROPOUT_RATE
 
