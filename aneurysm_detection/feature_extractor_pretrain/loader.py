@@ -13,7 +13,6 @@ tl.files.exists_or_mkdir(npz_path)
 
 data_list = glob.glob(dcm_path + '*.dcm')
 data_list = sorted(data_list)
-# data_list.sort(key=lambda f: int(filter(str.isdigit, f)))
 
 clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8,8))
 npy_list = []
@@ -28,6 +27,6 @@ for data in data_list:
     npy_list.append(img)
 
 print(np.shape(npy_list))
-np.savez_compressed(os.path.join(npz_path, 'input_original_{}.npz'.format(cfg.IMG_SIZE[0])), all=npy_list)
+np.savez_compressed(os.path.join(npz_path, 'feature_extractor_pretrain_input_ori_{}.npz'.format(cfg.IMG_SIZE[0])), all=npy_list)
 print('saved')
 
