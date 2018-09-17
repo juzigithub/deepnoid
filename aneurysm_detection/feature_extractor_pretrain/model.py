@@ -87,7 +87,7 @@ class Model:
 
     def model(self):
 
-        inputs = self.X
+        inputs = tf.identity(self.X)
         channel_n = cfg.INIT_N_FILTER
         inputs = self.feature_extractor(inputs, channel_n, cfg.PRETRAIN_N_LAYERS)
 
@@ -104,7 +104,7 @@ class Model:
         noise = tf.random_normal(tf.shape(gamma), dtype=tf.float32)
         inputs = mean + tf.exp(0.5 * gamma) * noise
 
-        inputs = tf.layers.dense(inputs, inputs_shape[1]*inputs_shape[2]*inputs_shape[3]/2, activation=tf.nn.elu)
+        # inputs = tf.layers.dense(inputs, inputs_shape[1]*inputs_shape[2]*inputs_shape[3]/2, activation=tf.nn.elu)
         inputs = tf.layers.dense(inputs, inputs_shape[1]*inputs_shape[2]*inputs_shape[3], activation=tf.nn.elu)
         inputs = tf.reshape(inputs, reshaped_dim)
 
