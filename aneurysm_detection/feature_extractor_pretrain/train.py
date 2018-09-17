@@ -190,8 +190,8 @@ class Train:
                             logit = np.reshape(logit, (-1, cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 3))
 
 
-                            cv2.imwrite(self.img_path + '/{}_{}_{}_original.png'.format(epoch, i, print_img_idx), batch_x[0,:,:,1])
-                            cv2.imwrite(self.img_path + '/{}_{}_{}_reconstruction.png'.format(epoch, i, print_img_idx), logit[0,:,:,1])
+                            cv2.imwrite(self.img_path + '/{}_{}_{}_original.png'.format(epoch, i, print_img_idx), batch_x[0,:,:,1]/np.max(batch_x[0,:,:,1]))
+                            cv2.imwrite(self.img_path + '/{}_{}_{}_reconstruction.png'.format(epoch, i, print_img_idx), logit[0,:,:,1]/np.max(logit[0,:,:,1]))
 
                         # label_print = np.transpose(label, [-1, 0, 1, 2])
                         #
