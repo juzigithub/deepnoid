@@ -159,7 +159,7 @@ class Train:
 
                         print(self.result)
 
-                    # one_epoch_result_list = []
+                    one_epoch_result_list = []
 
                     print_img_idx = 0
 
@@ -183,7 +183,7 @@ class Train:
 
                         loss, logit = sess.run([self.model.loss, self.model.logit], feed_dict=val_feed_dict)
 
-                        print('loss', loss)
+                        one_epoch_result_list.append(loss)
 
 
                         if epoch % 5 == 0 :
@@ -192,6 +192,10 @@ class Train:
 
                             cv2.imwrite(self.img_path + '/{}_{}_{}_original.png'.format(epoch, i, print_img_idx), utils.masking_rgb(batch_x[0,:,:,1]))
                             cv2.imwrite(self.img_path + '/{}_{}_{}_reconstruction.png'.format(epoch, i, print_img_idx), utils.masking_rgb(logit[0,:,:,1]))
+                    one_epoch_mean = np.mean(np.array(one_epoch_result_list))
+                    self.result = '\nEpoch: {} / {}, Loss : {}\n'.format(epoch, cfg.EPOCHS, one_epoch_mean)
+                    print(self.result)
+                    utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 
                         # label_print = np.transpose(label, [-1, 0, 1, 2])
                         #

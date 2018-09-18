@@ -7,6 +7,7 @@ import numpy as np
 import config as cfg
 
 
+
 # dcm_path = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/input_dcm/*/*/*/'
 # npz_path = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/npz/'
 tl.files.exists_or_mkdir(cfg.NPZ_PATH)
