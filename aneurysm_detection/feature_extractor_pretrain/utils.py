@@ -157,9 +157,10 @@ def Normalization(x, norm_type, is_train, name, G=2, esp=1e-5, channel_mode='NHW
                                                   center=True,
                                                   scale=True,
                                                   fused=True,
-                                                  decay=0.001,
+                                                  decay=0.9,
                                                   is_training=is_train,
                                                   updates_collections=None,
+                                                  zero_debias_moving_mean=True,
                                                   scope='BN_'+name)
 
             # output = tf.layers.batch_normalization(x, momentum=0.9, epsilon=0.0001, training=is_train, name='BN_'+name)
