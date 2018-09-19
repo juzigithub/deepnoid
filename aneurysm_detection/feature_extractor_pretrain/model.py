@@ -100,8 +100,6 @@ class Model:
         reshaped_dim = [-1, inputs_shape[1], inputs_shape[2], inputs_shape[3]]
 
         inputs = utils.flatten('flatten1', inputs)
-        print('inputs',inputs)
-        print('inputs[1]', inputs[1])
         mean = utils.fully_connected('mean', inputs, 30)
         gamma = utils.fully_connected('gamma', inputs, 30)
         noise = tf.random_normal(tf.shape(gamma), dtype=tf.float32)
