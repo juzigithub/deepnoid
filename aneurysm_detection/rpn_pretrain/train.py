@@ -53,22 +53,22 @@ class Train:
         self.merged_summary = tf.summary.merge_all()
         self.writer = tf.summary.FileWriter(self.log_path)
 
-    def optimizer(self, global_step):
-        exponential_decay_learning_rate = tf.train.exponential_decay(learning_rate=cfg.INIT_LEARNING_RATE,
-                                                                     global_step=global_step,
-                                                                     decay_steps=cfg.DECAY_STEP,
-                                                                     decay_rate=cfg.DECAY_RATE,
-                                                                     staircase=cfg.DECAY_STAIRCASE,
-                                                                     name='learning_rate')
-
-        self.optimizer = utils.select_optimizer(cfg.OPTIMIZER, exponential_decay_learning_rate, self.model.loss, global_step)
+    # def optimizer(self, global_step):
+    #     exponential_decay_learning_rate = tf.train.exponential_decay(learning_rate=cfg.INIT_LEARNING_RATE,
+    #                                                                  global_step=global_step,
+    #                                                                  decay_steps=cfg.DECAY_STEP,
+    #                                                                  decay_rate=cfg.DECAY_RATE,
+    #                                                                  staircase=cfg.DECAY_STAIRCASE,
+    #                                                                  name='learning_rate')
+    #
+    #     self.optimizer = utils.select_optimizer(cfg.OPTIMIZER, exponential_decay_learning_rate, self.model.loss, global_step)
 
 
     def train(self):
         global_step = tf.Variable(0, trainable=False, name='global_step')
 
-        with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
-            self.optimizer(global_step)
+        # with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
+        #     self.optimizer(global_step)
 
         with tf.Session() as sess:
 
