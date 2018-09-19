@@ -7,6 +7,7 @@ from sklearn.preprocessing import scale
 import config as cfg
 
 txt_dir_list = os.listdir(cfg.TXT_PATH)
+txt_dir_list = sorted(txt_dir_list)
 print(txt_dir_list)
 input_data_list = []
 label_data_list = []
