@@ -100,11 +100,10 @@ WIDTH_MULTIPLIER = 1.0          # out_channel = in_channel * width_multiplier
 # STANDARD = False
 # SCALE = 1
 
-
 ### Rpn ###
 ANCHOR_SCALES = [8, 16, 32]     # [int(IMAGE_WIDTH / i) for i in [32, 16, 8, 4, 2]]
 ANCHOR_RATIOS = [0.5, 1, 2]
-FEATURE_STRIDES = [8]
+FEATURE_STRIDES = [8, 16, 32]
 ANCHOR_STRIDE = 1
 RPN_N_FILTER = 512
 
