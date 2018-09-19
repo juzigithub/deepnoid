@@ -50,7 +50,7 @@ class Model:
                 print(l)
         return l
 
-    def reconstructor(self, inputs, output_channel, n_layer):
+    def reconstructor(self, inputs, output_channel, n_layer, n_downsampling):
         with tf.variable_scope('non_pretrain'):
             l = inputs
             # _, h, w, channel_n = tf.shape(l)
@@ -67,10 +67,10 @@ class Model:
                                                norm_type=cfg.NORMALIZATION_TYPE,
                                                training=self.training,
                                                idx=idx)
-                if idx + 1 < n_layer:
+                channel_n //= 2
+                if idx + 1 <= n_downsampling:
                     h *= 2
                     w *= 2
-                    channel_n //= 2
                     l = utils.select_upsampling(name='upsampling_{}'.format(idx),
                                                  up_conv=l,
                                                  up_pool=[],
