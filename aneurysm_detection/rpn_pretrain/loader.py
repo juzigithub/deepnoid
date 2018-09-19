@@ -55,6 +55,6 @@ for dir in txt_dir_list:
         label_data_list.append(load_label(t_path))
     print('directory : {} / imgs : {} saved'.format(dir, len(txt_path)))
 
-np.save(cfg.NPZ_PATH + 'rpn_pretrain_input_ori_{}'.format(cfg.IMG_SIZE[0]), input_data_list)
-np.save(cfg.NPZ_PATH + 'rpn_pretrain_label_ori_{}'.format(cfg.IMG_SIZE[0]), label_data_list)
+np.savez_compressed(cfg.NPZ_PATH + 'rpn_pretrain_input_ori_{}.npz'.format(cfg.IMG_SIZE[0]), all=input_data_list)
+np.savez_compressed(cfg.NPZ_PATH + 'rpn_pretrain_label_ori_{}.npz'.format(cfg.IMG_SIZE[0]), all=label_data_list)
 print('saved')
