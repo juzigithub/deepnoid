@@ -31,7 +31,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU
 
 class Train:
     def __init__(self, restore=False):
-        self.model = Model()
+        # self.model = Model()
         self.p_eval = pe.performance()
         self.restore = restore
 
