@@ -110,7 +110,7 @@ class Model:
         inputs = tf.layers.dense(inputs, inputs_shape[1]*inputs_shape[2]*inputs_shape[3], activation=tf.nn.elu)
         inputs = tf.reshape(inputs, reshaped_dim)
 
-        outputs = self.reconstructor(inputs, 3, cfg.PRETRAIN_N_LAYERS)
+        outputs = self.reconstructor(inputs, 3, cfg.PRETRAIN_N_LAYERS, cfg.N_DOWNSAMPLING)
 
 
         # outputs = utils.flatten('flatten2', inputs)
