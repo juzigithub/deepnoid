@@ -1,3 +1,4 @@
+import numpy as np
 ### Model info ###
 
 ### Path info ###
@@ -5,6 +6,9 @@
 # Linux #
 MODE = 'linux'
 GPU = '6'
+DCM_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/input_dcm_original/*/*/*/'
+LABEL_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/label/*/*/*/'
+NPZ_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/npz/'
 # SAVE_TRAIN_DATA_PATH = '/mnt/sdb/mspark/data/brain_aneurysm_yonsei/'      # train
 # SAVE_VALID_DATA_PATH ##################################################
 # DATA_PATH = '/mnt/sdb/bjh/Brain_Aneurysm_dataset/'
@@ -34,11 +38,12 @@ GPU = '6'
 # REBUILD_TASK2_VAL_DATA = False
 # REBUILD_TASK1_TEST_DATA = False
 # REBUILD_TASK2_TEST_DATA = False
-RESTORE = True                 # load weights file
+RESTORE = False                 # load weights file
 PATH_SLASH = '/' if MODE == 'linux' else '\\'
 
 ### Data info ###
-IMG_SIZE = [32, 32]         # axial : [192, 192], sagittal : [155, 192], coronal : [155, 192]
+IMG_SIZE = [256, 256]         # axial : [192, 192], sagittal : [155, 192], coronal : [155, 192]
+
 # PATCH_SIZE = 128
 # PATCH_STRIDE = 16
 # PATCH_NCR_CUTLINE = 1e-10  # 0.05
@@ -59,18 +64,19 @@ N_CLASS = 10
 EPOCHS = 100                     # epochs
 # SPLITS = 5                      # cross validation cnt
 SAVING_EPOCH = 1                # save model/img every SAVING_EPOCH
-BATCH_SIZE = 100
+BATCH_SIZE = 10
 INIT_N_FILTER = 32              # output n_channel(n_filter) of first conv layer
-ACTIVATION_FUNC = 'lrelu'         # relu, lrelu, elu, prelu, selu
+ACTIVATION_FUNC = 'elu'         # relu, lrelu, elu, prelu, selu
 LOSS_FUNC = 'dice_sum'          # g_dice, dice, focal, cross_entropy, dice_sum, huber, weighted_cross_entropy
 LAMBDA = [0.2, 0.8]   # weight of each loss [bg, ncr, ed, et]
-OPTIMIZER = 'rmsprop'           # adam, rmsprop, sgd
-INIT_LEARNING_RATE = 5e-3
+OPTIMIZER = 'adam'           # adam, rmsprop, sgd
+INIT_LEARNING_RATE = 1e-5
 DECAY_RATE = 0.9
 DECAY_STEP = 4000
 DECAY_STAIRCASE = True
 NORMALIZATION_TYPE = 'batch'    # batch, group
-PRETRAIN_N_LAYERS = 4
+PRETRAIN_N_LAYERS = 5
+N_DOWNSAMPLING = 3
 # N_LAYERS = [3, 3, 4]            # n_layers before each downsampling
 # N_LAYERS_HIGH = [2,2,2,3]       # n_high_layers before each downsampling
 # N_LAYERS_LOW = [2,3,3]          # n_low_layers before each downsampling
@@ -91,3 +97,18 @@ WIDTH_MULTIPLIER = 1.0          # out_channel = in_channel * width_multiplier
 # N_MATCH_DIVIDE = 10
 # STANDARD = False
 # SCALE = 1
+
+
+### Rpn ###
+ANCHOR_SCALES = [8, 16, 32]     # [int(IMAGE_WIDTH / i) for i in [32, 16, 8, 4, 2]]
+ANCHOR_RATIOS = [0.5, 1, 2]
+FEATURE_STRIDES = [8]
+ANCHOR_STRIDE = 1
+RPN_N_FILTER = 256
+
+RPN_TRAIN_ANCHORS_PER_IMAGE = 256
+RPN_BBOX_STD_DEV = np.array([0.1, 0.1, 0.2, 0.2])
+
+POST_NMS_ROIS_TRAINING = 2000
+POST_NMS_ROIS_INFERENCE = 1000
+RPN_NMS_THRESHOLD = 0.7

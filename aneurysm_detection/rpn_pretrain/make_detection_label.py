@@ -1,10 +1,11 @@
 import cv2
 import glob
 import os
-# path = 'D:\\dataset\\Brain_Aneurysm_new_dataset\\full_data\\new_label\\final_filtered_labels\\*\\*\\*\\'
-path = 'd:\\ta\\label\\*\\*\\*\\'
+import config as cfg
+# path = 'd:\\ta\\label\\*\\*\\*\\'
 # path = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/label/*/*/*/'
-data_list = glob.glob(path + '*.png')
+
+data_list = glob.glob(cfg.LABEL_PATH + '*.png')
 data_list = sorted(data_list)
 # print(data_list)
 
@@ -35,13 +36,13 @@ for data in data_list:
         cv2.rectangle(img, (x1-5, y1-5), (x2+5, y2+5), (255, 0, 0), 1)
 
     if label_list != [] :
-        # with open(path + '/' + fn + '.txt', 'wt') as f:
-        with open(path + '\\' + fn + '.txt', 'wt') as f:
+        with open(path + '/' + fn + '.txt', 'wt') as f:
+        # with open(path + '\\' + fn + '.txt', 'wt') as f:
 
             for label in label_list:
                 f.write('{} {} {} {} {}\n'.format(1, str(label[0]), str(label[1]), str(label[2]), str(label[3])))
-        # cv2.imwrite(path + '/' + 'detection_' + fn + '.png', img)
-        cv2.imwrite(path + '\\' + 'detection_' + fn + '.png', img)
+        cv2.imwrite(path + '/' + 'detection_' + fn + '.png', img)
+        # cv2.imwrite(path + '\\' + 'detection_' + fn + '.png', img)
 
-        # print(path + '/' + fn + ' saved')
-        print(path + '\\' + fn + ' saved')
+        print(path + '/' + fn + ' saved')
+        # print(path + '\\' + fn + ' saved')
