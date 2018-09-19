@@ -53,7 +53,7 @@ for dir in txt_dir_list:
         input_data_list.append([input_num_data_dic[max(0, min(n_files-1, (input_file_num_dic[t_fn] - cfg.N_3D_CONTEXT//2 + i)))]
                                 for i in range(cfg.N_3D_CONTEXT)])
         label_data_list.append(load_label(t_path))
-    print('directory : {} / imgs : {} saved'.format(dir, n_files))
+    print('directory : {} / imgs : {} saved'.format(dir, len(txt_path)))
 
 np.save(cfg.NPZ_PATH + 'rpn_pretrain_input_ori_{}'.format(cfg.IMG_SIZE[0]), input_data_list)
 np.save(cfg.NPZ_PATH + 'rpn_pretrain_label_ori_{}'.format(cfg.IMG_SIZE[0]), label_data_list)
