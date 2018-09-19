@@ -6,6 +6,8 @@ import numpy as np
 # Linux #
 MODE = 'linux'
 GPU = '6'
+INPUT_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/input_dcm_original/'
+TXT_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/label/'
 DCM_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/input_dcm_original/*/*/*/'
 LABEL_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/label/*/*/*/'
 NPZ_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/npz/'
@@ -43,7 +45,7 @@ PATH_SLASH = '/' if MODE == 'linux' else '\\'
 
 ### Data info ###
 IMG_SIZE = [256, 256]         # axial : [192, 192], sagittal : [155, 192], coronal : [155, 192]
-
+N_3D_CONTEXT = 9
 # PATCH_SIZE = 128
 # PATCH_STRIDE = 16
 # PATCH_NCR_CUTLINE = 1e-10  # 0.05
@@ -104,7 +106,7 @@ ANCHOR_SCALES = [8, 16, 32]     # [int(IMAGE_WIDTH / i) for i in [32, 16, 8, 4, 
 ANCHOR_RATIOS = [0.5, 1, 2]
 FEATURE_STRIDES = [8]
 ANCHOR_STRIDE = 1
-RPN_N_FILTER = 256
+RPN_N_FILTER = 512
 
 RPN_TRAIN_ANCHORS_PER_IMAGE = 256
 RPN_BBOX_STD_DEV = np.array([0.1, 0.1, 0.2, 0.2])
