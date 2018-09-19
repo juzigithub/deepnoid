@@ -74,7 +74,7 @@ class Train:
 
             #  Saving a model is saving variables such as weights, ans we call it as ckpt(check point file) in tensorflow
             # It's a tensorflow class saving ckpt file
-            saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain'))
+            # saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain'))
 
             # save graphs from tensorboard
             self.writer.add_graph(sess.graph)
@@ -82,8 +82,8 @@ class Train:
             # initialize global variables from session. Need to assign initial values for each variables
             sess.run(tf.global_variables_initializer())
 
-            if self.restore:
-                saver.restore(sess, self.ckpt_path + 'feature_extractor_weights.ckpt')
+            # if self.restore:
+            #     saver.restore(sess, self.ckpt_path + 'feature_extractor_weights.ckpt')
 
             print("BEGIN TRAINING")
             total_training_time = 0
