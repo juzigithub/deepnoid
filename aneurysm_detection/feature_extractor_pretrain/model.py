@@ -26,7 +26,7 @@ class Model:
 
         self.loss = tf.reduce_mean(self.reconstruction_loss + self.latent_loss)
 
-    def feature_extractor(self, inputs, channel_n, n_layer):
+    def feature_extractor(self, inputs, channel_n, n_layer, n_downsampling):
         with tf.variable_scope('feature_extractor_pretrain'):
             l = inputs
             for idx in range(n_layer):
@@ -40,13 +40,13 @@ class Model:
                                                norm_type=cfg.NORMALIZATION_TYPE,
                                                training=self.training,
                                                idx=idx)
-                if idx + 1 < n_layer:
+                if idx + 1 <= n_downsampling:
                     l = utils.maxpool(name='maxpool_{}'.format(idx),
                                       inputs=l,
                                       pool_size=[2, 2],
                                       strides=[2, 2],
                                       padding='same')
-                    channel_n *= 2
+                channel_n *= 2
                 print(l)
         return l
 
@@ -91,7 +91,7 @@ class Model:
 
         inputs = tf.identity(self.X)
         channel_n = cfg.INIT_N_FILTER
-        inputs = self.feature_extractor(inputs, channel_n, cfg.PRETRAIN_N_LAYERS)
+        inputs = self.feature_extractor(inputs, channel_n, cfg.PRETRAIN_N_LAYERS, cfg.N_DOWNSAMPLING)
 
         # inputs_shape = tf.shape(inputs)
         inputs_shape = inputs.get_shape().as_list()

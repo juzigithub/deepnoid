@@ -73,6 +73,7 @@ DECAY_STEP = 4000
 DECAY_STAIRCASE = True
 NORMALIZATION_TYPE = 'batch'    # batch, group
 PRETRAIN_N_LAYERS = 4
+N_DOWNSAMPLING = 3
 # N_LAYERS = [3, 3, 4]            # n_layers before each downsampling
 # N_LAYERS_HIGH = [2,2,2,3]       # n_high_layers before each downsampling
 # N_LAYERS_LOW = [2,3,3]          # n_low_layers before each downsampling
