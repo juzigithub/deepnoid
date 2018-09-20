@@ -175,6 +175,9 @@ class Train:
                     gt_boxes = batch_y[:,1:]
 
                     rpn_class_label, rpn_bbox_label = utils.build_rpn_targets(anchors, gt_boxes, cfg)
+                    print('class',rpn_class_label.shape)
+                    print('bbox',rpn_bbox_label.shape)
+
                     # batch_x = np.expand_dims(batch_x, axis=-1)
                     # batch_x = np.concatenate((0.8 * batch_x, batch_x, 1.2 * batch_x), axis=-1)
 
