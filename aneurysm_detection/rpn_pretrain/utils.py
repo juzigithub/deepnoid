@@ -2279,7 +2279,7 @@ def compute_iou(box, boxes, box_area, boxes_area):
 
     return iou
 
-def get_anchors(image_shape, scales, ratios, feature_strides, anchor_stride):
+def get_anchors(image_shape, scales, ratios, feature_strides, anchor_stride, normalization=True):
     """Returns anchor pyramid for the given image size."""
     feature_shapes = compute_backbone_shapes(image_shape, feature_strides)
     a = generate_pyramid_anchors(
@@ -2289,7 +2289,9 @@ def get_anchors(image_shape, scales, ratios, feature_strides, anchor_stride):
         feature_strides,
         anchor_stride)
     # Normalize coordinates
-    return norm_boxes(a, image_shape)
+    if normalization:
+        a = norm_boxes(a, image_shape)
+    return a
 
 def compute_backbone_shapes(image_shape, backbone_strides):
     """Computes the width and height of each stage of the backbone network.
