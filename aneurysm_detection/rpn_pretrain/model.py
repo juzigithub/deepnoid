@@ -108,30 +108,31 @@ class Model:
                                                     training=self.training,
                                                     idx=idx)
                 print(shared)
-                l = utils.residual_block_dw_dr(name='rpn_class_{}'.format(idx),
-                                               inputs=shared,
-                                               channel_n=anchors_per_location * 2,
-                                               width_mul=1.0,
-                                               group_n=cfg.GROUP_N,
-                                               drop_rate=self.drop_rate,
-                                               act_fn=cfg.ACTIVATION_FUNC,
-                                               norm_type=cfg.NORMALIZATION_TYPE,
-                                               training=self.training,
-                                               idx=idx)
+                l = utils.depthwise_separable_convlayer_dr(name='rpn_class_{}'.format(idx),
+                                                           inputs=shared,
+                                                           channel_n=anchors_per_location * 2,
+                                                           width_mul=1.0,
+                                                           group_n=cfg.GROUP_N,
+                                                           drop_rate=self.drop_rate,
+                                                           act_fn=cfg.ACTIVATION_FUNC,
+                                                           norm_type=cfg.NORMALIZATION_TYPE,
+                                                           training=self.training,
+                                                           idx=idx)
+
                 print('rpn_class',l)
                 rpn_class_logits = tf.reshape(l, (tf.shape(l)[0], -1, 2))
                 rpn_prob = tf.nn.softmax(rpn_class_logits)
 
-                l = utils.residual_block_dw_dr(name='rpn_bbox_{}'.format(idx),
-                                               inputs=shared,
-                                               channel_n=anchors_per_location * 4,
-                                               width_mul=1.0,
-                                               group_n=cfg.GROUP_N,
-                                               drop_rate=self.drop_rate,
-                                               act_fn=cfg.ACTIVATION_FUNC,
-                                               norm_type=cfg.NORMALIZATION_TYPE,
-                                               training=self.training,
-                                               idx=idx)
+                l = utils.depthwise_separable_convlayer_dr(name='rpn_bbox_{}'.format(idx),
+                                                           inputs=shared,
+                                                           channel_n=anchors_per_location * 4,
+                                                           width_mul=1.0,
+                                                           group_n=cfg.GROUP_N,
+                                                           drop_rate=self.drop_rate,
+                                                           act_fn=cfg.ACTIVATION_FUNC,
+                                                           norm_type=cfg.NORMALIZATION_TYPE,
+                                                           training=self.training,
+                                                           idx=idx)
                 print('rpn_bbox',l)
                 rpn_refinement = tf.reshape(l, (tf.shape(l)[0], -1, 4))
 
