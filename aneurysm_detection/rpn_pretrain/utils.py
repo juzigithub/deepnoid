@@ -2544,8 +2544,8 @@ def build_rpn_targets(anchors, gt_boxes, config):
         gt_center_y = gt[0] + 0.5 * gt_h
         gt_center_x = gt[1] + 0.5 * gt_w
         # Anchor
-        a_h = a[2] - a[0]
-        a_w = a[3] - a[1]
+        a_h = (a[2] - a[0]) if (a[2] - a[0]) > 0 else 1e-6
+        a_w = (a[3] - a[1]) if (a[3] - a[1]) > 0 else 1e-6
         a_center_y = a[0] + 0.5 * a_h
         a_center_x = a[1] + 0.5 * a_w
 
