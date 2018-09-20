@@ -170,8 +170,7 @@ class Model:
         6. output shape : (bs, self.proposal_count, 4)
         '''
         proposals = ''
-        proposal_count = cfg.POST_NMS_ROIS_TRAINING if is_train \
-            else cfg.POST_NMS_ROIS_INFERENCE
+        proposal_count = cfg.POST_NMS_ROIS_TRAINING if is_train else cfg.POST_NMS_ROIS_INFERENCE
         nms_threshold = cfg.RPN_NMS_THRESHOLD
 
         def nms(boxes, scores):
