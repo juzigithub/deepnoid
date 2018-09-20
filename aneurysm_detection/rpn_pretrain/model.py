@@ -107,6 +107,7 @@ class Model:
                                                     norm_type=cfg.NORMALIZATION_TYPE,
                                                     training=self.training,
                                                     idx=idx)
+                print(shared)
                 l = utils.residual_block_dw_dr(name='rpn_class_{}'.format(idx),
                                                inputs=shared,
                                                channel_n=anchors_per_location * 2,
@@ -117,7 +118,7 @@ class Model:
                                                norm_type=cfg.NORMALIZATION_TYPE,
                                                training=self.training,
                                                idx=idx)
-
+                print('rpn_class',l)
                 rpn_class_logits = tf.reshape(l, (tf.shape(l)[0], -1, 2))
                 rpn_prob = tf.nn.softmax(rpn_class_logits)
 
@@ -131,7 +132,7 @@ class Model:
                                                norm_type=cfg.NORMALIZATION_TYPE,
                                                training=self.training,
                                                idx=idx)
-
+                print('rpn_bbox',l)
                 rpn_refinement = tf.reshape(l, (tf.shape(l)[0], -1, 4))
 
                 if idx == 0:
