@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
-import aneurysm_detection.rpn_pretrain.utils as utils
-import aneurysm_detection.rpn_pretrain.config as cfg
+import utils as utils
+import config as cfg
 
 class Model:
     def __init__(self):
@@ -34,7 +34,7 @@ class Model:
 
         feature_maps = self.feature_extractor(self.X, channel_n, cfg.PRETRAIN_N_LAYERS, cfg.N_DOWNSAMPLING)
         rpn_feature_maps = tf.expand_dims(feature_maps[tf.shape(feature_maps)[0]//2], axis=0)
-
+        rpn_feature_maps = [rpn_feature_maps]
         rpn_class_logitss, rpn_class_probs, rpn_bbox_refinements = self.rpn_bbox_generator(rpn_feature_maps,
                                                                                 cfg.RPN_N_FILTER,
                                                                                 len(cfg.ANCHOR_RATIOS))
