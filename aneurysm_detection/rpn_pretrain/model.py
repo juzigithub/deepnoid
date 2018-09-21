@@ -39,8 +39,8 @@ class Model:
                                                                                 cfg.RPN_N_FILTER,
                                                                                 len(cfg.ANCHOR_RATIOS))
 
-        proposals = self.region_proposal_network(self.anchors, rpn_bbox_refinements, rpn_class_probs, self.training)
-        print(proposals)
+        self.proposals = self.region_proposal_network(self.anchors, rpn_bbox_refinements, rpn_class_probs, self.training)
+        print(self.proposals)
 
         return rpn_class_logitss, rpn_bbox_refinements
 
