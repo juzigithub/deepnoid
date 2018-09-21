@@ -122,7 +122,7 @@ class Train:
 
             for epoch in range(cfg.EPOCHS):
 
-                print('train_Y', train_Y)
+                # print('train_Y', train_Y)
 
 
                 # dynamic dropout rate
@@ -198,9 +198,10 @@ class Train:
                                     self.model.training: True,
                                     self.model.drop_rate: drop_rate}
 
-                    cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
-
+                    cost, _, proposals = sess.run([self.model.loss, self.optimizer, self.model.proposals], feed_dict=tr_feed_dict)
+                    print('proposals', proposals)
                     print(cost)
+
 
                     # Update Loss Ratio for next step
 
