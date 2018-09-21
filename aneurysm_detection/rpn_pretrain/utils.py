@@ -2650,13 +2650,13 @@ def build_rpn_targets2(anchors, gt_boxes, config):
 
         # Compute the bbox refinement that the RPN should predict.
         rpn_bbox[ix] = [
-            (gt_center_y - a_center_y) / config.IMG_SIZE[0],
-            (gt_center_x - a_center_x) / config.IMG_SIZE[0],
-            (gt_h - a_h) / config.IMG_SIZE[0],
-            (gt_w - a_w) / config.IMG_SIZE[0],
+            (gt_center_y - a_center_y) / config.IMG_SIZE[0] * 100,
+            (gt_center_x - a_center_x) / config.IMG_SIZE[0] * 100,
+            (gt_h - a_h) / config.IMG_SIZE[0] * 100,
+            (gt_w - a_w) / config.IMG_SIZE[0] * 100,
         ]
         # Normalize
         # rpn_bbox[ix] /= config.RPN_BBOX_STD_DEV
         ix += 1
-    print(rpn_bbox)
+    # print(rpn_bbox)
     return rpn_match, rpn_bbox
