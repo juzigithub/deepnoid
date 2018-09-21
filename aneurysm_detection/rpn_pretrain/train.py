@@ -9,6 +9,7 @@ import config as cfg
 import performance_eval as pe
 import utils as utils
 from model import Model        # choose model
+from copy import deepcopy
 
 # tot_data, tot_label = cifar10.load_training_data()
 
@@ -116,12 +117,12 @@ class Train:
                                         cfg.FEATURE_STRIDES,
                                         cfg.ANCHOR_STRIDE,
                                         normalization=False)
-            print('anchors', anchors)
+            # print('anchors', anchors)
             normed_anchors = utils.norm_boxes(anchors, cfg.IMG_SIZE)
 
             for epoch in range(cfg.EPOCHS):
 
-                print('train_Y',train_Y)
+                print('train_Y', train_Y)
 
 
                 # dynamic dropout rate
@@ -142,7 +143,7 @@ class Train:
                     self._make_path(epoch)
 
                 # train
-                for batch_x, batch_y in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
+                for batch_x, batch_y in tl.iterate.minibatches(inputs=deepcopy(train_X), targets=deepcopy(train_Y),
                                                                batch_size=1, shuffle=True):
                     # def build_rpn_targets(self, anchors, gt_boxes, config):
                     #     """Given the anchors and GT boxes, compute overlaps and identify positive
