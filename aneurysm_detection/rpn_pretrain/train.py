@@ -121,7 +121,7 @@ class Train:
 
             for epoch in range(cfg.EPOCHS):
 
-
+                print('train_Y',train_Y)
 
 
                 # dynamic dropout rate
@@ -142,7 +142,7 @@ class Train:
                     self._make_path(epoch)
 
                 # train
-                for batch_xy in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
+                for batch_x, batch_y in tl.iterate.minibatches(inputs=train_X, targets=train_Y,
                                                                batch_size=1, shuffle=True):
                     # def build_rpn_targets(self, anchors, gt_boxes, config):
                     #     """Given the anchors and GT boxes, compute overlaps and identify positive
@@ -161,7 +161,7 @@ class Train:
                     #                1 = positive anchor, -1 = negative anchor, 0 = neutral
                     #     rpn_bbox: [N, (dy, dx, log(dh), log(dw))] Anchor bbox deltas.
                     #     """
-                    batch_x, batch_y = batch_xy
+
                     batch_x = batch_x[0]
                     batch_y = batch_y[0]
 
