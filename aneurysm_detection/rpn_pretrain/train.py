@@ -199,7 +199,7 @@ class Train:
                                     self.model.drop_rate: drop_rate}
 
                     cost, _, proposals = sess.run([self.model.loss, self.optimizer, self.model.proposals], feed_dict=tr_feed_dict)
-                    print('proposals', proposals)
+                    print('proposals', np.round(proposals * cfg.IMG_SIZE[0]))
                     print(cost)
 
 
