@@ -2318,8 +2318,12 @@ def generate_pyramid_anchors(scales, ratios, feature_shapes, feature_strides,
     # [anchor_count, (y1, x1, y2, x2)]
     anchors = []
     for i in range(len(scales)):
-        anchors.append(generate_anchors(scales[i], ratios, feature_shapes[i],
-                                        feature_strides[i], anchor_stride))
+        anchors.append(generate_anchors(scales[i], ratios, feature_shapes[0],
+                                        feature_strides[0], anchor_stride))
+
+    # for i in range(len(scales)):
+    #     anchors.append(generate_anchors(scales[i], ratios, feature_shapes[i],
+    #                                     feature_strides[i], anchor_stride))
     return np.concatenate(anchors, axis=0)
 
 
@@ -2544,8 +2548,8 @@ def build_rpn_targets(anchors, gt_boxes, config):
         gt_center_y = gt[0] + 0.5 * gt_h
         gt_center_x = gt[1] + 0.5 * gt_w
         # Anchor
-        a_h = (a[2] - a[0]) if (a[2] - a[0]) > 0 else 1e-6
-        a_w = (a[3] - a[1]) if (a[3] - a[1]) > 0 else 1e-6
+        a_h = (a[2] - a[0])
+        a_w = (a[3] - a[1])
         a_center_y = a[0] + 0.5 * a_h
         a_center_x = a[1] + 0.5 * a_w
 
@@ -2559,5 +2563,5 @@ def build_rpn_targets(anchors, gt_boxes, config):
         # Normalize
         rpn_bbox[ix] /= config.RPN_BBOX_STD_DEV
         ix += 1
-
+    print(rpn_bbox)
     return rpn_match, rpn_bbox

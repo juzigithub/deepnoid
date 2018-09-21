@@ -101,11 +101,12 @@ WIDTH_MULTIPLIER = 1.0          # out_channel = in_channel * width_multiplier
 # SCALE = 1
 
 ### Rpn ###
-ANCHOR_SCALES = [8, 16, 32]     # [int(IMAGE_WIDTH / i) for i in [32, 16, 8, 4, 2]]
+ANCHOR_SCALES = [4, 8, 16, 32]     # [int(IMAGE_WIDTH / i) for i in [32, 16, 8, 4, 2]]
 ANCHOR_RATIOS = [0.5, 1, 2]
-FEATURE_STRIDES = [8, 16, 32]
+FEATURE_STRIDES = [8]
 ANCHOR_STRIDE = 1
 RPN_N_FILTER = 512
+IMAGES_PER_GPU = 1
 
 RPN_TRAIN_ANCHORS_PER_IMAGE = 256
 RPN_BBOX_STD_DEV = np.array([0.1, 0.1, 0.2, 0.2])
