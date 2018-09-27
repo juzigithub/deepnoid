@@ -2219,6 +2219,34 @@ def apply_box_deltas_graph(boxes, deltas):
     result = tf.stack([y1, x1, y2, x2], axis=1, name="apply_box_deltas_out")
     return result
 
+def apply_box_deltas_graph2(boxes, deltas, config):
+    """Applies the given deltas to the given boxes.
+    boxes: [N, (y1, x1, y2, x2)] boxes to update
+    deltas: [N, (dy, dx, log(dh), log(dw))] refinements to apply
+    """
+
+    # (gt_center_y - a_center_y) / config.IMG_SIZE[0] * 100,
+    # (gt_center_x - a_center_x) / config.IMG_SIZE[0] * 100,
+    # (gt_h - a_h) / config.IMG_SIZE[0] * 100,
+    # (gt_w - a_w) / config.IMG_SIZE[0] * 100,
+    # Convert to y, x, h, w
+    height = boxes[:, 2] - boxes[:, 0]
+    width = boxes[:, 3] - boxes[:, 1]
+    center_y = boxes[:, 0] + 0.5 * height
+    center_x = boxes[:, 1] + 0.5 * width
+    # Apply deltas
+    center_y += deltas[:, 0] * config.IMG_SIZE[0] / 100
+    center_x += deltas[:, 1] * config.IMG_SIZE[0] / 100
+    height += deltas[:, 2] * config.IMG_SIZE[0] / 100
+    width += deltas[:, 3] * config.IMG_SIZE[0] / 100
+    # Convert back to y1, x1, y2, x2
+    y1 = center_y - 0.5 * height
+    x1 = center_x - 0.5 * width
+    y2 = y1 + height
+    x2 = x1 + width
+    result = tf.stack([y1, x1, y2, x2], axis=1, name="apply_box_deltas_out")
+    return result
+
 def clip_boxes_graph(boxes, window):
     """
     boxes: [N, (y1, x1, y2, x2)]
@@ -2660,3 +2688,108 @@ def build_rpn_targets2(anchors, gt_boxes, config):
         ix += 1
     # print(rpn_bbox)
     return rpn_match, rpn_bbox
+
+def roi_pooling(roi_proposals, conv_feature_map, pooled_shape, feature_pyramid=False):
+    '''
+    :param roi_proposals: [batch, num_boxes, (y1, x1, y2, x2)]
+    :param conv_feature_map: [p2, p3, p4, p5 ..]
+    :param pooled_shape: [pooled_width, pooled_height]
+    :param feature_pyramid: conv_feature_map is feature_pyramid -> True
+    :return: [batch, num_boxes, height, width, channels]
+    '''
+
+    def log2_graph(x):
+        return tf.log(x) / tf.log(2.0)
+
+    if feature_pyramid:
+        n_feature = len(conv_feature_map)
+
+        y1, x1, y2, x2 = tf.split(roi_proposals, 4, axis=2)
+        h = y2 - y1
+        w = x2 - x1
+
+        # image_area = tf.cast(image_shape[0] * image_shape[1], tf.float32)
+        # roi_level = 4 + tf.cast(tf.round(log2_graph(tf.sqrt(h * w))), tf.int32)
+        # # 2 <= roi_level <= 5
+        # roi_level = tf.minimum(5, tf.maximum(2, roi_level))
+        # roi_level = tf.squeeze(roi_level, 2)
+
+        roi_level = n_feature - 2 + tf.cast(tf.round(log2_graph(tf.sqrt(h * w))), tf.int32)
+        # 0 <= roi_level <= n_feature-1
+        roi_level = tf.minimum(n_feature - 1, tf.maximum(0, roi_level))
+        roi_level = tf.squeeze(roi_level, 2)
+
+
+        pooled = []
+        box_to_level = []
+
+        # for i, level in enumerate(range(2, 6)):
+        #     ix = tf.where(tf.equal(roi_level, level))
+        #     level_boxes = tf.gather_nd(roi_proposals, ix)
+        #
+        #     # Box indicies for crop_and_resize.
+        #     box_indices = tf.cast(ix[:, 0], tf.int32)
+        #
+        #     # Keep track of which box is mapped to which level
+        #     box_to_level.append(ix)
+        #
+        #     # Stop gradient propogation to ROI proposals
+        #     level_boxes = tf.stop_gradient(level_boxes)
+        #     box_indices = tf.stop_gradient(box_indices)
+        #
+        #     # Crop and Resize
+        #     # From Mask R-CNN paper: "We sample four regular locations, so
+        #     # that we can evaluate either max or average pooling. In fact,
+        #     # interpolating only a single value at each bin center (without
+        #     # pooling) is nearly as effective."
+        #     # Result: [batch * num_boxes, pool_height, pool_width, channels]
+        #     pooled.append(tf.image.crop_and_resize(conv_feature_map[i], level_boxes, box_indices, pooled_shape, method="bilinear"))
+        for i in range(n_feature):
+            ix = tf.where(tf.equal(roi_level, i))
+            level_boxes = tf.gather_nd(roi_proposals, ix)
+
+            # Box indicies for crop_and_resize.
+            box_indices = tf.cast(ix[:, 0], tf.int32)
+
+            # Keep track of which box is mapped to which level
+            box_to_level.append(ix)
+
+            # Stop gradient propogation to ROI proposals
+            level_boxes = tf.stop_gradient(level_boxes)
+            box_indices = tf.stop_gradient(box_indices)
+
+            # Crop and Resize
+            # From Mask R-CNN paper: "We sample four regular locations, so
+            # that we can evaluate either max or average pooling. In fact,
+            # interpolating only a single value at each bin center (without
+            # pooling) is nearly as effective."
+            # Result: [batch * num_boxes, pool_height, pool_width, channels]
+            pooled.append(tf.image.crop_and_resize(conv_feature_map[i], level_boxes, box_indices, pooled_shape, method="bilinear"))
+
+        # Pack pooled features into one tensor
+        pooled = tf.concat(pooled, axis=0)
+
+        # Pack box_to_level mapping into one array and add another
+        # column representing the order of pooled boxes
+        box_to_level = tf.concat(box_to_level, axis=0)
+        box_range = tf.expand_dims(tf.range(tf.shape(box_to_level)[0]), 1)
+        box_to_level = tf.concat([tf.cast(box_to_level, tf.int32), box_range], axis=1)
+
+        # Rearrange pooled features to match the order of the original boxes
+        # Sort box_to_level by batch then box index
+        # TF doesn't have a way to sort by two columns, so merge them and sort.
+        sorting_tensor = box_to_level[:, 0] * 100000 + box_to_level[:, 1]
+        ix = tf.nn.top_k(sorting_tensor, k=tf.shape(box_to_level)[0]).indices[::-1]
+        ix = tf.gather(box_to_level[:, 2], ix)
+        pooled = tf.gather(pooled, ix)
+
+        # Re-add the batch dimension
+        pooled = tf.expand_dims(pooled, 0)
+
+    else :
+        box_indices = tf.zeros((roi_proposals[0] * roi_proposals[1],), dtype=tf.int32)
+        roi_proposals = tf.squeeze(roi_proposals, axis=0)
+        pooled = tf.image.crop_and_resize(conv_feature_map, roi_proposals, box_indices, pooled_shape, method="bilinear")
+
+    print('utils.roi_pooling', pooled)
+    return pooled
