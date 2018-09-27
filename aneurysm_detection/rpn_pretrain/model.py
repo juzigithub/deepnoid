@@ -32,7 +32,7 @@ class Model:
 
         channel_n = cfg.INIT_N_FILTER
 
-        feature_maps = self.feature_extractor(self.X, channel_n, cfg.PRETRAIN_N_LAYERS, cfg.N_DOWNSAMPLING)
+        feature_maps = self.feature_extractor(self.X, channel_n, cfg.PRETRAIN_N_LAYERS)
         rpn_feature_maps = tf.expand_dims(feature_maps[tf.shape(feature_maps)[0]//2], axis=0)
         rpn_feature_maps = [rpn_feature_maps]
         rpn_class_logitss, rpn_class_probs, rpn_bbox_refinements = self.rpn_bbox_generator(rpn_feature_maps,
