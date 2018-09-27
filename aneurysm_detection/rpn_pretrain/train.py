@@ -188,7 +188,7 @@ class Train:
 
 ###################################################################
                 # validation test
-                for batch_x, batch_y in tl.iterate.minibatches(inputs=val_X, targets=val_Y,
+                for batch_x, batch_y in tl.iterate.minibatches(inputs=deepcopy(val_X), targets=deepcopy(val_Y),
                                                     batch_size=cfg.BATCH_SIZE, shuffle=False):
                     batch_x = batch_x[0]
                     batch_y = batch_y[0]
@@ -237,10 +237,7 @@ class Train:
 
         # create if there is no such file in a saving path
         tl.files.exists_or_mkdir(self.model_path + '{0}{1}'.format(cfg.PATH_SLASH, str(epoch + 1)))
-        # tl.files.exists_or_mkdir('./img/epoch{}/result/'.format(str(epoch + 1)))
-        # tl.files.exists_or_mkdir('./img/epoch{}/mask/'.format(str(epoch + 1)))
-        # if epoch == 0:
-        #     tl.files.exists_or_mkdir('./img/epoch{}/original/'.format(str(epoch + 1)))
+
 
 if __name__ == "__main__":
     trainer = Train(cfg.RESTORE)
