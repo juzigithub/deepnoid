@@ -219,7 +219,7 @@ class Train:
 
 
                 one_epoch_mean = np.mean(np.array(one_epoch_result_list))
-                self.result = '\nEpoch: {} / {}, Loss : {}\n'.format(epoch, cfg.EPOCHS, one_epoch_mean)
+                self.result = '\nEpoch: {} / {}, Loss : {}\n'.format(epoch + 1, cfg.EPOCHS, one_epoch_mean)
                 print(self.result)
                 utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 
