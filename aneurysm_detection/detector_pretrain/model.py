@@ -237,7 +237,7 @@ class Model:
             pre_nms_anchors = tf.gather(anchors, ix)
 
             # apply deltas to anchors to get refined anchors.
-            boxes = utils.apply_box_deltas_graph2(pre_nms_anchors, deltas_slice, cfg)
+            boxes = utils.apply_box_deltas_graph2(pre_nms_anchors, deltas_slice)
 
             # clip box to range 0..1 [batch, N, (y1, x1, y2, x2)]
             window = np.array([0, 0, 1, 1], dtype=np.float32)
