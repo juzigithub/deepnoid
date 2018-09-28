@@ -75,8 +75,8 @@ class Train:
 
             #  Saving a model is saving variables such as weights, ans we call it as ckpt(check point file) in tensorflow
             # It's a tensorflow class saving ckpt file
-            saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain'))
-            saver2 = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain')+
+            # saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain'))
+            saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain')+
                                                              tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='rpn_pretrain'))
 
             # save graphs from tensorboard
