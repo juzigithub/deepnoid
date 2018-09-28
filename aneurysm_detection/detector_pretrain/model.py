@@ -18,12 +18,12 @@ class Model:
         ##############################################
 
         self.rpn_class_logitss, self.rpn_bbox_refinements, self.detector_class_logits, self.detector_bbox_refinements,\
-            self.detector_class_label, self.detector_bbox_label = self.model()
+            self.detector_class_label2, self.detector_bbox_label2 = self.model()
         self.rpn_class_loss = utils.rpn_class_loss_graph(self.rpn_class_label, self.rpn_class_logitss)
         self.rpn_bbox_loss = utils.rpn_bbox_loss_graph(cfg, self.rpn_bbox_label, self.rpn_class_label, self.rpn_bbox_refinements)
 
-        self.detector_class_loss = utils.detector_class_loss_graph(self.detector_class_label, self.detector_class_logits)
-        self.detector_bbox_loss = utils.detector_bbox_loss_graph(self.detector_bbox_label, self.detector_class_label, self.detector_bbox_refinements, cfg)
+        self.detector_class_loss = utils.detector_class_loss_graph(self.detector_class_label2, self.detector_class_logits)
+        self.detector_bbox_loss = utils.detector_bbox_loss_graph(self.detector_bbox_label2, self.detector_class_label2, self.detector_bbox_refinements, cfg)
 
 
         ############## lambda 값은 변경해야. 일단 0.5로 ##############

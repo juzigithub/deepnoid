@@ -2536,7 +2536,7 @@ def detector_bbox_loss_graph(target_bbox, target_class_ids, pred_bbox, config):
     target_class_ids = tf.reshape(target_class_ids, (-1,))
     target_bbox = tf.reshape(target_bbox, (-1, 4))
 
-    pred_bbox = tf.reshape(pred_bbox, (-1, config.TRAIN_ROIS_PER_IMAGE * config.CLASS_NUM, 4))
+    pred_bbox = tf.reshape(pred_bbox, (-1, config.TRAIN_ROIS_PER_IMAGE * config.N_CLASS, 4))
 
     # Only positive ROIs contribute to the loss. And only
     # the right class_id of each ROI. Get their indicies.
