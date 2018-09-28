@@ -40,12 +40,16 @@ class Model:
 
         channel_n = cfg.INIT_N_FILTER
 
+        ### Feature Extractor (Conv1~5) ###
         feature_maps = self.feature_extractor(self.X, channel_n, cfg.PRETRAIN_N_LAYERS)
+
+        ### RPN ###
         rpn_feature_maps = tf.expand_dims(feature_maps[tf.shape(feature_maps)[0]//2], axis=0)
         rpn_feature_maps = [rpn_feature_maps]
         rpn_class_logitss, rpn_class_probs, rpn_bbox_refinements = self.rpn_bbox_generator(rpn_feature_maps,
                                                                                            cfg.RPN_N_FILTER,
                                                                                            len(cfg.ANCHOR_RATIOS))
+        ### Additional Conv for 3d contexts ###
         feature_maps = utils.residual_block_dw_dr(name='common_conv',
                                                   inputs=feature_maps,
                                                   channel_n=cfg.POOLED_SIZE[0]*cfg.POOLED_SIZE[1]*10,
@@ -57,51 +61,34 @@ class Model:
                                                   training=self.training,
                                                   idx=0)
         print('feature_maps', feature_maps)
-
-        # feature_shape_h, feature_shape_w, feature_shape_c = tf.shape(feature_maps)[1], tf.shape(feature_maps)[2], tf.shape(feature_maps)[3]
         feature_shape_h, feature_shape_w, feature_shape_c = feature_maps.get_shape().as_list()[1:]
-
         feature_maps = tf.expand_dims(feature_maps, axis=0)
         feature_maps = tf.transpose(feature_maps, (0, 2, 3, 1, 4))
         feature_maps = tf.reshape(feature_maps, (1, feature_shape_h, feature_shape_w, cfg.N_3D_CONTEXT // 3 * feature_shape_c))
         print('concated_feature_maps', feature_maps)
 
-        proposals = self.region_proposal_network(self.anchors, rpn_bbox_refinements, rpn_class_probs, self.training)
+
+        ### Proposal Network ###
+        proposals = self.region_proposal_network(self.anchors,
+                                                 rpn_bbox_refinements,
+                                                 rpn_class_probs,
+                                                 self.training)
         proposals = tf.squeeze(proposals, axis=0)
+
+        ### Make detector label ###
         proposals, detector_class_label, detector_bbox_label = utils.detection_targets_graph(proposals,
                                                                                              self.detector_class_label,
                                                                                              self.detector_bbox_label, cfg)
-
-
         detector_class_label = tf.expand_dims(detector_class_label, axis=0)
         detector_bbox_label = tf.expand_dims(detector_bbox_label, axis=0)
         proposals = tf.expand_dims(proposals, axis=0)
 
-
+        ### Detector ###
         detector_class_logits, detector_bbox_refinements = self.detector(proposals, feature_maps, feature_shape_c, cfg)
         print('detector_class_logits', detector_class_logits)
         print('detector_bbox_refinements', detector_bbox_refinements)
 
-
-        # pooled_feature_maps = utils.roi_pooling(proposals, feature_maps, cfg.POOLED_SIZE, feature_pyramid=False)
-        # print('pooled', pooled_feature_maps)
-        # # pooled_feature_maps = tf.squeeze(pooled_feature_maps, axis=0)
-        #
-        # pooled_feature_maps = utils.GlobalAveragePooling2D(input=pooled_feature_maps,
-        #                                                    n_class=feature_shape_c,
-        #                                                    name='GAP',
-        #                                                    keep_dims=False)
-        #
-        # detector_bbox_refinements = utils.fully_connected('detector_bbox_refinements', pooled_feature_maps, cfg.N_CLASS * 4)
-        # detector_class_logits = utils.fully_connected('detector_class_logits', pooled_feature_maps, cfg.N_CLASS)
-        #
-        # detector_bbox_refinements = tf.reshape(detector_bbox_refinements, (-1, cfg.TRAIN_ROIS_PER_IMAGE, cfg.N_CLASS, 4))
-        # detector_class_logits = tf.reshape(detector_class_logits, (-1, cfg.TRAIN_ROIS_PER_IMAGE, cfg.N_CLASS))
-
-
         return rpn_class_logitss, rpn_bbox_refinements, detector_class_logits, detector_bbox_refinements, detector_class_label, detector_bbox_label
-
-
 
 
     def feature_extractor(self, inputs, channel_n, n_layer):
@@ -298,6 +285,18 @@ class Model:
 
         return detector_class_logits, detector_bbox_refinements
 
+
+
+
+
+
+
+
+
+#
+#
+#
+#
 # def refine_detections_graph(rois, probs, deltas, window, config):
 #     """Refine classified proposals and filter overlaps and return final
 #     detections.
@@ -322,8 +321,11 @@ class Model:
 #     deltas_specific = tf.gather_nd(deltas, indices)
 #     # Apply bounding box deltas
 #     # Shape: [boxes, (y1, x1, y2, x2)] in normalized coordinates
-#     refined_rois = utils.apply_box_deltas_graph2(
-#         rois, deltas_specific * config.BBOX_STD_DEV)
+#
+#     ########################################
+#     # refined_rois = utils.apply_box_deltas_graph2(rois, deltas_specific * config.BBOX_STD_DEV)
+#     refined_rois = utils.apply_box_deltas_graph2(rois, deltas_specific)
+#     ########################################
 #     # Clip boxes to image window
 #     refined_rois = utils.clip_boxes_graph(refined_rois, window)
 #
@@ -409,7 +411,7 @@ class Model:
 #     def __init__(self, config=None, **kwargs):
 #         super(DetectionLayer, self).__init__(**kwargs)
 #         self.config = config
-#
+# 
 #     def call(self, inputs):
 #         rois = inputs[0]
 #         mrcnn_class = inputs[1]
@@ -439,4 +441,3 @@ class Model:
 #
 #     def compute_output_shape(self, input_shape):
 #         return (None, self.config.DETECTION_MAX_INSTANCES, 6)
-
