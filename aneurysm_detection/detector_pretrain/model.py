@@ -21,6 +21,7 @@ class Model:
             self.detector_class_label, self.detector_bbox_label = self.model()
         self.rpn_class_loss = utils.rpn_class_loss_graph(self.rpn_class_label, self.rpn_class_logitss)
         self.rpn_bbox_loss = utils.rpn_bbox_loss_graph(cfg, self.rpn_bbox_label, self.rpn_class_label, self.rpn_bbox_refinements)
+
         self.detector_class_loss = utils.detector_class_loss_graph(self.detector_class_label, self.detector_class_logits)
         self.detector_bbox_loss = utils.detector_bbox_loss_graph(self.detector_bbox_label, self.detector_class_label, self.detector_bbox_refinements, cfg)
 
@@ -69,6 +70,9 @@ class Model:
         proposals, detector_class_label, detector_bbox_label = utils.detection_targets_graph(proposals,
                                                                                              self.detector_class_label,
                                                                                              self.detector_bbox_label, cfg)
+        detector_class_label = tf.expand_dims(detector_class_label, axis=0)
+        detector_bbox_label = tf.expand_dims(detector_bbox_label, axis=0)
+
         proposals = tf.expand_dims(proposals, axis=0)
         # proposals = tf.reshape(proposals, (cfg.BATCH_SIZE, cfg.TRAIN_ROIS_PER_IMAGE, 4))
 
