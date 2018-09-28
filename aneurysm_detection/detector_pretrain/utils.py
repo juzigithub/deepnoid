@@ -63,8 +63,7 @@ def GlobalAveragePooling2D(input, n_class, name, keep_dims=False):
     https://github.com/AndersonJo/global-average-pooling/blob/master/global-average-pooling.ipynb
     """
     kernel_size = input.get_shape().as_list()[1]
-    # gap_filter = tf.get_variable(name='gap_filter', shape=[1, 1, input.get_shape()[-1], n_class], dtype=tf.float32, initializer=initializer)
-    gap_filter = tf.get_variable(name='gap_filter', shape=[1, 1, tf.shape(input)[-1], n_class], dtype=tf.float32, initializer=initializer)
+    gap_filter = tf.get_variable(name='gap_filter', shape=[1, 1, input.get_shape().as_list()[-1], n_class], dtype=tf.float32, initializer=initializer)
     layer = tf.nn.conv2d(input, filter=gap_filter, strides=[1, 1, 1, 1], padding='SAME', name=name)
     layer = tf.nn.avg_pool(layer, ksize=[1, kernel_size, kernel_size, 1], strides=[1, 1, 1, 1], padding='VALID')
     if not keep_dims:
