@@ -65,10 +65,11 @@ class Model:
                                                                                                        self.detector_class_label,
                                                                                                        self.detector_bbox_label, cfg)
         proposals = tf.expand_dims(proposals, axis=0)
-        proposals = tf.reshape(proposals, (cfg.BATCH_SIZE, cfg.TRAIN_ROIS_PER_IMAGE, 4))
+        # proposals = tf.reshape(proposals, (cfg.BATCH_SIZE, cfg.TRAIN_ROIS_PER_IMAGE, 4))
 
         pooled_feature_maps = utils.roi_pooling(proposals, feature_maps, cfg.POOLED_SIZE, feature_pyramid=False)
-        pooled_feature_maps = tf.squeeze(pooled_feature_maps, axis=0)
+        print('pooled', pooled_feature_maps)
+        # pooled_feature_maps = tf.squeeze(pooled_feature_maps, axis=0)
 
         pooled_feature_maps = utils.GlobalAveragePooling2D(input=pooled_feature_maps,
                                                            n_class=tf.shape(pooled_feature_maps)[-1],
