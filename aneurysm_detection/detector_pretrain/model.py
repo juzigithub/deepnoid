@@ -17,7 +17,8 @@ class Model:
 
         ##############################################
 
-        self.rpn_class_logitss, self.rpn_bbox_refinements, self.detector_class_logits, self.detector_bbox_refinements = self.model()
+        self.rpn_class_logitss, self.rpn_bbox_refinements, self.detector_class_logits, self.detector_bbox_refinements,\
+            self.detector_class_label, self.detector_bbox_label = self.model()
         self.rpn_class_loss = utils.rpn_class_loss_graph(self.rpn_class_label, self.rpn_class_logitss)
         self.rpn_bbox_loss = utils.rpn_bbox_loss_graph(cfg, self.rpn_bbox_label, self.rpn_class_label, self.rpn_bbox_refinements)
         self.detector_class_loss = utils.detector_class_loss_graph(self.detector_class_label, self.detector_class_logits)
@@ -65,9 +66,9 @@ class Model:
 
         proposals = self.region_proposal_network(self.anchors, rpn_bbox_refinements, rpn_class_probs, self.training)
         proposals = tf.squeeze(proposals, axis=0)
-        proposals, self.detector_class_label, self.detector_bbox_label = utils.detection_targets_graph(proposals,
-                                                                                                       self.detector_class_label,
-                                                                                                       self.detector_bbox_label, cfg)
+        proposals, detector_class_label, detector_bbox_label = utils.detection_targets_graph(proposals,
+                                                                                             self.detector_class_label,
+                                                                                             self.detector_bbox_label, cfg)
         proposals = tf.expand_dims(proposals, axis=0)
         # proposals = tf.reshape(proposals, (cfg.BATCH_SIZE, cfg.TRAIN_ROIS_PER_IMAGE, 4))
 
@@ -76,7 +77,7 @@ class Model:
         # pooled_feature_maps = tf.squeeze(pooled_feature_maps, axis=0)
 
         pooled_feature_maps = utils.GlobalAveragePooling2D(input=pooled_feature_maps,
-                                                           n_class=tf.shape(pooled_feature_maps)[-1],
+                                                           n_class=feature_shape_c,
                                                            name='GAP',
                                                            keep_dims=False)
 
@@ -87,7 +88,7 @@ class Model:
         detector_class_logits = tf.reshape(detector_class_logits, (-1, cfg.TRAIN_ROIS_PER_IMAGE, cfg.N_CLASS))
 
 
-        return rpn_class_logitss, rpn_bbox_refinements, detector_class_logits, detector_bbox_refinements
+        return rpn_class_logitss, rpn_bbox_refinements, detector_class_logits, detector_bbox_refinements, detector_class_label, detector_bbox_label
 
 
     def feature_extractor(self, inputs, channel_n, n_layer):
