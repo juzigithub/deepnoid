@@ -2855,7 +2855,7 @@ def roi_pooling(roi_proposals, conv_feature_map, pooled_shape, feature_pyramid=F
         pooled = tf.expand_dims(pooled, 0)
 
     else :
-        box_indices = tf.zeros((roi_proposals[0] * roi_proposals[1],), dtype=tf.int32)
+        box_indices = tf.zeros((tf.shape(roi_proposals)[0] * tf.shape(roi_proposals)[1],), dtype=tf.int32)
         roi_proposals = tf.squeeze(roi_proposals, axis=0)
         pooled = tf.image.crop_and_resize(conv_feature_map, roi_proposals, box_indices, pooled_shape, method="bilinear")
 
