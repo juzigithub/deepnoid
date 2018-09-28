@@ -78,7 +78,6 @@ class Train:
             # saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain'))
             saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain')+
                                                              tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='rpn_pretrain'))
-
             saver2 = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain')+
                                                              tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='rpn_pretrain')+
                                                              tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='detector_pretrain'))
