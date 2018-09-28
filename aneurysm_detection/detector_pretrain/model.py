@@ -71,7 +71,7 @@ class Model:
         print('pooled', pooled_feature_maps)
         # pooled_feature_maps = tf.squeeze(pooled_feature_maps, axis=0)
 
-        pooled_feature_maps = utils.GlobalAveragePooling2D(input=pooled_feature_maps,
+        pooled_feature_maps = self.GlobalAveragePooling2D(input=pooled_feature_maps,
                                                            n_class=tf.shape(pooled_feature_maps)[-1],
                                                            name='GAP',
                                                            keep_dims=False)
@@ -256,6 +256,23 @@ class Model:
 
         return proposals
 
+    def GlobalAveragePooling2D(self, input, n_class, name, keep_dims=False):
+        """
+        replace Fully Connected Layer.
+        https://www.facebook.com/groups/smartbean/permalink/1708560322490187/
+        https://github.com/AndersonJo/global-average-pooling/blob/master/global-average-pooling.ipynb
+        """
+        kernel_size = input.get_shape().as_list()[1]
+        # gap_filter = tf.get_variable(name='gap_filter', shape=[1, 1, input.get_shape().as_list()[-1], n_class],
+        #                              dtype=tf.float32, initializer=tf.contrib.layers.variance_scaling_initializer())
+        gap_filter = tf.get_variable(name='gap_filter', shape=[1, 1, n_class, n_class],
+                                     dtype=tf.float32, initializer=tf.contrib.layers.variance_scaling_initializer())
+
+        layer = tf.nn.conv2d(input, filter=gap_filter, strides=[1, 1, 1, 1], padding='SAME', name=name)
+        layer = tf.nn.avg_pool(layer, ksize=[1, kernel_size, kernel_size, 1], strides=[1, 1, 1, 1], padding='VALID')
+        if not keep_dims:
+            layer = tf.reduce_mean(layer, axis=[1, 2])
+        return layer
 
 # def refine_detections_graph(rois, probs, deltas, window, config):
 #     """Refine classified proposals and filter overlaps and return final
