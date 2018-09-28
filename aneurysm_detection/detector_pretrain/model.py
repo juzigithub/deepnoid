@@ -55,10 +55,10 @@ class Model:
                                                   idx=0)
         print('feature_maps', feature_maps)
 
-        feature_shape_h, feature_shape_w = tf.shape(feature_maps)[1], tf.shape(feature_maps)[2]
+        feature_shape_h, feature_shape_w, feature_shape_c = tf.shape(feature_maps)[1], tf.shape(feature_maps)[2], tf.shape(feature_maps)[3]
         feature_maps = tf.expand_dims(feature_maps, axis=0)
         feature_maps = tf.transpose(feature_maps, (0, 2, 3, 1, 4))
-        feature_maps = tf.reshape(feature_maps, (1, feature_shape_h, feature_shape_w, -1))
+        feature_maps = tf.reshape(feature_maps, (1, feature_shape_h, feature_shape_w, cfg.N_3D_CONTEXT / 3 * feature_shape_c))
         print('concated_feature_maps', feature_maps)
 
         proposals = self.region_proposal_network(self.anchors, rpn_bbox_refinements, rpn_class_probs, self.training)
