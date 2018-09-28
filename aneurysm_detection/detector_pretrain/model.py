@@ -285,15 +285,18 @@ class Model:
                                                                name='GAP',
                                                                keep_dims=False)
 
-            detector_bbox_refinements = utils.fully_connected('detector_bbox_refinements', pooled_feature_maps,
+            detector_bbox_refinements = utils.fully_connected('detector_bbox_refinements',
+                                                              pooled_feature_maps,
                                                               config.N_CLASS * 4)
-            detector_class_logits = utils.fully_connected('detector_class_logits', pooled_feature_maps, config.N_CLASS)
+            detector_class_logits = utils.fully_connected('detector_class_logits',
+                                                          pooled_feature_maps,
+                                                          config.N_CLASS)
 
             detector_bbox_refinements = tf.reshape(detector_bbox_refinements,
                                                    (-1, config.TRAIN_ROIS_PER_IMAGE, config.N_CLASS, 4))
             detector_class_logits = tf.reshape(detector_class_logits, (-1, config.TRAIN_ROIS_PER_IMAGE, config.N_CLASS))
 
-        return detector_bbox_refinements, detector_class_logits
+        return detector_class_logits, detector_bbox_refinements
 
 # def refine_detections_graph(rois, probs, deltas, window, config):
 #     """Refine classified proposals and filter overlaps and return final
