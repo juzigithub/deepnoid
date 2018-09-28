@@ -79,6 +79,10 @@ class Train:
             saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain')+
                                                              tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='rpn_pretrain'))
 
+            saver2 = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain')+
+                                                             tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='rpn_pretrain')+
+                                                             tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='detector_pretrain'))
+
             # save graphs from tensorboard
             self.writer.add_graph(sess.graph)
 
@@ -86,7 +90,7 @@ class Train:
             sess.run(tf.global_variables_initializer())
 
             if self.restore:
-                saver.restore(sess, self.ckpt_path + 'feature_extractor_weights.ckpt')
+                saver.restore(sess, self.ckpt_path + 'rpn_weights.ckpt')
 
             print("BEGIN TRAINING")
 
@@ -241,7 +245,7 @@ class Train:
 
     def _make_path(self, epoch):
         # Absolute path for model saving. save as 'file_name'.ckpt
-        self.model_save_path = self.model_path + '{0}{1}{0}rpn_weights.ckpt'.format(cfg.PATH_SLASH,
+        self.model_save_path = self.model_path + '{0}{1}{0}detector_weights.ckpt'.format(cfg.PATH_SLASH,
                                                                                     str(epoch + 1))
 
         # create if there is no such file in a saving path
