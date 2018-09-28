@@ -53,11 +53,13 @@ class Model:
                                                   norm_type=cfg.NORMALIZATION_TYPE,
                                                   training=self.training,
                                                   idx=0)
+        print('feature_maps', feature_maps)
 
         feature_shape_h, feature_shape_w = tf.shape(feature_maps)[1], tf.shape(feature_maps)[2]
         feature_maps = tf.expand_dims(feature_maps, axis=0)
         feature_maps = tf.transpose(feature_maps, (0, 2, 3, 1, 4))
         feature_maps = tf.reshape(feature_maps, (1, feature_shape_h, feature_shape_w, -1))
+        print('concated_feature_maps', feature_maps)
 
         proposals = self.region_proposal_network(self.anchors, rpn_bbox_refinements, rpn_class_probs, self.training)
         proposals = tf.squeeze(proposals, axis=0)
