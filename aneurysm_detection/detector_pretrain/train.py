@@ -63,7 +63,7 @@ class Train:
                                                                      name='learning_rate')
 
         self.optimizer = utils.select_optimizer(cfg.OPTIMIZER, exponential_decay_learning_rate, self.model.loss, global_step,
-                                                tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='detector_pretrain'))
+                                                tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='detector_pretrain')) ######################################
 
 
     def train(self):
@@ -79,11 +79,13 @@ class Train:
             # saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain'))
             saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain')+
                                                              tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='rpn_pretrain'))
-            saver2 = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain')+
-                                                             tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='rpn_pretrain')+
-                                                             tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='detector_pretrain'))
-
+            # saver2 = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain')+
+            #                                                  tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='rpn_pretrain')+
+            #                                                  tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='detector_pretrain'))
             # save graphs from tensorboard
+            saver2 = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES))
+
+
             self.writer.add_graph(sess.graph)
 
             # initialize global variables from session. Need to assign initial values for each variables
