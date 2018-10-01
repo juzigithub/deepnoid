@@ -91,6 +91,7 @@ class Model:
         print('detector_bbox_refinements', detector_bbox_refinements)
 
         if self.training == tf.constant(False):
+            print('training == False')
             ### Detector Final Outputs ###
             final_proposals = tf.squeeze(proposals, axis=0)
             final_detector_class_probs = tf.squeeze(tf.nn.softmax(detector_class_logits), axis=0)
