@@ -171,12 +171,12 @@ class Train:
                                     self.model.training: True,
                                     self.model.drop_rate: drop_rate}
 
-                    cost, _, dlogits, dbbox = sess.run([self.model.loss, self.optimizer, self.model.detector_class_label2, self.model.detector_bbox_label2], feed_dict=tr_feed_dict)
+                    cost, _, dlogits, dbbox = sess.run([self.model.loss, self.optimizer, self.model.detector_class_label, self.model.detector_bbox_label], feed_dict=tr_feed_dict)
                     # print('gt_boxes', gt_boxes)
                     # print('proposals', np.round(proposals * cfg.IMG_SIZE[0]))
                     print(cost)
-                    print('\ndlogits',dlogits)
-                    print('\ndbbox', dbbox)
+                    print('\ndlogits',dlogits, np.shape(dlogits))
+                    print('\ndbbox', dbbox, np.shape(dbbox))
 
 
                     # Update Loss Ratio for next step
