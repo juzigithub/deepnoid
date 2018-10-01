@@ -90,17 +90,16 @@ class Model:
         # detector_bbox_refinements = tf.reshape(detector_class_logits, (-1, config.TRAIN_ROIS_PER_IMAGE, config.N_CLASS, 4))
         print('detector_bbox_refinements', detector_bbox_refinements)
 
-        if self.training == tf.constant(False):
-            print('training == False')
-            ### Detector Final Outputs ###
-            final_proposals = tf.squeeze(proposals, axis=0)
-            final_detector_class_probs = tf.squeeze(tf.nn.softmax(detector_class_logits), axis=0)
-            final_detector_bbox_refinements = tf.squeeze(detector_bbox_refinements, axis=0)
 
-            self.detection_outputs = self.refine_detections_graph(final_proposals,
-                                                                  final_detector_class_probs,
-                                                                  final_detector_bbox_refinements,
-                                                                  cfg)
+        ### Detector Final Outputs ###
+        final_proposals = tf.squeeze(proposals, axis=0)
+        final_detector_class_probs = tf.squeeze(tf.nn.softmax(detector_class_logits), axis=0)
+        final_detector_bbox_refinements = tf.squeeze(detector_bbox_refinements, axis=0)
+
+        self.detection_outputs = self.refine_detections_graph(final_proposals,
+                                                              final_detector_class_probs,
+                                                              final_detector_bbox_refinements,
+                                                              cfg)
 
         # def refine_detections_graph(rois, probs, deltas, window, config):
         #     """Refine classified proposals and filter overlaps and return final

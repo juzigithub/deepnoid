@@ -200,7 +200,7 @@ class Train:
 
 ###################################################################
                 # validation test
-                for batch_x, batch_y in tl.iterate.minibatches(inputs=val_X, targets=val_Y,
+                for batch_x, batch_y in tl.iterate.minibatches(inputs=deepcopy(val_X), targets=deepcopy(val_Y),
                                                                batch_size=1, shuffle=False):
                     batch_x = batch_x[0]
                     batch_y = batch_y[0]
