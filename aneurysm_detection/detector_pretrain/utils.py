@@ -2917,7 +2917,7 @@ def detection_targets_graph(proposals, gt_class_ids, gt_boxes, config):
     generates target class IDs, bounding box deltas, and masks for each.
 
     Inputs:
-    proposals: [N, (y1, x1, y2, x2)] in normalized coordinates. Might
+    proposals: [Batch_size, N, (y1, x1, y2, x2)] in normalized coordinates. Might
                be zero padded if there are not enough proposals.
     gt_class_ids: [MAX_GT_INSTANCES] int class IDs
     gt_boxes: [MAX_GT_INSTANCES, (y1, x1, y2, x2)] in normalized coordinates.
@@ -2937,6 +2937,7 @@ def detection_targets_graph(proposals, gt_class_ids, gt_boxes, config):
                   name="roi_assertion"),
     ]
     with tf.control_dependencies(asserts):
+        proposals = tf.squeeze(proposals, axis=0) ############################################
         proposals = tf.identity(proposals)
 
     # Remove zero padding

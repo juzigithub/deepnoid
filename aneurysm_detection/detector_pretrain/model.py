@@ -73,7 +73,7 @@ class Model:
                                                  rpn_bbox_refinements,
                                                  rpn_class_probs,
                                                  self.training)
-        proposals = tf.squeeze(proposals, axis=0)
+        # proposals = tf.squeeze(proposals, axis=0)
 
         ### Make detector label ###
         proposals, detector_class_label, detector_bbox_label = utils.detection_targets_graph(proposals,
@@ -87,6 +87,12 @@ class Model:
         detector_class_logits, detector_bbox_refinements = self.detector(proposals, feature_maps, feature_shape_c, cfg)
         print('detector_class_logits', detector_class_logits)
         print('detector_bbox_refinements', detector_bbox_refinements)
+
+        if not self.training:
+            ### Detector Final Outputs ###
+            pass
+
+
 
         return rpn_class_logitss, rpn_bbox_refinements, detector_class_logits, detector_bbox_refinements, detector_class_label, detector_bbox_label
 
@@ -290,10 +296,6 @@ class Model:
 
 
 
-
-
-
-#
 #
 #
 #
@@ -411,7 +413,7 @@ class Model:
 #     def __init__(self, config=None, **kwargs):
 #         super(DetectionLayer, self).__init__(**kwargs)
 #         self.config = config
-# 
+#
 #     def call(self, inputs):
 #         rois = inputs[0]
 #         mrcnn_class = inputs[1]
