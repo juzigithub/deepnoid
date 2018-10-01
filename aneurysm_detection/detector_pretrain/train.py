@@ -171,11 +171,13 @@ class Train:
                                     self.model.training: True,
                                     self.model.drop_rate: drop_rate}
 
-                    cost, _, posi_id = sess.run([self.model.loss, self.optimizer, self.model.posi_id], feed_dict=tr_feed_dict)
+                    cost, _, prop, bbox, posi_id = sess.run([self.model.loss, self.optimizer, self.model.prop, self.model.detector_bbox_label, self.model.posi_id], feed_dict=tr_feed_dict)
                     # print('gt_boxes', gt_boxes)
                     # print('proposals', np.round(proposals * cfg.IMG_SIZE[0]))
                     print(cost)
                     print('\nposi_id',posi_id, len(posi_id))
+                    print('\nprop', prop)
+                    print('\nbbox', bbox)
 
 
                     # Update Loss Ratio for next step

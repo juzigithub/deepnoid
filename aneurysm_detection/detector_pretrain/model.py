@@ -75,10 +75,14 @@ class Model:
                                                  self.training)
         # proposals = tf.squeeze(proposals, axis=0)
 
+        #############################
+        self.prop = tf.identity(proposals)
+        #############################
+
         ### Make detector label ###
         proposals, detector_class_label, detector_bbox_label, self.posi_id = utils.detection_targets_graph(proposals,
                                                                                              self.detector_class_label,
-                                                                                             self.detector_bbox_label, cfg)
+                                                                                             self.detector_bbox_label, cfg) #############################
         detector_class_label = tf.expand_dims(detector_class_label, axis=0)
         detector_bbox_label = tf.expand_dims(detector_bbox_label, axis=0)
         proposals = tf.expand_dims(proposals, axis=0)
