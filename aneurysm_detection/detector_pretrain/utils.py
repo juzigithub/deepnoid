@@ -715,13 +715,13 @@ def select_loss(mode, output, target, smooth=1e-6, weight=1, epsilon=1e-6, delta
 #############################################################################################################################
 
 
-def select_optimizer(mode, learning_rate, loss, global_step):
+def select_optimizer(mode, learning_rate, loss, global_step, var_list=None):
     if mode == 'adam':
-        return tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss=loss, global_step=global_step)
+        return tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss=loss, var_list=var_list, global_step=global_step)
     elif mode == 'rmsprop':
-        return tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(loss=loss, global_step=global_step)
+        return tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(loss=loss, var_list=var_list, global_step=global_step)
     elif mode == 'sgd':
-        return tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(loss=loss, global_step=global_step)
+        return tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(loss=loss, var_list=var_list, global_step=global_step)
     else:
         print("Not supported optimizer. Select among adam, rmsprop, sgd")
 
@@ -2958,7 +2958,7 @@ def detection_targets_graph(proposals, gt_class_ids, gt_boxes, config):
     # Compute overlaps matrix [proposals, gt_boxes]
     #############################################################
     # overlaps = overlaps_graph(proposals, gt_boxes)
-
+    #
     overlaps = overlaps_graph(proposals * config.IMG_SIZE[0], gt_boxes * config.IMG_SIZE[0])
 
 
