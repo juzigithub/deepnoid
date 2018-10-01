@@ -172,7 +172,7 @@ class Train:
                                     self.model.detector_class_label: detector_class_label,
                                     self.model.detector_bbox_label: detector_bbox_label,
                                     self.model.training: True,
-                                    self.model.drop_rate: drop_rate}
+                                    self.model.drop_rate: 0} ##############################################
 
                     cost, _, prop, bbox, posi_id = sess.run([self.model.loss, self.optimizer, self.model.prop, self.model.detector_bbox_label, self.model.posi_id], feed_dict=tr_feed_dict)
                     # print('gt_boxes', gt_boxes)
