@@ -86,7 +86,8 @@ class Train:
             sess.run(tf.global_variables_initializer())
 
             if self.restore:
-                saver.restore(sess, self.ckpt_path + 'feature_extractor_weights.ckpt')
+                # saver.restore(sess, self.ckpt_path + 'feature_extractor_weights.ckpt') #######################################
+                saver2.restore(sess, self.ckpt_path + 'rpn_weights.ckpt')
 
             print("BEGIN TRAINING")
 
@@ -145,6 +146,11 @@ class Train:
 
                     if np.ndim(batch_y) == 1:
                         batch_y = np.expand_dims(batch_y, 0)
+
+                    ###############################
+                    gt = deepcopy(batch_y)
+                    ###############################
+
                     batch_y[:,1:] = np.round(batch_y[:,1:] * cfg.IMG_SIZE[0])
                     # rpn_class_label = np.expand_dims(batch_y[:,0], -1).reshape((1, -1, 1))
                     gt_boxes = batch_y[:,1:]
@@ -160,8 +166,8 @@ class Train:
                                     self.model.drop_rate: drop_rate}
 
                     cost, _, proposals = sess.run([self.model.loss, self.optimizer, self.model.proposals], feed_dict=tr_feed_dict)
-                    print('gt_boxes', gt_boxes)
-                    print('proposals', np.round(proposals * cfg.IMG_SIZE[0]))
+                    print('gt', gt)
+                    print('proposals', proposals)
                     print(cost)
 
 
