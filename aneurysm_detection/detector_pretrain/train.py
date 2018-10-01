@@ -199,47 +199,54 @@ class Train:
 
 
 ###################################################################
-                # # validation test
-                # for batch_x, batch_y in tl.iterate.minibatches(inputs=val_X, targets=val_Y,
-                #                                     batch_size=cfg.BATCH_SIZE, shuffle=False):
-                #     batch_x = batch_x[0]
-                #     batch_y = batch_y[0]
-                #
-                #     batch_x = batch_x.reshape((-1, 3, cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]))
-                #     batch_x = np.transpose(batch_x, (0, 2, 3, 1))
-                #
-                #     if np.ndim(batch_y) == 1:
-                #         batch_y = np.expand_dims(batch_y, 0)
-                #     batch_y[:, 1:] = np.round(batch_y[:, 1:] * cfg.IMG_SIZE[0])
-                #     # rpn_class_label = np.expand_dims(batch_y[:,0], -1).reshape((1, -1, 1))
-                #     gt_boxes = batch_y[:, 1:]
-                #     rpn_class_label, rpn_bbox_label = utils.build_rpn_targets2(anchors, gt_boxes, cfg)
-                #     rpn_class_label = np.expand_dims(np.expand_dims(rpn_class_label, 0), -1)
-                #     rpn_bbox_label = np.expand_dims(rpn_bbox_label, 0)
-                #
-                #     val_feed_dict = {self.model.X: batch_x,
-                #                      self.model.anchors: normed_anchors,
-                #                      self.model.rpn_class_label: rpn_class_label,
-                #                      self.model.rpn_bbox_label: rpn_bbox_label,
-                #                      self.model.training: False,
-                #                      self.model.drop_rate: 0}
-                #
-                #     cost, proposals = sess.run([self.model.loss, self.model.proposals], feed_dict=val_feed_dict)
-                #     print('gt_boxes', gt_boxes)
-                #     print('proposals', np.round(proposals * cfg.IMG_SIZE[0]))
-                #     one_epoch_result_list.append(cost)
-                #
-                #
-                # one_epoch_mean = np.mean(np.array(one_epoch_result_list))
-                # self.result = '\nEpoch: {} / {}, Loss : {}\n'.format(epoch, cfg.EPOCHS, one_epoch_mean)
-                # print(self.result)
-                # utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
-                #
-                # # save model ckpt
-                # if save_yn:
-                #     saver2.save(sess, self.model_save_path)
-                #     print(">>> Model SAVED")
-                #     print('')
+                # validation test
+                for batch_x, batch_y in tl.iterate.minibatches(inputs=val_X, targets=val_Y,
+                                                               batch_size=1, shuffle=False):
+                    batch_x = batch_x[0]
+                    batch_y = batch_y[0]
+
+                    batch_x = batch_x.reshape((-1, 3, cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]))
+                    batch_x = np.transpose(batch_x, (0, 2, 3, 1))
+
+                    if np.ndim(batch_y) == 1:
+                        batch_y = np.expand_dims(batch_y, 0)
+
+                    detector_class_label = batch_y[:,0]
+                    detector_bbox_label = deepcopy(batch_y[:,1:])
+
+                    batch_y[:, 1:] = np.round(batch_y[:, 1:] * cfg.IMG_SIZE[0])
+                    # rpn_class_label = np.expand_dims(batch_y[:,0], -1).reshape((1, -1, 1))
+                    gt_boxes = batch_y[:, 1:]
+                    rpn_class_label, rpn_bbox_label = utils.build_rpn_targets2(anchors, gt_boxes, cfg)
+                    rpn_class_label = np.expand_dims(np.expand_dims(rpn_class_label, 0), -1)
+                    rpn_bbox_label = np.expand_dims(rpn_bbox_label, 0)
+
+                    val_feed_dict = {self.model.X: batch_x,
+                                     self.model.anchors: normed_anchors,
+                                     self.model.rpn_class_label: rpn_class_label,
+                                     self.model.rpn_bbox_label: rpn_bbox_label,
+                                     self.model.detector_class_label: detector_class_label,
+                                     self.model.detector_bbox_label: detector_bbox_label,
+                                     self.model.training: False,
+                                     self.model.drop_rate: 0}
+
+                    cost, detection_outputs = sess.run([self.model.loss, self.model.detection_outputs], feed_dict=val_feed_dict)
+                    # print('gt_boxes', gt_boxes)
+                    # print('proposals', np.round(proposals * cfg.IMG_SIZE[0]))
+                    print('detection_outputs', detection_outputs)
+                    one_epoch_result_list.append(cost)
+
+
+                one_epoch_mean = np.mean(np.array(one_epoch_result_list))
+                self.result = '\nEpoch: {} / {}, Loss : {}\n'.format(epoch, cfg.EPOCHS, one_epoch_mean)
+                print(self.result)
+                utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
+
+                # save model ckpt
+                if save_yn:
+                    saver2.save(sess, self.model_save_path)
+                    print(">>> Model SAVED")
+                    print('')
 ##########################################################################
 
     def _make_path(self, epoch):
