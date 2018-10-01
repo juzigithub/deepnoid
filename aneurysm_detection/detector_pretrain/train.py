@@ -234,7 +234,7 @@ class Train:
                     # print('gt_boxes', gt_boxes)
                     # print('proposals', np.round(proposals * cfg.IMG_SIZE[0]))
                     print('gt', batch_y)
-                    print('detection_outputs', np.round(detection_outputs[:,:4] * cfg.IMG_SIZE[0]))
+                    print('detection_outputs', np.round(detection_outputs[:,:4] * cfg.IMG_SIZE[0]), detection_outputs[:,4:])
 
                     one_epoch_result_list.append(cost)
 
