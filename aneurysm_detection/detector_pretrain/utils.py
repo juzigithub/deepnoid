@@ -2967,7 +2967,7 @@ def detection_targets_graph(proposals, gt_class_ids, gt_boxes, config):
     roi_iou_max = tf.reduce_max(overlaps, axis=1)
     # 1. Positive ROIs are those with >= 0.5 IoU with a GT box
     positive_roi_bool = (roi_iou_max >= 0.5)
-    positive_indices = tf.where(positive_roi_bool)[:, 0]
+    positive_indices = tf.where(positive_roi_bool)[:, 0] #####################################################
     # 2. Negative ROIs are those with < 0.5 with every GT box. Skip crowds.
     negative_indices = tf.where(roi_iou_max < 0.5)[:, 0]
 
@@ -3009,7 +3009,7 @@ def detection_targets_graph(proposals, gt_class_ids, gt_boxes, config):
     roi_gt_class_ids = tf.pad(roi_gt_class_ids, [(0, N + P)])
     deltas = tf.pad(deltas, [(0, N + P), (0, 0)])
 
-    return rois, roi_gt_class_ids, deltas
+    return rois, roi_gt_class_ids, deltas, positive_indices ##########################################
 
 def overlaps_graph(boxes1, boxes2):
     """Computes IoU overlaps between two sets of boxes.

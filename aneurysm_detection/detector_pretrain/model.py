@@ -76,7 +76,7 @@ class Model:
         # proposals = tf.squeeze(proposals, axis=0)
 
         ### Make detector label ###
-        proposals, detector_class_label, detector_bbox_label = utils.detection_targets_graph(proposals,
+        proposals, detector_class_label, detector_bbox_label, self.posi_id = utils.detection_targets_graph(proposals,
                                                                                              self.detector_class_label,
                                                                                              self.detector_bbox_label, cfg)
         detector_class_label = tf.expand_dims(detector_class_label, axis=0)
