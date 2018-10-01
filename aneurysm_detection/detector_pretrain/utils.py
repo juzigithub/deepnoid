@@ -2956,7 +2956,11 @@ def detection_targets_graph(proposals, gt_class_ids, gt_boxes, config):
     # gt_boxes = tf.gather(gt_boxes, non_crowd_ix)
 
     # Compute overlaps matrix [proposals, gt_boxes]
-    overlaps = overlaps_graph(proposals, gt_boxes)
+    #############################################################
+    # overlaps = overlaps_graph(proposals, gt_boxes)
+
+    overlaps = overlaps_graph(proposals * config.IMG_SIZE[0], gt_boxes * config.IMG_SIZE[0])
+
 
     # Compute overlaps with crowd boxes [anchors, crowds]
     # crowd_overlaps = overlaps_graph(proposals, crowd_boxes)
