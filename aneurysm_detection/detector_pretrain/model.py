@@ -88,7 +88,7 @@ class Model:
         print('detector_class_logits', detector_class_logits)
         print('detector_bbox_refinements', detector_bbox_refinements)
 
-        if not self.training:
+        if self.training == tf.constant(False):
             ### Detector Final Outputs ###
             pass
 
