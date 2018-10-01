@@ -45,7 +45,7 @@ PATH_SLASH = '/' if MODE == 'linux' else '\\'
 
 ### Data info ###
 IMG_SIZE = [256, 256]         # axial : [192, 192], sagittal : [155, 192], coronal : [155, 192]
-POOLED_SIZE = [7, 7]
+POOLED_SIZE = [8, 8]
 N_3D_CONTEXT = 9
 # PATCH_SIZE = 128
 # PATCH_STRIDE = 16
@@ -78,8 +78,8 @@ DECAY_RATE = 0.9
 DECAY_STEP = 4000
 DECAY_STAIRCASE = True
 NORMALIZATION_TYPE = 'group'    # batch, group
-PRETRAIN_N_LAYERS = 5
-N_DOWNSAMPLING = 3
+PRETRAIN_N_LAYERS = 4
+# N_DOWNSAMPLING = 3
 # N_LAYERS = [3, 3, 4]            # n_layers before each downsampling
 # N_LAYERS_HIGH = [2,2,2,3]       # n_high_layers before each downsampling
 # N_LAYERS_LOW = [2,3,3]          # n_low_layers before each downsampling
@@ -119,3 +119,6 @@ RPN_NMS_THRESHOLD = 0.7
 ### detector ###
 TRAIN_ROIS_PER_IMAGE = 200
 ROI_POSITIVE_RATIO = 0.33
+DETECTION_MIN_CONFIDENCE = 0.7
+DETECTION_MAX_INSTANCES = 100
+DETECTION_NMS_THRESHOLD = 0.3
