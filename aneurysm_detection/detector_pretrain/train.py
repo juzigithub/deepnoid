@@ -175,13 +175,21 @@ class Train:
                                     self.model.training: True,
                                     self.model.drop_rate: 0} ##############################################
 
-                    cost, _, prop, bbox, posi_id = sess.run([self.model.loss, self.optimizer, self.model.prop, self.model.detector_bbox_label, self.model.posi_id], feed_dict=tr_feed_dict)
+                    cost, _, prop, prop2, bbox, bbox2, posi_id = sess.run([self.model.loss,
+                                                             self.optimizer,
+                                                             self.model.prop,
+                                                                           self.model.proposals,
+                                                             self.model.detector_bbox_label,
+                                                             self.model.detector_bbox_label2,
+                                                             self.model.posi_id], feed_dict=tr_feed_dict)
                     # print('gt_boxes', gt_boxes)
                     # print('proposals', np.round(proposals * cfg.IMG_SIZE[0]))
                     print(cost)
                     print('\nposi_id',posi_id, len(posi_id))
                     print('\nprop', prop)
+                    print('\nprop2', prop2)
                     print('\nbbox', bbox)
+                    print('\nbbox2', bbox2)
 
 
                     # Update Loss Ratio for next step

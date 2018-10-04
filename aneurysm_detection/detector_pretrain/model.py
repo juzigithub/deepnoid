@@ -50,16 +50,17 @@ class Model:
                                                                                            cfg.RPN_N_FILTER,
                                                                                            len(cfg.ANCHOR_RATIOS))
         ### Additional Conv for 3d contexts ###
-        feature_maps = utils.residual_block_dw_dr(name='common_conv',
-                                                  inputs=feature_maps,
-                                                  channel_n=cfg.POOLED_SIZE[0]*cfg.POOLED_SIZE[1]*10,
-                                                  width_mul=1.0,
-                                                  group_n=cfg.GROUP_N,
-                                                  drop_rate=self.drop_rate,
-                                                  act_fn=cfg.ACTIVATION_FUNC,
-                                                  norm_type=cfg.NORMALIZATION_TYPE,
-                                                  training=self.training,
-                                                  idx=0)
+        with tf.variable_scope('common_conv_pretrain'):
+            feature_maps = utils.residual_block_dw_dr(name='common_conv',
+                                                      inputs=feature_maps,
+                                                      channel_n=cfg.POOLED_SIZE[0]*cfg.POOLED_SIZE[1]*10,
+                                                      width_mul=1.0,
+                                                      group_n=cfg.GROUP_N,
+                                                      drop_rate=self.drop_rate,
+                                                      act_fn=cfg.ACTIVATION_FUNC,
+                                                      norm_type=cfg.NORMALIZATION_TYPE,
+                                                      training=self.training,
+                                                      idx=0)
         print('feature_maps', feature_maps)
         feature_shape_h, feature_shape_w, feature_shape_c = feature_maps.get_shape().as_list()[1:]
         feature_maps = tf.expand_dims(feature_maps, axis=0)
@@ -86,6 +87,10 @@ class Model:
         detector_class_label = tf.expand_dims(detector_class_label, axis=0)
         detector_bbox_label = tf.expand_dims(detector_bbox_label, axis=0)
         proposals = tf.expand_dims(proposals, axis=0)
+
+        ################################
+        self.proposals = tf.identity(proposals)
+        ################################
 
         ### Detector ###
         detector_class_logits, detector_bbox_refinements = self.detector(proposals, feature_maps, feature_shape_c, cfg)
