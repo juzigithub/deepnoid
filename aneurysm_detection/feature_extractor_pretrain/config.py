@@ -41,6 +41,7 @@ PATH_SLASH = '/' if MODE == 'linux' else '\\'
 
 ### Data info ###
 IMG_SIZE = [256, 256]         # axial : [192, 192], sagittal : [155, 192], coronal : [155, 192]
+N_3D_CONTEXT = 9
 # PATCH_SIZE = 128
 # PATCH_STRIDE = 16
 # PATCH_NCR_CUTLINE = 1e-10  # 0.05
@@ -72,7 +73,7 @@ DECAY_RATE = 0.9
 DECAY_STEP = 4000
 DECAY_STAIRCASE = True
 NORMALIZATION_TYPE = 'batch'    # batch, group
-PRETRAIN_N_LAYERS = 4
+PRETRAIN_N_LAYERS = 5
 N_DOWNSAMPLING = 3
 # N_LAYERS = [3, 3, 4]            # n_layers before each downsampling
 # N_LAYERS_HIGH = [2,2,2,3]       # n_high_layers before each downsampling
