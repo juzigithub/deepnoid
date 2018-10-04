@@ -86,8 +86,8 @@ class Train:
             sess.run(tf.global_variables_initializer())
 
             if self.restore:
-                # saver.restore(sess, self.ckpt_path + 'feature_extractor_weights.ckpt') #######################################
-                saver2.restore(sess, self.ckpt_path + 'rpn_weights.ckpt')
+                saver.restore(sess, self.ckpt_path + 'feature_extractor_weights.ckpt') #######################################
+                # saver2.restore(sess, self.ckpt_path + 'rpn_weights.ckpt')
 
             print("BEGIN TRAINING")
 
