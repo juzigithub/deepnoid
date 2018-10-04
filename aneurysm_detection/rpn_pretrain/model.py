@@ -97,8 +97,30 @@ class Model:
 
             for idx, p in enumerate(rpn_feature_maps):
 
-                shared = utils.residual_block_dw_dr(name='rpn_shared_{}'.format(idx),
+                shared = utils.residual_block_dw_dr(name='rpn_shared_{}_0'.format(idx),
                                                     inputs=p,
+                                                    channel_n=channel_n,
+                                                    width_mul=1.0,
+                                                    group_n=cfg.GROUP_N,
+                                                    drop_rate=self.drop_rate,
+                                                    act_fn=cfg.ACTIVATION_FUNC,
+                                                    norm_type=cfg.NORMALIZATION_TYPE,
+                                                    training=self.training,
+                                                    idx=idx)
+                print(shared)
+                shared = utils.residual_block_dw_dr(name='rpn_shared_{}_1'.format(idx),
+                                                    inputs=shared,
+                                                    channel_n=channel_n,
+                                                    width_mul=1.0,
+                                                    group_n=cfg.GROUP_N,
+                                                    drop_rate=self.drop_rate,
+                                                    act_fn=cfg.ACTIVATION_FUNC,
+                                                    norm_type=cfg.NORMALIZATION_TYPE,
+                                                    training=self.training,
+                                                    idx=idx)
+                print(shared)
+                shared = utils.residual_block_dw_dr(name='rpn_shared_{}_2'.format(idx),
+                                                    inputs=shared,
                                                     channel_n=channel_n,
                                                     width_mul=1.0,
                                                     group_n=cfg.GROUP_N,
