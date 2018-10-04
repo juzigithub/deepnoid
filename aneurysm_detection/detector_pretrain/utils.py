@@ -3106,7 +3106,9 @@ def detection_targets_graph(proposals, gt_class_ids, gt_boxes, config):
     roi_gt_class_ids = tf.gather(gt_class_ids, roi_gt_box_assignment)
 
     # Compute bbox refinement for positive ROIs
-    deltas = box_refinement_graph2(positive_rois, roi_gt_boxes, config)
+    deltas = box_refinement_graph2(tf.round(positive_rois * config.IMG_SIZE[0]),
+                                   tf.round(roi_gt_boxes * config.IMG_SIZE[0]),
+                                   config)
     # deltas /= config.BBOX_STD_DEV ######################################################
 
     # Append negative ROIs and pad bbox deltas and masks that
