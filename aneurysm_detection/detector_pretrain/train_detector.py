@@ -62,7 +62,9 @@ class Train:
                                                                      staircase=cfg.DECAY_STAIRCASE,
                                                                      name='learning_rate')
 
-        self.optimizer = utils.select_optimizer(cfg.OPTIMIZER, exponential_decay_learning_rate, self.model.loss, global_step) ######################################
+        self.optimizer = utils.select_optimizer(cfg.OPTIMIZER, exponential_decay_learning_rate, self.model.loss, global_step,
+                                                tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='detector_pretrain')+
+                                                tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='common_conv_pretrain')) ######################################
 
 
     def train(self):
