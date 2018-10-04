@@ -2912,6 +2912,111 @@ def box_refinement_graph2(box, gt_box, config):
     result = tf.stack([dy, dx, dh, dw], axis=1)
     return result
 
+# def detection_targets_graph(proposals, gt_class_ids, gt_boxes, config):
+#     """Generates detection targets for one image. Subsamples proposals and
+#     generates target class IDs, bounding box deltas, and masks for each.
+#
+#     Inputs:
+#     proposals: [Batch_size, N, (y1, x1, y2, x2)] in normalized coordinates. Might
+#                be zero padded if there are not enough proposals.
+#     gt_class_ids: [MAX_GT_INSTANCES] int class IDs
+#     gt_boxes: [MAX_GT_INSTANCES, (y1, x1, y2, x2)] in normalized coordinates.
+#
+#     Returns: Target ROIs and corresponding class IDs, bounding box shifts,
+#     and masks.
+#     rois: [TRAIN_ROIS_PER_IMAGE, (y1, x1, y2, x2)] in normalized coordinates
+#     class_ids: [TRAIN_ROIS_PER_IMAGE]. Integer class IDs. Zero padded.
+#     deltas: [TRAIN_ROIS_PER_IMAGE, NUM_CLASSES, (dy, dx, log(dh), log(dw))]
+#             Class-specific bbox refinements.
+#
+#     Note: Returned arrays might be zero padded if not enough target ROIs.
+#     """
+#     # Assertions
+#     asserts = [
+#         tf.Assert(tf.greater(tf.shape(proposals)[0], 0), [proposals],
+#                   name="roi_assertion"),
+#     ]
+#     with tf.control_dependencies(asserts):
+#         proposals = tf.squeeze(proposals, axis=0) ############################################
+#         proposals = tf.identity(proposals)
+#
+#     # Remove zero padding
+#     proposals, _ = trim_zeros_graph(proposals, name="trim_proposals")
+#     gt_boxes, non_zeros = trim_zeros_graph(gt_boxes, name="trim_gt_boxes")
+#     gt_class_ids = tf.boolean_mask(gt_class_ids, non_zeros,
+#                                    name="trim_gt_class_ids")
+#
+#     # # Handle COCO crowds
+#     # # A crowd box in COCO is a bounding box around several instances. Exclude
+#     # # them from training. A crowd box is given a negative class ID.
+#     # crowd_ix = tf.where(gt_class_ids < 0)[:, 0]
+#     # non_crowd_ix = tf.where(gt_class_ids > 0)[:, 0]
+#     # crowd_boxes = tf.gather(gt_boxes, crowd_ix)
+#     # gt_class_ids = tf.gather(gt_class_ids, non_crowd_ix)
+#     # gt_boxes = tf.gather(gt_boxes, non_crowd_ix)
+#
+#     # Compute overlaps matrix [proposals, gt_boxes]
+#     #############################################################
+#     # overlaps = overlaps_graph(proposals, gt_boxes)
+#     #
+#     overlaps = overlaps_graph(tf.round(proposals * config.IMG_SIZE[0]),
+#                               tf.round(gt_boxes * config.IMG_SIZE[0]))
+#
+#
+#     # Compute overlaps with crowd boxes [anchors, crowds]
+#     # crowd_overlaps = overlaps_graph(proposals, crowd_boxes)
+#     # crowd_iou_max = tf.reduce_max(crowd_overlaps, axis=1)
+#     # no_crowd_bool = (crowd_iou_max < 0.001)
+#
+#     # Determine postive and negative ROIs
+#     roi_iou_max = tf.reduce_max(overlaps, axis=1)
+#     # 1. Positive ROIs are those with >= 0.5 IoU with a GT box
+#     positive_roi_bool = (roi_iou_max >= 0.1) ################################### 0.5
+#     positive_indices = tf.where(positive_roi_bool)[:, 0] #####################################################
+#     # 2. Negative ROIs are those with < 0.5 with every GT box. Skip crowds.
+#     negative_indices = tf.where(roi_iou_max < 0.1)[:, 0] ################################## 0.5
+#
+#     # Subsample ROIs. Aim for 33% positive
+#     # Positive ROIs
+#     positive_count = int(config.TRAIN_ROIS_PER_IMAGE *
+#                          config.ROI_POSITIVE_RATIO)
+#     positive_indices = tf.random_shuffle(positive_indices)[:positive_count]
+#     positive_count = tf.shape(positive_indices)[0]
+#     # Negative ROIs. Add enough to maintain positive:negative ratio.
+#     r = 1.0 / config.ROI_POSITIVE_RATIO
+#     negative_count = tf.cast(r * tf.cast(positive_count, tf.float32), tf.int32) - positive_count
+#     negative_indices = tf.random_shuffle(negative_indices)[:negative_count]
+#     # Gather selected ROIs
+#     positive_rois = tf.gather(proposals, positive_indices)
+#     negative_rois = tf.gather(proposals, negative_indices)
+#
+#     # Assign positive ROIs to GT boxes.
+#     positive_overlaps = tf.gather(overlaps, positive_indices)
+#     roi_gt_box_assignment = tf.cond(
+#         tf.greater(tf.shape(positive_overlaps)[1], 0),
+#         true_fn=lambda: tf.argmax(positive_overlaps, axis=1),
+#         false_fn=lambda: tf.cast(tf.constant([]), tf.int64)
+#     )
+#     roi_gt_boxes = tf.gather(gt_boxes, roi_gt_box_assignment)
+#     roi_gt_class_ids = tf.gather(gt_class_ids, roi_gt_box_assignment)
+#
+#     # Compute bbox refinement for positive ROIs
+#     deltas = box_refinement_graph2(positive_rois, roi_gt_boxes, config)
+#     # deltas /= config.BBOX_STD_DEV ######################################################
+#
+#     # Append negative ROIs and pad bbox deltas and masks that
+#     # are not used for negative ROIs with zeros.
+#     rois = tf.concat([positive_rois, negative_rois], axis=0)
+#     N = tf.shape(negative_rois)[0]
+#     P = tf.maximum(config.TRAIN_ROIS_PER_IMAGE - tf.shape(rois)[0], 0)
+#     rois = tf.pad(rois, [(0, P), (0, 0)])
+#     # roi_gt_boxes = tf.pad(roi_gt_boxes, [(0, N + P), (0, 0)])
+#     roi_gt_class_ids = tf.pad(roi_gt_class_ids, [(0, N + P)])
+#     deltas = tf.pad(deltas, [(0, N + P), (0, 0)])
+#
+#     return rois, roi_gt_class_ids, deltas, positive_indices ##########################################
+
+
 def detection_targets_graph(proposals, gt_class_ids, gt_boxes, config):
     """Generates detection targets for one image. Subsamples proposals and
     generates target class IDs, bounding box deltas, and masks for each.
@@ -3014,7 +3119,7 @@ def detection_targets_graph(proposals, gt_class_ids, gt_boxes, config):
     roi_gt_class_ids = tf.pad(roi_gt_class_ids, [(0, N + P)])
     deltas = tf.pad(deltas, [(0, N + P), (0, 0)])
 
-    return rois, roi_gt_class_ids, deltas, positive_indices ##########################################
+    return rois, roi_gt_class_ids, deltas, positive_indices, overlaps ##########################################
 
 def overlaps_graph(boxes1, boxes2):
     """Computes IoU overlaps between two sets of boxes.

@@ -175,12 +175,13 @@ class Train:
                                     self.model.training: True,
                                     self.model.drop_rate: 0} ##############################################
 
-                    cost, _, prop, prop2, bbox, bbox2, posi_id = sess.run([self.model.loss,
+                    cost, _, prop, prop2, bbox, bbox2, overlaps, posi_id = sess.run([self.model.loss,
                                                              self.optimizer,
                                                              self.model.prop,
                                                                            self.model.proposals,
                                                              self.model.detector_bbox_label,
                                                              self.model.detector_bbox_label2,
+                                                                           self.model.overlaps,
                                                              self.model.posi_id], feed_dict=tr_feed_dict)
                     # print('gt_boxes', gt_boxes)
                     # print('proposals', np.round(proposals * cfg.IMG_SIZE[0]))
@@ -190,6 +191,7 @@ class Train:
                     print('\nprop2', prop2)
                     print('\nbbox', bbox)
                     print('\nbbox2', bbox2)
+                    print('\noverlaps', overlaps)
 
 
                     # Update Loss Ratio for next step
