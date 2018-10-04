@@ -26,7 +26,7 @@ class Model:
 
         self.loss = tf.reduce_mean(self.reconstruction_loss + self.latent_loss)
 
-    def feature_extractor(self, inputs, channel_n, n_layer):
+    def feature_extractor(self, inputs, channel_n, n_layer, n_downsampling):
         with tf.variable_scope('feature_extractor_pretrain'):
             l = inputs
             for idx in range(n_layer):
@@ -40,17 +40,17 @@ class Model:
                                                norm_type=cfg.NORMALIZATION_TYPE,
                                                training=self.training,
                                                idx=idx)
-                if idx + 1 < n_layer:
+                if idx + 1 <= n_downsampling:
                     l = utils.maxpool(name='maxpool_{}'.format(idx),
                                       inputs=l,
                                       pool_size=[2, 2],
                                       strides=[2, 2],
                                       padding='same')
-                    channel_n *= 2
+                channel_n *= 2
                 print(l)
         return l
 
-    def reconstructor(self, inputs, output_channel, n_layer):
+    def reconstructor(self, inputs, output_channel, n_layer, n_downsampling):
         with tf.variable_scope('non_pretrain'):
             l = inputs
             # _, h, w, channel_n = tf.shape(l)
@@ -67,10 +67,10 @@ class Model:
                                                norm_type=cfg.NORMALIZATION_TYPE,
                                                training=self.training,
                                                idx=idx)
-                if idx + 1 < n_layer:
+                channel_n //= 2
+                if idx + 1 <= n_downsampling:
                     h *= 2
                     w *= 2
-                    channel_n //= 2
                     l = utils.select_upsampling(name='upsampling_{}'.format(idx),
                                                  up_conv=l,
                                                  up_pool=[],
@@ -91,7 +91,7 @@ class Model:
 
         inputs = tf.identity(self.X)
         channel_n = cfg.INIT_N_FILTER
-        inputs = self.feature_extractor(inputs, channel_n, cfg.PRETRAIN_N_LAYERS)
+        inputs = self.feature_extractor(inputs, channel_n, cfg.PRETRAIN_N_LAYERS, cfg.N_DOWNSAMPLING)
 
         # inputs_shape = tf.shape(inputs)
         inputs_shape = inputs.get_shape().as_list()
@@ -100,7 +100,6 @@ class Model:
         reshaped_dim = [-1, inputs_shape[1], inputs_shape[2], inputs_shape[3]]
 
         inputs = utils.flatten('flatten1', inputs)
-
         mean = utils.fully_connected('mean', inputs, 30)
         gamma = utils.fully_connected('gamma', inputs, 30)
         noise = tf.random_normal(tf.shape(gamma), dtype=tf.float32)
@@ -110,7 +109,7 @@ class Model:
         inputs = tf.layers.dense(inputs, inputs_shape[1]*inputs_shape[2]*inputs_shape[3], activation=tf.nn.elu)
         inputs = tf.reshape(inputs, reshaped_dim)
 
-        outputs = self.reconstructor(inputs, 3, cfg.PRETRAIN_N_LAYERS)
+        outputs = self.reconstructor(inputs, 3, cfg.PRETRAIN_N_LAYERS, cfg.N_DOWNSAMPLING)
 
 
         # outputs = utils.flatten('flatten2', inputs)

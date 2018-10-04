@@ -130,7 +130,6 @@ class Model:
 
         return rpn_class_logitss, rpn_bbox_refinements, detector_class_logits, detector_bbox_refinements, detector_class_label, detector_bbox_label
 
-
     def feature_extractor(self, inputs, channel_n, n_layer):
         with tf.variable_scope('feature_extractor_pretrain'):
             l = inputs
@@ -145,13 +144,16 @@ class Model:
                                                norm_type=cfg.NORMALIZATION_TYPE,
                                                training=self.training,
                                                idx=idx)
-                if idx + 1 < n_layer:
+
+                if channel_n < 2 ** 11:
+                    channel_n *= 2
+
+                if idx + 1 <= cfg.N_DOWNSAMPLING:
                     l = utils.maxpool(name='maxpool_{}'.format(idx),
                                       inputs=l,
                                       pool_size=[2, 2],
                                       strides=[2, 2],
                                       padding='same')
-                    channel_n *= 2
                 print(l)
         return l
 
@@ -322,29 +324,6 @@ class Model:
                 proposals = tf.concat([proposals, proposal], 0)
 
         return proposals
-
-    # def detector(self, proposals, feature_maps, channel_n, config):
-    #     with tf.variable_scope('detector_pretrain'):
-    #         pooled_feature_maps = utils.roi_pooling(proposals, feature_maps, config.POOLED_SIZE, feature_pyramid=False)
-    #         print('pooled', pooled_feature_maps)
-    #         # pooled_feature_maps = tf.squeeze(pooled_feature_maps, axis=0)
-    #
-    #         pooled_feature_maps = utils.GlobalAveragePooling2D(input=pooled_feature_maps,
-    #                                                            n_class=channel_n,
-    #                                                            name='GAP',
-    #                                                            keep_dims=False)
-    #
-    #         detector_bbox_refinements = utils.fully_connected('detector_bbox_refinements',
-    #                                                           pooled_feature_maps,
-    #                                                           config.N_CLASS * 4)
-    #         detector_bbox_refinements = tf.reshape(detector_bbox_refinements, (-1, config.TRAIN_ROIS_PER_IMAGE, config.N_CLASS, 4))
-    #
-    #         detector_class_logits = utils.fully_connected('detector_class_logits',
-    #                                                       pooled_feature_maps,
-    #                                                       config.N_CLASS)
-    #         detector_class_logits = tf.reshape(detector_class_logits, (-1, config.TRAIN_ROIS_PER_IMAGE, config.N_CLASS))
-    #
-    #     return detector_class_logits, detector_bbox_refinements
 
     def detector(self, proposals, feature_maps, channel_n, config):
         with tf.variable_scope('detector_pretrain'):
