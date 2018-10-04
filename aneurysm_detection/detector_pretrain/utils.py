@@ -3076,10 +3076,10 @@ def detection_targets_graph(proposals, gt_class_ids, gt_boxes, config):
     # Determine postive and negative ROIs
     roi_iou_max = tf.reduce_max(overlaps, axis=1)
     # 1. Positive ROIs are those with >= 0.5 IoU with a GT box
-    positive_roi_bool = (roi_iou_max >= 0.1) ################################### 0.5
+    positive_roi_bool = (roi_iou_max > 0) ################################### >= 0.5
     positive_indices = tf.where(positive_roi_bool)[:, 0] #####################################################
     # 2. Negative ROIs are those with < 0.5 with every GT box. Skip crowds.
-    negative_indices = tf.where(roi_iou_max < 0.1)[:, 0] ################################## 0.5
+    negative_indices = tf.where(roi_iou_max == 0)[:, 0] ################################## < 0.5
 
     # Subsample ROIs. Aim for 33% positive
     # Positive ROIs
