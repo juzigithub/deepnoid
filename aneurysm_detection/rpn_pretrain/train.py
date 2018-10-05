@@ -75,7 +75,8 @@ class Train:
 
             #  Saving a model is saving variables such as weights, ans we call it as ckpt(check point file) in tensorflow
             # It's a tensorflow class saving ckpt file
-            saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain'))
+            saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain')+
+                                                            tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='rpn_pretrain'))
             saver2 = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain')+
                                                              tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='rpn_pretrain'))
 
@@ -86,7 +87,7 @@ class Train:
             sess.run(tf.global_variables_initializer())
 
             if self.restore:
-                saver.restore(sess, self.ckpt_path + 'feature_extractor_weights.ckpt') #######################################
+                saver.restore(sess, self.ckpt_path + 'rpn_weights.ckpt') #######################################
                 # saver2.restore(sess, self.ckpt_path + 'rpn_weights.ckpt')
 
             print("BEGIN TRAINING")
