@@ -78,7 +78,7 @@ DECAY_STEP = 4000
 DECAY_STAIRCASE = True
 NORMALIZATION_TYPE = 'group'    # batch, group
 PRETRAIN_N_LAYERS = 5
-N_DOWNSAMPLING = 3
+# N_DOWNSAMPLING = 3
 # N_LAYERS = [3, 3, 4]            # n_layers before each downsampling
 # N_LAYERS_HIGH = [2,2,2,3]       # n_high_layers before each downsampling
 # N_LAYERS_LOW = [2,3,3]          # n_low_layers before each downsampling
@@ -101,8 +101,8 @@ WIDTH_MULTIPLIER = 1.0          # out_channel = in_channel * width_multiplier
 # SCALE = 1
 
 ### Rpn ###
-ANCHOR_SCALES = [4, 8, 16, 32]     # [int(IMAGE_WIDTH / i) for i in [32, 16, 8, 4, 2]]
-ANCHOR_RATIOS = [0.5, 1, 2]
+ANCHOR_SCALES = [8, 16, 32, 64]     #   [8, 16, 32] <- [int(IMAGE_WIDTH / i) for i in [32, 16, 8, 4, 2]]
+ANCHOR_RATIOS = [0.5, 1, 1.5, 2]
 FEATURE_STRIDES = [8]
 ANCHOR_STRIDE = 1
 RPN_N_FILTER = 512
