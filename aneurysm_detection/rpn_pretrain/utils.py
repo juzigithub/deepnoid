@@ -2237,13 +2237,17 @@ def apply_box_deltas_graph2(boxes, deltas):
     # Apply deltas
     center_y += deltas[:, 0] / 100
     center_x += deltas[:, 1] / 100
-    height += 2 * deltas[:, 2] / 100 ##################### deltas[:, 2] / 100
-    width += 2 * deltas[:, 3] / 100 ##################### deltas[:, 3] / 100
+    height += deltas[:, 2] / 100 ##################### deltas[:, 2] / 100
+    width += deltas[:, 3] / 100 ##################### deltas[:, 3] / 100
     # Convert back to y1, x1, y2, x2
-    y1 = center_y - 0.5 * height
-    x1 = center_x - 0.5 * width
-    y2 = y1 + height
-    x2 = x1 + width
+    # y1 = center_y - 0.5 * height
+    # x1 = center_x - 0.5 * width
+    # y2 = y1 + height
+    # x2 = x1 + width
+    y1 = center_y - 2 * 0.5 * height
+    x1 = center_x - 2 * 0.5 * width
+    y2 = center_y + 2 * 0.5 * height
+    x2 = center_x + 2 * 0.5 * width
     result = tf.stack([y1, x1, y2, x2], axis=1, name="apply_box_deltas_out")
     return result
 
