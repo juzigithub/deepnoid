@@ -166,10 +166,9 @@ class Train:
                                     self.model.training: True,
                                     self.model.drop_rate: drop_rate}
 
-                    cost, _, proposals, refine = sess.run([self.model.loss, self.optimizer, self.model.proposals, self.model.rpn_bbox_refinements], feed_dict=tr_feed_dict)
+                    cost, _, proposals = sess.run([self.model.loss, self.optimizer, self.model.proposals], feed_dict=tr_feed_dict)
                     print('gt', gt)
                     print('proposals', proposals)
-                    print('refine', refine)
                     print(cost)
 
 
@@ -220,10 +219,9 @@ class Train:
                                      self.model.training: False,
                                      self.model.drop_rate: 0}
 
-                    cost, proposals, refine = sess.run([self.model.loss, self.model.proposals, self.model.rpn_bbox_refinements], feed_dict=val_feed_dict)
+                    cost, proposals = sess.run([self.model.loss, self.model.proposals], feed_dict=val_feed_dict)
                     print('gt_boxes', gt_boxes)
                     print('proposals', np.round(proposals * cfg.IMG_SIZE[0]))
-                    print('refine', refine)
                     one_epoch_result_list.append(cost)
 
 
