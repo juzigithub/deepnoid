@@ -130,7 +130,6 @@ class Model:
 
         return rpn_class_logitss, rpn_bbox_refinements, detector_class_logits, detector_bbox_refinements, detector_class_label, detector_bbox_label
 
-
     def feature_extractor(self, inputs, channel_n, n_layer):
         with tf.variable_scope('feature_extractor_pretrain'):
             l = inputs
@@ -145,7 +144,9 @@ class Model:
                                                norm_type=cfg.NORMALIZATION_TYPE,
                                                training=self.training,
                                                idx=idx)
-                channel_n *= 2
+
+                if channel_n < 2 ** 11:
+                    channel_n *= 2
 
                 if idx + 1 <= cfg.N_DOWNSAMPLING:
                     l = utils.maxpool(name='maxpool_{}'.format(idx),
@@ -329,6 +330,18 @@ class Model:
             pooled_feature_maps = utils.roi_pooling(proposals, feature_maps, config.POOLED_SIZE, feature_pyramid=False)
             print('pooled', pooled_feature_maps)
             # pooled_feature_maps = tf.squeeze(pooled_feature_maps, axis=0)
+
+            for i in range(3):
+                pooled_feature_maps = utils.residual_block_dw_dr(name='detector_conv{}'.format(i),
+                                                                 inputs=pooled_feature_maps,
+                                                                 channel_n=channel_n,
+                                                                 width_mul=1.0,
+                                                                 group_n=cfg.GROUP_N,
+                                                                 drop_rate=self.drop_rate,
+                                                                 act_fn=cfg.ACTIVATION_FUNC,
+                                                                 norm_type=cfg.NORMALIZATION_TYPE,
+                                                                 training=self.training,
+                                                                 idx=i)
 
             pooled_feature_maps = utils.GlobalAveragePooling2D(input=pooled_feature_maps,
                                                                n_class=channel_n,
