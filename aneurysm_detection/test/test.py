@@ -141,6 +141,7 @@ class Test:
                 input_img = utils.masking_rgb(input_img, multiply=1)
 
                 # label_img #
+                print('detection_outputs_shape', detection_outputs.shape)
                 prob = np.round(detection_outputs[:][5], 2)
                 bbox = np.round(detection_outputs[:][:4] * cfg.IMG_SIZE[0])
 
