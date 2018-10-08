@@ -9,6 +9,7 @@ class Model:
         self.training = tf.placeholder(tf.bool, name='training')
         self.X = tf.placeholder(tf.float32, [None, cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 3], name='X')
         self.anchors = tf.placeholder(tf.float32, [None, 4], name='anchors')
+        self.detection_outputs = self.model()
 
     def model(self):
 
@@ -68,10 +69,11 @@ class Model:
         final_detector_class_probs = tf.squeeze(tf.nn.softmax(detector_class_logits), axis=0)
         final_detector_bbox_refinements = tf.squeeze(detector_bbox_refinements, axis=0)
 
-        self.detection_outputs = self.refine_detections_graph(final_proposals,
+        detection_outputs = self.refine_detections_graph(final_proposals,
                                                               final_detector_class_probs,
                                                               final_detector_bbox_refinements,
                                                               cfg)
+        return detection_outputs
 
     def feature_extractor(self, inputs, channel_n, n_layer):
         with tf.variable_scope('feature_extractor_pretrain'):
