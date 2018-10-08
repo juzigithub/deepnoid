@@ -54,22 +54,12 @@ class Test:
         self.merged_summary = tf.summary.merge_all()
         self.writer = tf.summary.FileWriter(self.log_path)
 
-    def optimizer(self, global_step):
-        exponential_decay_learning_rate = tf.train.exponential_decay(learning_rate=cfg.INIT_LEARNING_RATE,
-                                                                     global_step=global_step,
-                                                                     decay_steps=cfg.DECAY_STEP,
-                                                                     decay_rate=cfg.DECAY_RATE,
-                                                                     staircase=cfg.DECAY_STAIRCASE,
-                                                                     name='learning_rate')
-
-        self.optimizer = utils.select_optimizer(cfg.OPTIMIZER, exponential_decay_learning_rate, self.model.loss, global_step) ######################################
-
-
     def test(self):
-        global_step = tf.Variable(0, trainable=False, name='global_step')
+        # global_step = tf.Variable(0, trainable=False, name='global_step')
 
         with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
-            self.optimizer(global_step)
+            # self.optimizer(global_step)
+            print("LOAD MODEL")
 
         with tf.Session() as sess:
 
@@ -85,11 +75,11 @@ class Test:
             if self.restore:
                 saver.restore(sess, self.ckpt_path + 'detector_weights.ckpt')
 
-            print("BEGIN TRAINING")
+            print("BEGIN TESTING")
 
             tot_data_X = np.load(cfg.NPZ_PATH + 'test_input_ori_{}.npz'.format(cfg.IMG_SIZE[0]))['all']
             tot_data_Y = np.load(cfg.NPZ_PATH + 'test_label_ori_{}.npz'.format(cfg.IMG_SIZE[0]))['all']
-            len_tot_data = np.shape(tot_data_X)[0]
+            # len_tot_data = np.shape(tot_data_X)[0]
             # train_X = tot_data_X[:int(len_tot_data * 0.8)]
             # val_X = tot_data_X[int(len_tot_data * 0.8):]
             # train_Y = tot_data_Y[:int(len_tot_data * 0.8)]
