@@ -142,10 +142,13 @@ class Test:
                 prob = np.round(detection_outputs[:,5], 2)
                 bbox = np.round(detection_outputs[:,:4] * cfg.IMG_SIZE[0]).astype(np.int32)
 
-                for p, b in zip(prob, bbox):
-                    cv2.rectangle(batch_y, (b[1], b[0]), (b[3], b[2]), (255, 255, 255), 1)
-                    cv2.putText(batch_y, str(p), (b[1], b[0] - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255))
                 label_img = utils.masking_rgb(batch_y, 'red')
+
+                for p, b in zip(prob, bbox):
+                    cv2.rectangle(batch_y, (b[1]-5, b[0]-5), (b[3]+5, b[2]+5), (255, 255, 255), 1)
+                    # cv2.putText(batch_y, str(p), (b[1], b[0] - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255))
+
+                label_img += utils.masking_rgb(batch_y, 'blue')
 
                 cv2.imwrite(self.img_path + '/{}.png'.format(print_img_idx) , input_img + label_img)
                 print_img_idx += 1
