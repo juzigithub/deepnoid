@@ -130,10 +130,8 @@ class Test:
                                  self.model.drop_rate: 0}
 
                 detection_outputs = sess.run([self.model.detection_outputs], feed_dict=val_feed_dict)
-                # print('gt_boxes', gt_boxes)
-                # print('proposals', np.round(proposals * cfg.IMG_SIZE[0]))
-                # print('gt', batch_y)
-                # print('detection_outputs', np.round(detection_outputs[:,:4] * cfg.IMG_SIZE[0]), detection_outputs[:,4:])
+                detection_outputs = np.squeeze(detection_outputs, axis=0)
+                print('detection_outputs_shape', detection_outputs.shape)
 
                 # input_img #
                 n_batch = len(batch_x)
@@ -141,14 +139,12 @@ class Test:
                 input_img = utils.masking_rgb(input_img, multiply=1)
 
                 # label_img #
-                detection_outputs = np.squeeze(detection_outputs, axis=0)
-                print('detection_outputs_shape', detection_outputs.shape)
                 prob = np.round(detection_outputs[:,5], 2)
                 bbox = np.round(detection_outputs[:,:4] * cfg.IMG_SIZE[0]).astype(np.int32)
-                print('batch_y', np.shape(batch_y))
+
                 for p, b in zip(prob, bbox):
                     cv2.rectangle(batch_y, (b[1], b[0]), (b[3], b[2]), (255, 255, 255), 1)
-                    cv2.putText(batch_y, b, (b[1], b[0] - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255))
+                    cv2.putText(batch_y, str(b), (b[1], b[0] - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255))
                 label_img = utils.masking_rgb(batch_y, 'red')
 
                 cv2.imwrite(self.img_path + '/{}.png'.format(print_img_idx) , input_img + label_img)
