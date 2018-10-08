@@ -49,7 +49,7 @@ class Model:
                                                  rpn_bbox_refinements,
                                                  rpn_class_probs,
                                                  self.training)
-
+        print('proposals', proposals)
         ### Make detector label ###
         # proposals, detector_class_label, detector_bbox_label, self.posi_id, self.overlaps = utils.detection_targets_graph(proposals,
         #                                                                                      self.detector_class_label,

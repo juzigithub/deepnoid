@@ -77,8 +77,8 @@ class Test:
 
             print("BEGIN TESTING")
 
-            tot_data_X = np.load(cfg.NPZ_PATH + 'test_input_ori_{}.npz'.format(cfg.IMG_SIZE[0]))['all']
-            tot_data_Y = np.load(cfg.NPZ_PATH + 'test_label_ori_{}.npz'.format(cfg.IMG_SIZE[0]))['all']
+            tot_data_X = np.load(cfg.TEST_NPZ_PATH + 'test_input_ori_{}.npz'.format(cfg.IMG_SIZE[0]))['all']
+            tot_data_Y = np.load(cfg.TEST_NPZ_PATH + 'test_label_ori_{}.npz'.format(cfg.IMG_SIZE[0]))['all']
             # len_tot_data = np.shape(tot_data_X)[0]
             # train_X = tot_data_X[:int(len_tot_data * 0.8)]
             # val_X = tot_data_X[int(len_tot_data * 0.8):]
