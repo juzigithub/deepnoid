@@ -141,10 +141,11 @@ class Test:
                 input_img = utils.masking_rgb(input_img, multiply=1)
 
                 # label_img #
-                print('detection_outputs_shape', np.array(detection_outputs).shape)
-                prob = np.round(np.array(detection_outputs)[:,5], 2)
-                bbox = np.round(np.array(detection_outputs)[:,:4] * cfg.IMG_SIZE[0])
-
+                detection_outputs = np.squeeze(detection_outputs, axis=0)
+                print('detection_outputs_shape', detection_outputs.shape)
+                prob = np.round(detection_outputs[:,5], 2)
+                bbox = np.round(detection_outputs[:,:4] * cfg.IMG_SIZE[0]).astype(np.int32)
+                print('batch_y', np.shape(batch_y))
                 for p, b in zip(prob, bbox):
                     cv2.rectangle(batch_y, (b[1], b[0]), (b[3], b[2]), (255, 255, 255), 1)
                     cv2.putText(batch_y, b, (b[1], b[0] - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255))
