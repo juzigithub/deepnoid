@@ -58,6 +58,10 @@ class Model:
 
         # Remove zero padding
         proposals, _ = utils.trim_zeros_graph(proposals, name="trim_proposals")
+        P = tf.maximum(cfg.TRAIN_ROIS_PER_IMAGE - tf.shape(proposals)[0], 0)
+        proposals = tf.pad(proposals, [(0, P), (0, 0)])
+
+
         proposals = tf.expand_dims(proposals, axis=0)
         ####################################################################
         print('proposals2', proposals)
