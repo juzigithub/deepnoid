@@ -139,14 +139,16 @@ class Test:
                 input_img = utils.masking_rgb(input_img)
 
                 # label_img #
+                cls = detection_outputs[:,4].astype(np.int32)
                 prob = np.round(detection_outputs[:,5], 2)
                 bbox = np.round(detection_outputs[:,:4] * cfg.IMG_SIZE[0]).astype(np.int32)
 
                 label_img = utils.masking_rgb(batch_y, 'red')
 
-                for p, b in zip(prob, bbox):
-                    cv2.rectangle(batch_y, (b[1]-5, b[0]-5), (b[3]+5, b[2]+5), (255, 255, 255), 1)
-                    # cv2.putText(batch_y, str(p), (b[1], b[0] - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255))
+                for c, p, b in zip(cls, prob, bbox):
+                    if c != 0 :
+                        cv2.rectangle(batch_y, (b[1]-5, b[0]-5), (b[3]+5, b[2]+5), (255, 255, 255), 1)
+                        # cv2.putText(batch_y, str(p), (b[1], b[0] - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255))
 
                 label_img += utils.masking_rgb(batch_y, 'blue')
 
