@@ -131,12 +131,12 @@ class Test:
 
                 detection_outputs = sess.run([self.model.detection_outputs], feed_dict=val_feed_dict)
                 detection_outputs = np.squeeze(detection_outputs, axis=0)
-                print('detection_outputs_shape', detection_outputs.shape)
+                # print('detection_outputs_shape', detection_outputs.shape)
 
                 # input_img #
                 n_batch = len(batch_x)
                 input_img = batch_x[n_batch//2, :, :, 1]
-                input_img = utils.masking_rgb(input_img, multiply=1)
+                input_img = utils.masking_rgb(input_img)
 
                 # label_img #
                 prob = np.round(detection_outputs[:,5], 2)
@@ -144,7 +144,7 @@ class Test:
 
                 for p, b in zip(prob, bbox):
                     cv2.rectangle(batch_y, (b[1], b[0]), (b[3], b[2]), (255, 255, 255), 1)
-                    cv2.putText(batch_y, str(b), (b[1], b[0] - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255))
+                    cv2.putText(batch_y, str(p), (b[1], b[0] - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255))
                 label_img = utils.masking_rgb(batch_y, 'red')
 
                 cv2.imwrite(self.img_path + '/{}.png'.format(print_img_idx) , input_img + label_img)
