@@ -49,7 +49,19 @@ class Model:
                                                  rpn_bbox_refinements,
                                                  rpn_class_probs,
                                                  self.training)
-        print('proposals', proposals)
+        print('proposals1', proposals)
+
+
+        ####################################################################
+        proposals = tf.squeeze(proposals, axis=0)
+        proposals = tf.identity(proposals)
+
+        # Remove zero padding
+        proposals, _ = utils.trim_zeros_graph(proposals, name="trim_proposals")
+        proposals = tf.expand_dims(proposals, axis=0)
+        ####################################################################
+        print('proposals2', proposals)
+
         ### Make detector label ###
         # proposals, detector_class_label, detector_bbox_label, self.posi_id, self.overlaps = utils.detection_targets_graph(proposals,
         #                                                                                      self.detector_class_label,
