@@ -57,9 +57,9 @@ class Test:
     def test(self):
         # global_step = tf.Variable(0, trainable=False, name='global_step')
 
-        with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
-            # self.optimizer(global_step)
-            print("LOAD MODEL")
+        # with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
+        #     # self.optimizer(global_step)
+        #     print("LOAD MODEL")
 
         with tf.Session() as sess:
 
