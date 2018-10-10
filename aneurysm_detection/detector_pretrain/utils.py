@@ -276,8 +276,8 @@ def cal_result_detection(class_pred, bbox_pred, class_label, bbox_label):
                     result = [1, ins / (pred + gt - ins)] if (ins / (pred + gt - ins)) > iou else result
                     iou = result[1]
 
-        match_list.append(result[0])
-        iou_list.append(result[1])
+            match_list.append(result[0])
+            iou_list.append(result[1])
     mean_match = np.mean(np.array(match_list))
     mean_iou = np.mean(np.array(iou_list))
 
