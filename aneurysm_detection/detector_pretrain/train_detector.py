@@ -146,22 +146,19 @@ class Train:
                     batch_x = batch_x[0]
                     batch_y = batch_y[0]
 
-
                     batch_x = batch_x.reshape((-1, 3, cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]))
                     batch_x = np.transpose(batch_x, (0, 2, 3, 1))
 
                     if np.ndim(batch_y) == 1:
                         batch_y = np.expand_dims(batch_y, 0)
 
-                    detector_class_label = batch_y[:,0]
-                    detector_bbox_label = deepcopy(batch_y[:,1:])
+                    detector_class_label = batch_y[:, 0]
+                    detector_bbox_label = deepcopy(batch_y[:, 1:])
 
-
-
-                    batch_y[:,1:] = np.round(batch_y[:,1:] * cfg.IMG_SIZE[0])
+                    batch_y[:, 1:] = np.round(batch_y[:, 1:] * cfg.IMG_SIZE[0])
 
                     # rpn_class_label = np.expand_dims(batch_y[:,0], -1).reshape((1, -1, 1))
-                    gt_boxes = batch_y[:,1:]
+                    gt_boxes = batch_y[:, 1:]
                     rpn_class_label, rpn_bbox_label = utils.build_rpn_targets2(anchors, gt_boxes, cfg)
                     rpn_class_label = np.expand_dims(np.expand_dims(rpn_class_label, 0), -1)
                     rpn_bbox_label = np.expand_dims(rpn_bbox_label, 0)
@@ -173,26 +170,17 @@ class Train:
                                     self.model.detector_class_label: detector_class_label,
                                     self.model.detector_bbox_label: detector_bbox_label,
                                     self.model.training: True,
-                                    self.model.drop_rate: 0} ##############################################
+                                    self.model.drop_rate: 0}  ##############################################
 
-                    cost, _, prop, prop2, bbox, bbox2, overlaps, posi_id = sess.run([self.model.loss,
-                                                             self.optimizer,
-                                                             self.model.prop,
-                                                                           self.model.proposals,
-                                                             self.model.detector_bbox_label,
-                                                             self.model.detector_bbox_label2,
-                                                                           self.model.overlaps,
-                                                             self.model.posi_id], feed_dict=tr_feed_dict)
+                    cost, _, prop, bbox = sess.run([self.model.loss,
+                                                    self.optimizer,
+                                                    self.model.proposals,
+                                                    self.model.detector_bbox_label2], feed_dict=tr_feed_dict)
                     # print('gt_boxes', gt_boxes)
                     # print('proposals', np.round(proposals * cfg.IMG_SIZE[0]))
                     print(cost)
-                    print('\nposi_id',posi_id, len(posi_id))
                     print('\nprop', prop)
-                    print('\nprop2', prop2)
                     print('\nbbox', bbox)
-                    print('\nbbox2', bbox2)
-                    print('\noverlaps', overlaps)
-
 
                     # Update Loss Ratio for next step
                     total_cost += cost
@@ -201,19 +189,14 @@ class Train:
                     # print out current epoch, step and batch loss value
                     self.result = 'Epoch: {} / {}, ' \
                                   'Step: {} / {}, Batch loss: {}'.format(epoch + 1,
-                                                                            cfg.EPOCHS,
-                                                                            step,
-                                                                            train_step,
-                                                                            cost)
+                                                                         cfg.EPOCHS,
+                                                                         step,
+                                                                         train_step,
+                                                                         cost)
 
                     print(self.result)
 
-                one_epoch_result_list = []
-
-                # print_img_idx = 0
-
-
-
+            one_epoch_result_list = []
 
 ###################################################################
                 # validation test
@@ -232,7 +215,6 @@ class Train:
                     detector_bbox_label = deepcopy(batch_y[:,1:])
 
                     batch_y[:, 1:] = np.round(batch_y[:, 1:] * cfg.IMG_SIZE[0])
-                    # rpn_class_label = np.expand_dims(batch_y[:,0], -1).reshape((1, -1, 1))
                     gt_boxes = batch_y[:, 1:]
                     rpn_class_label, rpn_bbox_label = utils.build_rpn_targets2(anchors, gt_boxes, cfg)
                     rpn_class_label = np.expand_dims(np.expand_dims(rpn_class_label, 0), -1)
@@ -248,16 +230,20 @@ class Train:
                                      self.model.drop_rate: 0}
 
                     cost, detection_outputs = sess.run([self.model.loss, self.model.detection_outputs], feed_dict=val_feed_dict)
-                    # print('gt_boxes', gt_boxes)
-                    # print('proposals', np.round(proposals * cfg.IMG_SIZE[0]))
-                    print('gt', batch_y)
-                    print('detection_outputs', np.round(detection_outputs[:,:4] * cfg.IMG_SIZE[0]), detection_outputs[:,4:])
 
-                    one_epoch_result_list.append(cost)
+                    cls = detection_outputs[:, 4].astype(np.int32)
+                    bbox = np.round(detection_outputs[:, :4] * cfg.IMG_SIZE[0]).astype(np.int32)
+
+                    match, iou = utils.cal_result_detection(cls, bbox, detector_class_label, gt_boxes)
+
+                    # print('gt', batch_y)
+                    # print('detection_outputs', bbox)
+
+                    one_epoch_result_list.append([cost, match, iou])
 
 
-                one_epoch_mean = np.mean(np.array(one_epoch_result_list))
-                self.result = '\nEpoch: {} / {}, Loss : {}\n'.format(epoch, cfg.EPOCHS, one_epoch_mean)
+                one_epoch_mean = np.mean(np.array(one_epoch_result_list), axis=0)
+                self.result = '\nEpoch: {} / {}, Loss : {}, Class_precision : {}, mean_IOU : {}\n'.format(epoch, cfg.EPOCHS, *one_epoch_mean)
                 print(self.result)
                 utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 
