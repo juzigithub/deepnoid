@@ -214,11 +214,12 @@ class Train:
 
                     cls = detection_outputs[:, 4].astype(np.int32)
                     bbox = np.round(detection_outputs[:, :4] * cfg.IMG_SIZE[0]).astype(np.int32)
+                    gt_boxes = gt_boxes.astype(np.int32)
 
                     match, iou = utils.cal_result_detection(cls, bbox, detector_class_label, gt_boxes)
 
-                    # print('gt', batch_y)
-                    # print('detection_outputs', bbox)
+                    print('gt', batch_y)
+                    print('detection_outputs', bbox)
 
                     one_epoch_result_list.append([cost, match, iou])
 
