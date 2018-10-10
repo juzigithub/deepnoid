@@ -155,15 +155,12 @@ class Train:
                                     self.model.training: True,
                                     self.model.drop_rate: 0} ##############################################
 
-                    cost, _, prop, bbox = sess.run([self.model.loss,
-                                                    self.optimizer,
-                                                    self.model.proposals,
-                                                    self.model.detector_bbox_label2], feed_dict=tr_feed_dict)
+                    cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
                     # print('gt_boxes', gt_boxes)
                     # print('proposals', np.round(proposals * cfg.IMG_SIZE[0]))
                     print(cost)
-                    print('\nprop', prop)
-                    print('\nbbox', bbox)
+                    # print('\nprop', prop)
+                    # print('\nbbox', bbox)
 
 
                     # Update Loss Ratio for next step
