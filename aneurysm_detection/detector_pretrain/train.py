@@ -199,7 +199,6 @@ class Train:
                     detector_bbox_label = deepcopy(batch_y[:,1:])
 
                     batch_y[:, 1:] = np.round(batch_y[:, 1:] * cfg.IMG_SIZE[0])
-                    # rpn_class_label = np.expand_dims(batch_y[:,0], -1).reshape((1, -1, 1))
                     gt_boxes = batch_y[:, 1:]
                     rpn_class_label, rpn_bbox_label = utils.build_rpn_targets2(anchors, gt_boxes, cfg)
                     rpn_class_label = np.expand_dims(np.expand_dims(rpn_class_label, 0), -1)
@@ -215,14 +214,20 @@ class Train:
                                      self.model.drop_rate: 0}
 
                     cost, detection_outputs = sess.run([self.model.loss, self.model.detection_outputs], feed_dict=val_feed_dict)
-                    print('gt', batch_y)
-                    print('detection_outputs', np.round(detection_outputs[:,:4] * cfg.IMG_SIZE[0]), detection_outputs[:,4:])
 
-                    one_epoch_result_list.append(cost)
+                    cls = detection_outputs[:, 4].astype(np.int32)
+                    bbox = np.round(detection_outputs[:, :4] * cfg.IMG_SIZE[0]).astype(np.int32)
+
+                    match, iou = utils.cal_result_detection(cls, bbox, detector_class_label, gt_boxes)
+
+                    # print('gt', batch_y)
+                    # print('detection_outputs', bbox)
+
+                    one_epoch_result_list.append([cost, match, iou])
 
 
-                one_epoch_mean = np.mean(np.array(one_epoch_result_list))
-                self.result = '\nEpoch: {} / {}, Loss : {}\n'.format(epoch, cfg.EPOCHS, one_epoch_mean)
+                one_epoch_mean = np.mean(np.array(one_epoch_result_list), axis=0)
+                self.result = '\nEpoch: {} / {}, Loss : {}, Class_precision : {}, mean_IOU : {}\n'.format(epoch, cfg.EPOCHS, *one_epoch_mean)
                 print(self.result)
                 utils.result_saver(self.model_path + cfg.PATH_SLASH + self.result_txt, self.result)
 

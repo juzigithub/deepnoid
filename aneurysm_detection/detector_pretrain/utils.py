@@ -246,6 +246,42 @@ def iou_coe(output, target, smooth=1e-5):
 
     return iou, inse, pre
 
+def cal_result_detection(class_pred, bbox_pred, class_label, bbox_label):
+    match_list = []
+    iou_list = []
+    for pc, pb in zip(class_pred, bbox_pred):
+        iou = 0
+        result = [0, 0]
+
+        for gc, gb in zip(class_label, bbox_label):
+            if int(pc) == int(gc):
+                ins_y1 = np.max(pb[0], gb[0])
+                ins_x1 = np.max(pb[1], gb[1])
+                ins_y2 = np.min(pb[2], gb[2])
+                ins_x2 = np.min(pb[3], gb[3])
+
+                ins_h = np.max(ins_y2 - ins_y1, 0)
+                ins_w = np.max(ins_x2 - ins_x1, 0)
+                ins = ins_h * ins_w
+
+                p_h = pb[2] - pb[0]
+                p_w = pb[3] - pb[1]
+                pred = p_h * p_w
+
+                g_h = gb[2] - gb[0]
+                g_w = gb[3] - gb[1]
+                gt = g_h * g_w
+
+                result = [1, ins / (pred + gt - ins)] if (ins / (pred + gt - ins)) > iou else result
+                iou = result[1]
+
+        match_list.append(result[0])
+        iou_list.append(result[1])
+    mean_match = np.mean(np.array(match_list))
+    mean_iou = np.mean(np.array(iou_list))
+
+    return [mean_match, mean_iou]
+
 def cal_result3(pred, label, one_hot=False, e=1e-6):
     ### for soft result ###
     # detect at least one pixel -> TP = 1
