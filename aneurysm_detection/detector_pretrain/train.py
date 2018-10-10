@@ -11,23 +11,6 @@ import utils as utils
 from model import Model        # choose model
 from copy import deepcopy
 
-# tot_data, tot_label = cifar10.load_training_data()
-
-
-# print(np.shape(tot_data))
-# # new_data = np.zeros(shape=(10000, 128, 128, 3))
-# new_data = np.zeros(shape=(10000,))
-# i = 0
-# for idx, img in enumerate(tot_label):
-#     # new_img = cv2.resize(img, (128, 128), interpolation=cv2.INTER_CUBIC)
-#     # print(idx, new_img.shape)
-#     new_data[idx - 10000 * i] = img
-#     if (idx + 1) % 10000 == 0:
-#         np.save('d:\\cifar10_128_label_{}.npy'.format( (idx + 1) // 10000), new_data)
-#         new_data = np.zeros(shape=(10000,))
-#         i += 1
-
-
 os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU
 
 class Train:
@@ -172,23 +155,15 @@ class Train:
                                     self.model.training: True,
                                     self.model.drop_rate: 0} ##############################################
 
-                    cost, _, prop, prop2, bbox, bbox2, overlaps, posi_id = sess.run([self.model.loss,
-                                                             self.optimizer,
-                                                             self.model.prop,
-                                                                           self.model.proposals,
-                                                             self.model.detector_bbox_label,
-                                                             self.model.detector_bbox_label2,
-                                                                           self.model.overlaps,
-                                                             self.model.posi_id], feed_dict=tr_feed_dict)
+                    cost, _, prop, bbox = sess.run([self.model.loss,
+                                                    self.optimizer,
+                                                    self.model.proposals,
+                                                    self.model.detector_bbox_label2], feed_dict=tr_feed_dict)
                     # print('gt_boxes', gt_boxes)
                     # print('proposals', np.round(proposals * cfg.IMG_SIZE[0]))
                     print(cost)
-                    print('\nposi_id',posi_id, len(posi_id))
                     print('\nprop', prop)
-                    print('\nprop2', prop2)
                     print('\nbbox', bbox)
-                    print('\nbbox2', bbox2)
-                    print('\noverlaps', overlaps)
 
 
                     # Update Loss Ratio for next step
@@ -206,11 +181,6 @@ class Train:
                     print(self.result)
 
                 one_epoch_result_list = []
-
-                # print_img_idx = 0
-
-
-
 
 ###################################################################
                 # validation test
@@ -245,8 +215,6 @@ class Train:
                                      self.model.drop_rate: 0}
 
                     cost, detection_outputs = sess.run([self.model.loss, self.model.detection_outputs], feed_dict=val_feed_dict)
-                    # print('gt_boxes', gt_boxes)
-                    # print('proposals', np.round(proposals * cfg.IMG_SIZE[0]))
                     print('gt', batch_y)
                     print('detection_outputs', np.round(detection_outputs[:,:4] * cfg.IMG_SIZE[0]), detection_outputs[:,4:])
 
@@ -267,8 +235,7 @@ class Train:
 
     def _make_path(self, epoch):
         # Absolute path for model saving. save as 'file_name'.ckpt
-        self.model_save_path = self.model_path + '{0}{1}{0}detector_weights.ckpt'.format(cfg.PATH_SLASH,
-                                                                                    str(epoch + 1))
+        self.model_save_path = self.model_path + '{0}{1}{0}detector_weights.ckpt'.format(cfg.PATH_SLASH, str(epoch + 1))
 
         # create if there is no such file in a saving path
         tl.files.exists_or_mkdir(self.model_path + '{0}{1}'.format(cfg.PATH_SLASH, str(epoch + 1)))

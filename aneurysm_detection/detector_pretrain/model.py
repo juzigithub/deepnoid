@@ -76,21 +76,17 @@ class Model:
                                                  self.training)
         # proposals = tf.squeeze(proposals, axis=0)
 
-        #############################
-        self.prop = tf.identity(proposals)
-        #############################
-
         ### Make detector label ###
-        proposals, detector_class_label, detector_bbox_label, self.posi_id, self.overlaps = utils.detection_targets_graph(proposals,
+        proposals, detector_class_label, detector_bbox_label = utils.detection_targets_graph(proposals,
                                                                                              self.detector_class_label,
-                                                                                             self.detector_bbox_label, cfg) #############################
+                                                                                             self.detector_bbox_label,
+                                                                                             cfg)
         detector_class_label = tf.expand_dims(detector_class_label, axis=0)
         detector_bbox_label = tf.expand_dims(detector_bbox_label, axis=0)
         proposals = tf.expand_dims(proposals, axis=0)
+        print('proposals', proposals)
 
-        ################################
         self.proposals = tf.identity(proposals)
-        ################################
 
         ### Detector ###
         detector_class_logits, detector_bbox_refinements = self.detector(proposals, feature_maps, feature_shape_c, cfg)
@@ -109,24 +105,6 @@ class Model:
                                                               final_detector_class_probs,
                                                               final_detector_bbox_refinements,
                                                               cfg)
-
-        # def refine_detections_graph(rois, probs, deltas, window, config):
-        #     """Refine classified proposals and filter overlaps and return final
-        #     detections.
-        #
-        #     Inputs:
-        #         rois: [N, (y1, x1, y2, x2)] in normalized coordinates
-        #         probs: [N, num_classes]. Class probabilities.
-        #         deltas: [N, num_classes, (dy, dx, log(dh), log(dw))]. Class-specific
-        #                 bounding box deltas.
-        #         window: (y1, x1, y2, x2) in image coordinates. The part of the image
-        #             that contains the image excluding the padding.
-        #
-        #     Returns detections shaped: [N, (y1, x1, y2, x2, class_id, score)] where
-        #         coordinates are normalized.
-        #     """
-
-
 
         return rpn_class_logitss, rpn_bbox_refinements, detector_class_logits, detector_bbox_refinements, detector_class_label, detector_bbox_label
 
@@ -159,7 +137,6 @@ class Model:
 
     def rpn_bbox_generator(self, rpn_feature_maps, channel_n, anchors_per_location):
         '''
-
         :param rpn_feature_maps: [P2, P3, P4, P5, (P6)]
         :param anchor_stride: same as anchors
         :param anchors_per_location: anchor per pixel
@@ -329,7 +306,6 @@ class Model:
         with tf.variable_scope('detector_pretrain'):
             pooled_feature_maps = utils.roi_pooling(proposals, feature_maps, config.POOLED_SIZE, feature_pyramid=False)
             print('pooled', pooled_feature_maps)
-            # pooled_feature_maps = tf.squeeze(pooled_feature_maps, axis=0)
 
             for i in range(3):
                 pooled_feature_maps = utils.residual_block_dw_dr(name='detector_conv{}'.format(i),
@@ -384,11 +360,8 @@ class Model:
         deltas_specific = tf.gather_nd(deltas, indices)
         # Apply bounding box deltas
         # Shape: [boxes, (y1, x1, y2, x2)] in normalized coordinates
-
-        ########################################
-        # refined_rois = utils.apply_box_deltas_graph2(rois, deltas_specific * config.BBOX_STD_DEV)
         refined_rois = utils.apply_box_deltas_graph2(rois, deltas_specific)
-        ########################################
+
         # Clip boxes to image window
         window = np.array([0, 0, 1, 1], dtype=np.float32) #######################################################
         refined_rois = utils.clip_boxes_graph(refined_rois, window)
@@ -460,48 +433,3 @@ class Model:
         gap = config.DETECTION_MAX_INSTANCES - tf.shape(detections)[0]
         detections = tf.pad(detections, [(0, gap), (0, 0)], "CONSTANT")
         return detections
-
-#
-# # KE.Layer -> tf.layers.Layer
-# class DetectionLayer(tf.layers.Layer):
-#     """Takes classified proposal boxes and their bounding box deltas and
-#     returns the final detection boxes.
-#
-#     Returns:
-#     [batch, num_detections, (y1, x1, y2, x2, class_id, class_score)] where
-#     coordinates are normalized.
-#     """
-#
-#     def __init__(self, config=None, **kwargs):
-#         super(DetectionLayer, self).__init__(**kwargs)
-#         self.config = config
-#
-#     def call(self, inputs):
-#         rois = inputs[0]
-#         mrcnn_class = inputs[1]
-#         mrcnn_bbox = inputs[2]
-#         image_meta = inputs[3]
-#
-#         # Get windows of images in normalized coordinates. Windows are the area
-#         # in the image that excludes the padding.
-#         # Use the shape of the first image in the batch to normalize the window
-#         # because we know that all images get resized to the same size.
-#         m = parse_image_meta_graph(image_meta)
-#         image_shape = m['image_shape'][0]
-#         window = norm_boxes_graph(m['window'], image_shape[:2])
-#
-#         # Run detection refinement graph on each item in the batch
-#         detections_batch = utils.batch_slice(
-#             [rois, mrcnn_class, mrcnn_bbox, window],
-#             lambda x, y, w, z: refine_detections_graph(x, y, w, z, self.config),
-#             self.config.IMAGES_PER_GPU)
-#
-#         # Reshape output
-#         # [batch, num_detections, (y1, x1, y2, x2, class_score)] in
-#         # normalized coordinates
-#         return tf.reshape(
-#             detections_batch,
-#             [self.config.BATCH_SIZE, self.config.DETECTION_MAX_INSTANCES, 6])
-#
-#     def compute_output_shape(self, input_shape):
-#         return (None, self.config.DETECTION_MAX_INSTANCES, 6)
