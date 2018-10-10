@@ -253,27 +253,28 @@ def cal_result_detection(class_pred, bbox_pred, class_label, bbox_label):
         iou = 0
         result = [0, 0]
 
-        for gc, gb in zip(class_label, bbox_label):
-            if int(pc) == int(gc):
-                ins_y1 = np.max(pb[0], gb[0])
-                ins_x1 = np.max(pb[1], gb[1])
-                ins_y2 = np.min(pb[2], gb[2])
-                ins_x2 = np.min(pb[3], gb[3])
+        if np.sum(pb) > 0:
+            for gc, gb in zip(class_label, bbox_label):
+                if int(pc) == int(gc):
+                    ins_y1 = np.maximum(pb[0], gb[0])
+                    ins_x1 = np.maximum(pb[1], gb[1])
+                    ins_y2 = np.minimum(pb[2], gb[2])
+                    ins_x2 = np.minimum(pb[3], gb[3])
 
-                ins_h = np.max(ins_y2 - ins_y1, 0)
-                ins_w = np.max(ins_x2 - ins_x1, 0)
-                ins = ins_h * ins_w
+                    ins_h = np.maximum(ins_y2 - ins_y1, 0)
+                    ins_w = np.maximum(ins_x2 - ins_x1, 0)
+                    ins = ins_h * ins_w
 
-                p_h = pb[2] - pb[0]
-                p_w = pb[3] - pb[1]
-                pred = p_h * p_w
+                    p_h = pb[2] - pb[0]
+                    p_w = pb[3] - pb[1]
+                    pred = p_h * p_w
 
-                g_h = gb[2] - gb[0]
-                g_w = gb[3] - gb[1]
-                gt = g_h * g_w
+                    g_h = gb[2] - gb[0]
+                    g_w = gb[3] - gb[1]
+                    gt = g_h * g_w
 
-                result = [1, ins / (pred + gt - ins)] if (ins / (pred + gt - ins)) > iou else result
-                iou = result[1]
+                    result = [1, ins / (pred + gt - ins)] if (ins / (pred + gt - ins)) > iou else result
+                    iou = result[1]
 
         match_list.append(result[0])
         iou_list.append(result[1])
