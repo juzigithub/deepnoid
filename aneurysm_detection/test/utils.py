@@ -3125,7 +3125,7 @@ def detection_targets_graph(proposals, gt_class_ids, gt_boxes, config):
     roi_gt_class_ids = tf.pad(roi_gt_class_ids, [(0, N + P)])
     deltas = tf.pad(deltas, [(0, N + P), (0, 0)])
 
-    return rois, roi_gt_class_ids, deltas, positive_indices, overlaps ##########################################
+    return rois, roi_gt_class_ids, deltas
 
 def overlaps_graph(boxes1, boxes2):
     """Computes IoU overlaps between two sets of boxes.

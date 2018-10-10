@@ -142,7 +142,6 @@ class Test:
                 cls = detection_outputs[:,4].astype(np.int32)
                 prob = np.round(detection_outputs[:,5], 2)
                 bbox = np.round(detection_outputs[:,:4] * cfg.IMG_SIZE[0]).astype(np.int32)
-
                 label_img = utils.masking_rgb(batch_y, 'red')
 
                 for c, p, b in zip(cls, prob, bbox):
@@ -156,21 +155,13 @@ class Test:
                 print_img_idx += 1
                 print('{} / {} img saved'.format(print_img_idx, test_step))
 
-    ##########################################################################
-    ######################################
-    # input = load_normalize_dcm('d:\\FILE00052.dcm')
-    # input = masking_rgb(input, multiply=1)
-    # label = load_label('d:\\FILE00052.png')
-    # label = masking_rgb(label, 'red')
-    # print(input.shape)
-    # print(label.shape)
+    # a = np.array([[1, 2, 3, 4],
+    #               [5, 6, 7, 8]])
     #
-    # cv2.imshow('aa', input)
-    # cv2.imshow('a', label)
-    # cv2.imshow('aaa', input+label)
-    # cv2.waitKey()
-    #######################################
-
+    # b = np.repeat(a[:, np.newaxis], 2, 0)
+    # c = np.repeat(a[:, np.newaxis], 2, 1)
+    # print(b)
+    # print(c)
 
     def _make_path(self, epoch):
         # Absolute path for model saving. save as 'file_name'.ckpt

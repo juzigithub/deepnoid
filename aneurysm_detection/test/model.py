@@ -49,8 +49,6 @@ class Model:
                                                  rpn_bbox_refinements,
                                                  rpn_class_probs,
                                                  self.training)
-        print('proposals1', proposals)
-
 
         ####################################################################
         proposals = tf.squeeze(proposals, axis=0)
@@ -64,15 +62,7 @@ class Model:
 
         proposals = tf.expand_dims(proposals, axis=0)
         ####################################################################
-        print('proposals2', proposals)
-
-        ### Make detector label ###
-        # proposals, detector_class_label, detector_bbox_label, self.posi_id, self.overlaps = utils.detection_targets_graph(proposals,
-        #                                                                                      self.detector_class_label,
-        #                                                                                      self.detector_bbox_label, cfg) #############################
-        # detector_class_label = tf.expand_dims(detector_class_label, axis=0)
-        # detector_bbox_label = tf.expand_dims(detector_bbox_label, axis=0)
-        # proposals = tf.expand_dims(proposals, axis=0)
+        print('proposals', proposals)
 
         ### Detector ###
         detector_class_logits, detector_bbox_refinements = self.detector(proposals, feature_maps, feature_shape_c, cfg)
