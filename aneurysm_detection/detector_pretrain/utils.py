@@ -273,11 +273,14 @@ def cal_result_detection(class_pred, bbox_pred, class_label, bbox_label):
                     g_w = gb[3] - gb[1]
                     gt = g_h * g_w
 
-                    result = [1, ins / (pred + gt - ins)] if (ins / (pred + gt - ins)) > iou else result
+                    result = [1, (ins + 1e-6) / (pred + gt - ins + 1e-6) ] if ((ins + 1e-6) / (pred + gt - ins + 1e-6)) > iou else result
                     iou = result[1]
 
             match_list.append(result[0])
             iou_list.append(result[1])
+            print('utils.cal_result_detection', match_list)
+            print('utils.cal_result_detection', iou_list)
+
     mean_match = np.mean(np.array(match_list))
     mean_iou = np.mean(np.array(iou_list))
 
@@ -2463,9 +2466,6 @@ def rpn_class_loss_graph(rpn_match, rpn_class_logits):
     rpn_class_logits: [batch, anchors, 2]. RPN classifier logits for FG/BG.
     """
 
-    print(rpn_match.get_shape())
-    print(rpn_class_logits.get_shape())
-
     # Squeeze last dim to simplify
     rpn_match = tf.squeeze(rpn_match, -1)
     # Get anchor classes. Convert the -1/+1 match to 0/1 values.
@@ -2480,9 +2480,6 @@ def rpn_class_loss_graph(rpn_match, rpn_class_logits):
     # input shapeerror 뜨면 target/logits 부분 사용하기
     # targets = tf.cast(tf.flatten(anchor_class), 'int64')
     # logits = tf.reshape(rpn_class_logits, [-1, int(rpn_class_logits.shape[-1])])
-
-    print(anchor_class.get_shape())
-    print(rpn_class_logits.get_shape())
 
     loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=anchor_class,
                                                           logits=rpn_class_logits,
@@ -2700,7 +2697,6 @@ def build_rpn_targets(anchors, gt_boxes, config):
         # Normalize
         rpn_bbox[ix] /= config.RPN_BBOX_STD_DEV
         ix += 1
-    print(rpn_bbox)
     return rpn_match, rpn_bbox
 
 def build_rpn_targets2(anchors, gt_boxes, config):
