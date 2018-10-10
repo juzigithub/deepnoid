@@ -215,7 +215,13 @@ class Train:
 
                     cls = detection_outputs[:, 4].astype(np.int32)
                     bbox = np.round(detection_outputs[:, :4] * cfg.IMG_SIZE[0]).astype(np.int32)
+                    gt_boxes = gt_boxes.astype(np.int32)
 
+                    print('cls', cls.shape)
+                    print('bbox', bbox.shape)
+                    print('det_cls_label', detector_class_label.shape)
+                    print('gt_box', gt_boxes)
+                    
                     match, iou = utils.cal_result_detection(cls, bbox, detector_class_label, gt_boxes)
 
                     # print('gt', batch_y)
