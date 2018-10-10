@@ -11,23 +11,6 @@ import utils as utils
 from model import Model        # choose model
 from copy import deepcopy
 
-# tot_data, tot_label = cifar10.load_training_data()
-
-
-# print(np.shape(tot_data))
-# # new_data = np.zeros(shape=(10000, 128, 128, 3))
-# new_data = np.zeros(shape=(10000,))
-# i = 0
-# for idx, img in enumerate(tot_label):
-#     # new_img = cv2.resize(img, (128, 128), interpolation=cv2.INTER_CUBIC)
-#     # print(idx, new_img.shape)
-#     new_data[idx - 10000 * i] = img
-#     if (idx + 1) % 10000 == 0:
-#         np.save('d:\\cifar10_128_label_{}.npy'.format( (idx + 1) // 10000), new_data)
-#         new_data = np.zeros(shape=(10000,))
-#         i += 1
-
-
 os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU
 
 class Train:
@@ -62,9 +45,7 @@ class Train:
                                                                      staircase=cfg.DECAY_STAIRCASE,
                                                                      name='learning_rate')
 
-        self.optimizer = utils.select_optimizer(cfg.OPTIMIZER, exponential_decay_learning_rate, self.model.loss, global_step,
-                                                tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='detector_pretrain')+
-                                                tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='common_conv_pretrain')) ######################################
+        self.optimizer = utils.select_optimizer(cfg.OPTIMIZER, exponential_decay_learning_rate, self.model.loss, global_step) ######################################
 
 
     def train(self):
@@ -78,10 +59,9 @@ class Train:
             #  Saving a model is saving variables such as weights, ans we call it as ckpt(check point file) in tensorflow
             # It's a tensorflow class saving ckpt file
             # saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain'))
+            # saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES))
             saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain')+
                                                              tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='rpn_pretrain'))
-            # saver2 = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain')+
-            #                                                  tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='rpn_pretrain')+
             #                                                  tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='detector_pretrain'))
             # save graphs from tensorboard
             saver2 = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES))
@@ -146,19 +126,22 @@ class Train:
                     batch_x = batch_x[0]
                     batch_y = batch_y[0]
 
+
                     batch_x = batch_x.reshape((-1, 3, cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]))
                     batch_x = np.transpose(batch_x, (0, 2, 3, 1))
 
                     if np.ndim(batch_y) == 1:
                         batch_y = np.expand_dims(batch_y, 0)
 
-                    detector_class_label = batch_y[:, 0]
-                    detector_bbox_label = deepcopy(batch_y[:, 1:])
+                    detector_class_label = batch_y[:,0]
+                    detector_bbox_label = deepcopy(batch_y[:,1:])
 
-                    batch_y[:, 1:] = np.round(batch_y[:, 1:] * cfg.IMG_SIZE[0])
+
+
+                    batch_y[:,1:] = np.round(batch_y[:,1:] * cfg.IMG_SIZE[0])
 
                     # rpn_class_label = np.expand_dims(batch_y[:,0], -1).reshape((1, -1, 1))
-                    gt_boxes = batch_y[:, 1:]
+                    gt_boxes = batch_y[:,1:]
                     rpn_class_label, rpn_bbox_label = utils.build_rpn_targets2(anchors, gt_boxes, cfg)
                     rpn_class_label = np.expand_dims(np.expand_dims(rpn_class_label, 0), -1)
                     rpn_bbox_label = np.expand_dims(rpn_bbox_label, 0)
@@ -170,7 +153,7 @@ class Train:
                                     self.model.detector_class_label: detector_class_label,
                                     self.model.detector_bbox_label: detector_bbox_label,
                                     self.model.training: True,
-                                    self.model.drop_rate: 0}  ##############################################
+                                    self.model.drop_rate: 0} ##############################################
 
                     cost, _, prop, bbox = sess.run([self.model.loss,
                                                     self.optimizer,
@@ -182,6 +165,7 @@ class Train:
                     print('\nprop', prop)
                     print('\nbbox', bbox)
 
+
                     # Update Loss Ratio for next step
                     total_cost += cost
                     step += 1
@@ -189,14 +173,14 @@ class Train:
                     # print out current epoch, step and batch loss value
                     self.result = 'Epoch: {} / {}, ' \
                                   'Step: {} / {}, Batch loss: {}'.format(epoch + 1,
-                                                                         cfg.EPOCHS,
-                                                                         step,
-                                                                         train_step,
-                                                                         cost)
+                                                                            cfg.EPOCHS,
+                                                                            step,
+                                                                            train_step,
+                                                                            cost)
 
                     print(self.result)
 
-            one_epoch_result_list = []
+                one_epoch_result_list = []
 
 ###################################################################
                 # validation test
@@ -256,8 +240,7 @@ class Train:
 
     def _make_path(self, epoch):
         # Absolute path for model saving. save as 'file_name'.ckpt
-        self.model_save_path = self.model_path + '{0}{1}{0}detector_weights.ckpt'.format(cfg.PATH_SLASH,
-                                                                                    str(epoch + 1))
+        self.model_save_path = self.model_path + '{0}{1}{0}detector_weights.ckpt'.format(cfg.PATH_SLASH, str(epoch + 1))
 
         # create if there is no such file in a saving path
         tl.files.exists_or_mkdir(self.model_path + '{0}{1}'.format(cfg.PATH_SLASH, str(epoch + 1)))
