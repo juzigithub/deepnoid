@@ -24,7 +24,7 @@ TEST_NPZ_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/test/npz/'
 # REBUILD_TASK2_VAL_DATA = False
 # REBUILD_TASK1_TEST_DATA = False
 # REBUILD_TASK2_TEST_DATA = False
-RESTORE = False                 # load weights file
+RESTORE = True                 # load weights file
 PATH_SLASH = '/' if MODE == 'linux' else '\\'
 
 ### Data info ###

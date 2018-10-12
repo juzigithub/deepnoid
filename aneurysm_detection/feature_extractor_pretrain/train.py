@@ -1,4 +1,5 @@
 # import cifar10_pickle as cifar10
+from tensorflow.python.client import device_lib
 import utils as utils
 import tensorflow as tf
 import tensorlayer as tl
@@ -10,6 +11,7 @@ import config as cfg
 import performance_eval as pe
 from model import Model        # choose model
 from sklearn.preprocessing import scale
+
 
 # tot_data, tot_label = cifar10.load_training_data()
 

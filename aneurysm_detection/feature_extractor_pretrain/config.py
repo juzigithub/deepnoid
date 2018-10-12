@@ -4,7 +4,7 @@
 ## mspark ##
 # Linux #
 MODE = 'linux'
-GPU = '6'
+GPU = '5'
 DCM_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/input_dcm_original/*/*/*/'
 NPZ_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/npz/'
 # SAVE_TRAIN_DATA_PATH = '/mnt/sdb/mspark/data/brain_aneurysm_yonsei/'      # train
@@ -72,8 +72,8 @@ INIT_LEARNING_RATE = 1e-4
 DECAY_RATE = 0.9
 DECAY_STEP = 4000
 DECAY_STAIRCASE = True
-NORMALIZATION_TYPE = 'batch'    # batch, group
-PRETRAIN_N_LAYERS = 5
+NORMALIZATION_TYPE = 'group'    # batch, group
+PRETRAIN_N_LAYERS = 8
 N_DOWNSAMPLING = 3
 # N_LAYERS = [3, 3, 4]            # n_layers before each downsampling
 # N_LAYERS_HIGH = [2,2,2,3]       # n_high_layers before each downsampling

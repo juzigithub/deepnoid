@@ -5,7 +5,7 @@ import numpy as np
 ## mspark ##
 # Linux #
 MODE = 'linux'
-GPU = '5'
+GPU = '6'
 INPUT_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/input_dcm_original/'
 TXT_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/label/'
 DCM_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/input_dcm_original/*/*/*/'
@@ -40,7 +40,7 @@ NPZ_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/npz/'
 # REBUILD_TASK2_VAL_DATA = False
 # REBUILD_TASK1_TEST_DATA = False
 # REBUILD_TASK2_TEST_DATA = False
-RESTORE = True                 # load weights file
+RESTORE = False                 # load weights file
 PATH_SLASH = '/' if MODE == 'linux' else '\\'
 
 ### Data info ###
@@ -73,12 +73,12 @@ ACTIVATION_FUNC = 'elu'         # relu, lrelu, elu, prelu, selu
 LOSS_FUNC = 'dice_sum'          # g_dice, dice, focal, cross_entropy, dice_sum, huber, weighted_cross_entropy
 LAMBDA = [0.2, 0.8]   # weight of each loss [bg, ncr, ed, et]
 OPTIMIZER = 'adam'           # adam, rmsprop, sgd
-INIT_LEARNING_RATE = 1e-6
+INIT_LEARNING_RATE = 1e-5
 DECAY_RATE = 0.9
 DECAY_STEP = 4000
 DECAY_STAIRCASE = True
 NORMALIZATION_TYPE = 'group'    # batch, group
-PRETRAIN_N_LAYERS = 8
+PRETRAIN_N_LAYERS = 5
 N_DOWNSAMPLING = 3
 # N_LAYERS = [3, 3, 4]            # n_layers before each downsampling
 # N_LAYERS_HIGH = [2,2,2,3]       # n_high_layers before each downsampling

@@ -51,6 +51,7 @@ def save_resized_dcm_as_npy(data_path, save_path, filename):
         for dcm in dcm_path_list:
             dic = dicom.read_file(dcm)
             dcm_img = dic.pixel_array
+
             dcm_img = cv2.resize(dcm_img, (cfg.IMG_SIZE[0], cfg.IMG_SIZE[1]), interpolation=cv2.INTER_AREA)
             dcm_img = clahe.apply(dcm_img)
             landmark_list = utils.cal_hm_landmark(dcm_img, threshold=cfg.HM_THRESHOLD_TYPE, n_divide=cfg.LANDMARK_DIVIDE, standard=True, scale=1000)

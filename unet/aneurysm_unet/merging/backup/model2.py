@@ -125,7 +125,7 @@ class Model:
 
 
 if __name__ == '__main__':
-    ###### 최종적으로 train.py 에서 Model()을 불러올 때 model = Model(안에 아무것도 들어가지 않도록) 코드를 짜시면 됩니다.########
+    ###### 최종적으로 train_mobile.py 에서 Model()을 불러올 때 model = Model(안에 아무것도 들어가지 않도록) 코드를 짜시면 됩니다.########
     # model = Model()
     model = Model(img_size=256,
                   n_channel=1,

@@ -236,6 +236,44 @@ def iou_coe(output, target, smooth=1e-5):
 
     return iou, inse, pre
 
+def cal_result3(pred, label, one_hot=False, e=1e-6):
+    ### for soft result ###
+    # detect at least one pixel -> TP = 1
+    # convert one-hot labels to multiple labels
+    if one_hot:
+        _pred = np.argmax(pred, axis=-1)
+        _label = np.argmax(label, axis=-1)
+
+    else:
+        _pred = pred
+        _label = label
+
+    _pred = _pred.reshape(np.shape(_pred)[0], -1)
+    _label = _label.reshape(np.shape(_label)[0], -1)
+
+    TP, FP, FN, TN = 0., 0., 0., 0.
+
+    for p, l in zip(_pred, _label):
+        cm = confusion_matrix(l, p, labels=[0, 1])
+        # TP = cm[1][1].astype(np.float32)
+        # FP = cm[0][1].astype(np.float32)
+        # FN = cm[1][0].astype(np.float32)
+        # TN = cm[0][0].astype(np.float32)
+
+        TP += 1. if (cm[1][1] != 0 and l.sum() != 0 and p.sum() != 0) else 0.
+        FP += 1. if (cm[1][1] == 0 and l.sum() != 0 and p.sum() != 0) or (l.sum() == 0 and p.sum() != 0) else 0.
+        FN += 1. if (l.sum() != 0 and p.sum() == 0) else 0.
+        TN += 1. if (l.sum() == 0 and p.sum() == 0) else 0.
+
+    mean_acc = (TP + TN + e) / (TP + FP + FN + TN + e)
+    mean_sens = (TP + e) / (TP + FN + e)
+    mean_spec = (TN + e) / (TN + FP + e)
+    mean_miou = (TP + e) / (FP + FN + TP + e)
+    mean_dice = (2 * TP + e) / (2 * TP + FP + FN + e)
+
+    hdorff = max(directed_hausdorff(_pred, _label)[0], directed_hausdorff(_label, _pred)[0])
+
+    return [mean_acc, mean_sens, mean_spec, mean_miou, mean_dice, hdorff]
 
 def cal_result2(pred, label, one_hot=False, e=1e-6):
     # convert one-hot labels to multiple labels
@@ -647,7 +685,7 @@ def weighted_categorical_cross_entropy(output, target, weights, epsilon=1e-6):
     return tf.reduce_sum(w * cross_entropies)
 
 def select_loss(mode, output, target, smooth=1e-6, weight=1, epsilon=1e-6, delta=1.0):
-    if mode == 'dice':
+    if mode == 'dice' or 'g_dice':
         return dice_loss(output, target, smooth=smooth)
     elif mode == 'focal':
         return focal_loss(output, target, epsilon=epsilon)
@@ -1488,6 +1526,53 @@ def xception_depthwise_separable_convlayer(name, inputs, channel_n, last_stride,
 
     return l
 
+def xception_depthwise_separable_convlayer_dr(name, inputs, channel_n, last_stride, drop_rate, act_fn, training, shortcut_conv=False, atrous=False, atrous_rate=2):
+    rate = [atrous_rate, atrous_rate] if atrous else None
+    # shortcut layer
+    shortcut = tf.identity(inputs)
+
+    if shortcut_conv:
+        shortcut = conv2D(name + '_shortcut', shortcut, channel_n, [1,1], [last_stride, last_stride], padding='SAME')
+        shortcut = Normalization(shortcut, 'batch', training, name + '_shortcut_norm')
+        shortcut = activation(name + '_shortcut_act', shortcut, act_fn)
+
+    in_channel = inputs.get_shape().as_list()[-1]
+    width_mul = int(channel_n / in_channel)
+
+    depthwise_filter1 = tf.get_variable(name = name + '_depthwise_filter1',
+                                        shape = [3, 3, in_channel, width_mul],
+                                        dtype = tf.float32,
+                                        initializer = initializer)
+
+    depthwise_filter2 = tf.get_variable(name = name + '_depthwise_filter2',
+                                        shape = [3, 3, channel_n, 1],
+                                        dtype = tf.float32,
+                                        initializer = initializer)
+    # conv layer 1
+    l = tf.nn.depthwise_conv2d(inputs, depthwise_filter1, [1, 1, 1, 1], 'SAME', rate = None, name = name + '_sep1')
+    l = Normalization(l, 'batch', training, name + '_sep_norm1')
+    l = activation(name + '_sep_act1', l, act_fn)
+    l = dropout(name + '_dropout1', l, drop_rate, training)
+
+    # conv layer 2
+    l = tf.nn.depthwise_conv2d(l, depthwise_filter2, [1, 1, 1, 1], 'SAME', rate = None, name = name + '_sep2')
+    l = Normalization(l, 'batch', training, name + '_sep_norm2')
+    l = activation(name + '_sep_act2', l, act_fn)
+    l = dropout(name + '_dropout1', l, drop_rate, training)
+
+    # conv layer 3
+    l = tf.nn.depthwise_conv2d(l, depthwise_filter2, [1, last_stride, last_stride, 1], 'SAME', rate = rate, name = name + '_sep3')
+    l = Normalization(l, 'batch', training, name + '_sep_norm3')
+    l = activation(name + '_sep_act3', l, act_fn)
+    l = dropout(name + '_dropout1', l, drop_rate, training)
+
+    # add layer
+    l = l + shortcut
+
+    return l
+
+
+
 def xception_depthwise_separable_convlayer2(name, inputs, channel_n, last_stride, act_fn, training, batch_size, threshold = 'fuzzy',n_divide = 4,standard=False, scale=1, shortcut_conv=False, atrous=False, atrous_rate=2):
     rate = [atrous_rate, atrous_rate] if atrous else None
     # shortcut layer
@@ -1748,25 +1833,67 @@ def extract_patches_from_batch(imgs, patch_shape, stride):
 def reconstruct_from_patches_nd(patches, image_shape, stride):
     # modified version of sklearn.feature_extraction.image.reconstruct_from_patches_2d
     # It can make only one image
-    i_h, i_w = image_shape[:2]
-    p_h, p_w = patches.shape[1:3]
-    img = np.zeros(image_shape)
-    img_overlapped = np.zeros(image_shape)
+    assert len(image_shape) < 4, 'image_shape must be [image_height, image_width, image_depth]'
 
-    n_h = i_h - p_h + 1
-    n_w = i_w - p_w + 1
-    for p, (i, j) in zip(patches, product(range(0,n_h,stride), range(0,n_w,stride))):
-        if patches.ndim == 3:
-            img[i:i + p_h, j:j + p_w] += p
-            img_overlapped[i:i + p_h, j:j + p_w] += 1
-        elif patches.ndim == 4:
-            img[i:i + p_h, j:j + p_w, :] += p
-            img_overlapped[i:i + p_h, j:j + p_w, :] += 1
+    if len(stride) == 1 :
+        i_h, i_w = image_shape[:2]
+        p_h, p_w = patches.shape[1:3]
+        img = np.zeros(image_shape)
+        img_overlapped = np.zeros(image_shape)
+
+        n_h = i_h - p_h + 1
+        n_w = i_w - p_w + 1
+        for p, (i, j) in zip(patches, product(range(0,n_h,stride), range(0,n_w,stride))):
+            if patches.ndim == 3:
+                img[i:i + p_h, j:j + p_w] += p
+                img_overlapped[i:i + p_h, j:j + p_w] += 1
+            elif patches.ndim == 4:
+                img[i:i + p_h, j:j + p_w, :] += p
+                img_overlapped[i:i + p_h, j:j + p_w, :] += 1
+
+    else :
+        assert len(stride) == 4, 'stride.shape must be stride or [1, x_stride, y_stride, z_stride] '
+        i_h, i_w, i_d = image_shape
+        p_h, p_w, p_d = patches.shape[1:]
+        img = np.zeros(image_shape)
+        img_overlapped = np.zeros(image_shape)
+
+        n_h = i_h - p_h + 1
+        n_w = i_w - p_w + 1
+        n_d = i_d - p_d + 1
+
+        for p, (i, j, k) in zip(patches, product(range(0,n_h,stride[1]), range(0,n_w,stride[2]), range(0,n_d,stride[3]))):
+            img[i:i + p_h, j:j + p_w, k:k + p_d] += p
+            img_overlapped[i:i + p_h, j:j + p_w, k:k + p_d] += 1
 
 
-    img /= img_overlapped
+        img /= img_overlapped
 
     return img
+
+
+# def reconstruct_from_patches_nd(patches, image_shape, stride):
+#     # modified version of sklearn.feature_extraction.image.reconstruct_from_patches_2d
+#     # It can make only one image
+#     i_h, i_w = image_shape[:2]
+#     p_h, p_w = patches.shape[1:3]
+#     img = np.zeros(image_shape)
+#     img_overlapped = np.zeros(image_shape)
+#
+#     n_h = i_h - p_h + 1
+#     n_w = i_w - p_w + 1
+#     for p, (i, j) in zip(patches, product(range(0,n_h,stride), range(0,n_w,stride))):
+#         if patches.ndim == 3:
+#             img[i:i + p_h, j:j + p_w] += p
+#             img_overlapped[i:i + p_h, j:j + p_w] += 1
+#         elif patches.ndim == 4:
+#             img[i:i + p_h, j:j + p_w, :] += p
+#             img_overlapped[i:i + p_h, j:j + p_w, :] += 1
+#
+#
+#     img /= img_overlapped
+#
+#     return img
 
 def discard_patch_idx(input, cut_line):
     n_non_zero = np.count_nonzero(input, axis=tuple(i for i in range(input.ndim) if not i == 0)) / np.prod(input.shape[1:])

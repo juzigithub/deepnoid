@@ -1,3 +1,4 @@
+# import cifar10_pickle as cifar10
 import tensorflow as tf
 import tensorlayer as tl
 import os

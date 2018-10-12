@@ -6,8 +6,11 @@
 MODE = 'linux'
 GPU = '6'
 SAVE_TRAIN_DATA_PATH = '/mnt/sdb/mspark/data/brain_aneurysm_yonsei/'      # train
+SAVE_VALID_DATA_PATH ##################################################
 DATA_PATH = '/mnt/sdb/bjh/Brain_Aneurysm_dataset/'
+VAL_DATA_PATH ################################################
 TRAIN_FILE_NAME = 'aneurysm_train.npy'
+VAL_FILE_NAME = 'aneurysm_val.npy' ##########################################################
 
 # Window #
 # MODE = 'window'
@@ -23,8 +26,8 @@ TRAIN_FILE_NAME = 'aneurysm_train.npy'
 
 ###  File setting ###
 # DATA_FILE_TYPE = 'npy'
-# REBUILD_HM_DATA = False
-# HM_THRESHOLD_TYPE = 'fuzzy_log'
+REBUILD_HM_DATA = False
+HM_THRESHOLD_TYPE = 'fuzzy_log'
 REBUILD_TRAIN_DATA = False     # train_mobile.py
 REBUILD_VAL_DATA = False      # train_mobile.py
 # REBUILD_TASK1_VAL_DATA = False
@@ -41,10 +44,10 @@ PATCH_STRIDE = 16
 # PATCH_NCR_CUTLINE = 1e-10  # 0.05
 # PATCH_WT_CUTLINE = 0       # 0.20
 # VAL_PATCH_RATIO = 0.25      # 0.05
-# N_PATCH_TO_IMG = (((IMG_SIZE[0] - PATCH_SIZE) // PATCH_STRIDE) + 1) * (((IMG_SIZE[1] - PATCH_SIZE) // PATCH_STRIDE) + 1)
+N_PATCH_TO_IMG = (((IMG_SIZE[0] - PATCH_SIZE) // PATCH_STRIDE) + 1) * (((IMG_SIZE[1] - PATCH_SIZE) // PATCH_STRIDE) + 1) ##############################
 # USED_MODALITY = ['flair', 't1', 't1ce', 't2']
 N_INPUT_CHANNEL = 1
-# LANDMARK_DIVIDE = 10
+LANDMARK_DIVIDE = 10
 RGB_CHANNEL = 1
 N_CLASS = 2
 # TRAIN_LABEL = [0, 1, 2, 3]
@@ -59,7 +62,7 @@ SAVING_EPOCH = 1                # save model/img every SAVING_EPOCH
 BATCH_SIZE = 20
 INIT_N_FILTER = 32              # output n_channel(n_filter) of first conv layer
 ACTIVATION_FUNC = 'elu'         # relu, lrelu, elu, prelu, selu
-LOSS_FUNC = 'dice_sum'          # dice, focal, cross_entropy, dice_sum, huber, weighted_cross_entropy
+LOSS_FUNC = 'dice_sum'          # g_dice, dice, focal, cross_entropy, dice_sum, huber, weighted_cross_entropy
 LAMBDA = [0.2, 0.8]   # weight of each loss [bg, ncr, ed, et]
 OPTIMIZER = 'rmsprop'           # adam, rmsprop, sgd
 INIT_LEARNING_RATE = 5e-3

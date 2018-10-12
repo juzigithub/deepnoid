@@ -1,3 +1,4 @@
+# import cifar10_pickle as cifar10
 import tensorflow as tf
 import tensorlayer as tl
 import os
@@ -44,7 +45,8 @@ class Train:
                                                                      staircase=cfg.DECAY_STAIRCASE,
                                                                      name='learning_rate')
 
-        self.optimizer = utils.select_optimizer(cfg.OPTIMIZER, exponential_decay_learning_rate, self.model.loss, global_step) ######################################
+        self.optimizer = utils.select_optimizer(cfg.OPTIMIZER, exponential_decay_learning_rate, self.model.loss, global_step,
+                                                tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='detector_pretrain')) ######################################
 
 
     def train(self):
@@ -58,9 +60,9 @@ class Train:
             #  Saving a model is saving variables such as weights, ans we call it as ckpt(check point file) in tensorflow
             # It's a tensorflow class saving ckpt file
             # saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain'))
-            saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES))
-            # saver2 = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain')+
-            #                                                  tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='rpn_pretrain')+
+            # saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES))
+            saver = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='feature_extractor_pretrain')+
+                                                             tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='rpn_pretrain'))
             #                                                  tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='detector_pretrain'))
             # save graphs from tensorboard
             saver2 = tf.train.Saver(max_to_keep=50, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES))
@@ -72,7 +74,7 @@ class Train:
             sess.run(tf.global_variables_initializer())
 
             if self.restore:
-                saver.restore(sess, self.ckpt_path + 'detector_weights.ckpt')
+                saver.restore(sess, self.ckpt_path + 'rpn_weights.ckpt')
 
             print("BEGIN TRAINING")
 

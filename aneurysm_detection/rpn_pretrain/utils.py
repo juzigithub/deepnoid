@@ -1682,7 +1682,7 @@ def xception_depthwise_separable_convlayer3(name, inputs, channel_n, last_stride
 #                                                    Result Function                                                        #
 #############################################################################################################################
 
-def masking_rgb(img, color=None):
+def masking_rgb(img, color=None, multiply=255):
     if len(np.shape(img)) <= 2:
         _img = np.expand_dims(img, axis=3)
     else:
@@ -1702,7 +1702,7 @@ def masking_rgb(img, color=None):
         B = G = R = _img
 
     concat_img = np.concatenate((B, G, R), axis=-1)
-    out_img = concat_img * 255
+    out_img = concat_img * multiply
 
     return out_img
 
@@ -3125,7 +3125,7 @@ def detection_targets_graph(proposals, gt_class_ids, gt_boxes, config):
     roi_gt_class_ids = tf.pad(roi_gt_class_ids, [(0, N + P)])
     deltas = tf.pad(deltas, [(0, N + P), (0, 0)])
 
-    return rois, roi_gt_class_ids, deltas, positive_indices, overlaps ##########################################
+    return rois, roi_gt_class_ids, deltas
 
 def overlaps_graph(boxes1, boxes2):
     """Computes IoU overlaps between two sets of boxes.

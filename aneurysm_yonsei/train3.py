@@ -86,8 +86,10 @@ class Train:
             total_training_time = 0
 
             whole = np.load(cfg.SAVE_TRAIN_DATA_PATH + 'aneurysm_train.npy')
+            print('111',len(whole))
             ########
             whole = whole[:100]
+            print('111', len(whole))
             ########
             train_ratio = int(len(whole) * 0.9)
             train_sets = whole[:train_ratio]
