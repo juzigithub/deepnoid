@@ -17,7 +17,7 @@ label_dic = {}
 
 for l_dir in label_dir_list:
 
-    inputs = np.load(os.path.join(INPUT_PATH, l_dir, l_dir + '.npz'))['id']
+    inputs = np.load(os.path.join(INPUT_PATH, l_dir, l_dir + '.npz'))[l_dir]
     n_files, height, width = inputs.shape
     inputs = inputs.reshape((n_files, -1))
     inputs = scale(inputs, axis=1)

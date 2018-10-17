@@ -307,7 +307,7 @@ class Model:
             pooled_feature_maps = utils.roi_pooling(proposals, feature_maps, config.POOLED_SIZE, feature_pyramid=False)
             print('pooled', pooled_feature_maps)
 
-            for i in range(3):
+            for i in range(5):
                 pooled_feature_maps = utils.residual_block_dw_dr(name='detector_conv{}'.format(i),
                                                                  inputs=pooled_feature_maps,
                                                                  channel_n=channel_n,

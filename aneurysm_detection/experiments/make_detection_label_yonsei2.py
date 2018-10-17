@@ -9,7 +9,7 @@ label_dir_list = os.listdir(LABEL_PATH)
 label_dir_list = sorted(label_dir_list)
 
 for l_dir in label_dir_list:
-    labels = np.load(os.path.join(LABEL_PATH, l_dir, l_dir + '_LabelData.npz'))['id'].astype(np.uint8)
+    labels = np.load(os.path.join(LABEL_PATH, l_dir, l_dir + '_LabelData.npz'))[l_dir].astype(np.uint8)
     for idx, label in enumerate(labels):
         _, _, stats, _ = cv2.connectedComponentsWithStats(label)
         label_areas = stats[1:, cv2.CC_STAT_AREA]
