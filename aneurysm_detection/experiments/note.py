@@ -37,7 +37,19 @@ import numpy as np
 # print(np.std(a, axis=1))
 # print(a - np.mean(a, axis=1).reshape(3, -1))
 
+aa = []
+a = np.load('/mnt/sdb/mspark/data/brain_aneurysm_yonsei/npz/input/SEVSH_BA_000001/SEVSH_BA_000001.npz')['SEVSH_BA_000001']
+b = np.load('/mnt/sdb/mspark/data/brain_aneurysm_yonsei/npz/input/SEVSH_BA_000002/SEVSH_BA_000002.npz')['SEVSH_BA_000002']
+aa.append(a)
+aa.append(b)
+aa = np.array(aa)
+print(aa.shape)
+aa = np.concatenate(aa, axis=0)
+print(aa.shape)
 
-a = np.load('/home/mspark/deepnoid/data/label_3dce.npz')['SEVSH_BA_000002']
-print(a.shape)
-print(a)
+aa = aa.reshape(-1, 256, 256)
+print(aa.shape)
+
+
+# print(a.shape)
+# print(a)

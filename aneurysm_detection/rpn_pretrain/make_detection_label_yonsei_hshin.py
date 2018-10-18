@@ -32,9 +32,6 @@ def save_bbox_input(data_path, input_path, save_path):
             z_index.append(int(base_name))
         input = np.load(os.path.join(input_path, id, id + '.npz'))
         imgs = input[id]
-        #####
-        '여기요'
-        #####
         img_4d = np.vstack([imgs[np.newaxis, :, :, :] for n in range(len(imgs))])
         new_img = np.stack([img_4d[z, np.clip(range(z - 4, z + 5), a_min=0, a_max=len(img_4d)), :, :] for z in z_index])
         dict[id] = new_img
