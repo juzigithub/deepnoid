@@ -16,7 +16,7 @@ class Model:
         channel_n = cfg.INIT_N_FILTER
 
         ### Feature Extractor (Conv1~5) ###
-        feature_maps = self.feature_extractor(self.X, channel_n, cfg.PRETRAIN_N_LAYERS)
+        feature_maps = self.feature_extractor(self.X, channel_n)
 
         ### RPN ###
         rpn_feature_maps = tf.expand_dims(feature_maps[tf.shape(feature_maps)[0]//2], axis=0)
@@ -81,23 +81,24 @@ class Model:
                                                               cfg)
         return detection_outputs
 
-    def feature_extractor(self, inputs, channel_n, n_layer):
+    def feature_extractor(self, inputs, channel_n):
         with tf.variable_scope('feature_extractor_pretrain'):
             l = inputs
-            for idx in range(n_layer):
-                l = utils.residual_block_dw_dr(name='downconv_{}'.format(idx),
-                                               inputs=l,
-                                               channel_n=channel_n,
-                                               width_mul=1.0,
-                                               group_n=cfg.GROUP_N,
-                                               drop_rate=self.drop_rate,
-                                               act_fn=cfg.ACTIVATION_FUNC,
-                                               norm_type=cfg.NORMALIZATION_TYPE,
-                                               training=self.training,
-                                               idx=idx)
+            for idx in range(cfg.N_DOWNSAMPLING + 1):
+                for i in range(cfg.N_EACH_DOWN_LAYERS[idx]):
+                    l = utils.residual_block_dw_dr(name='downconv_{}_{}'.format(idx, i),
+                                                   inputs=l,
+                                                   channel_n=channel_n,
+                                                   width_mul=1.0,
+                                                   group_n=cfg.GROUP_N,
+                                                   drop_rate=self.drop_rate,
+                                                   act_fn=cfg.ACTIVATION_FUNC,
+                                                   norm_type=cfg.NORMALIZATION_TYPE,
+                                                   training=self.training,
+                                                   idx=i)
 
-                if channel_n < 2 ** 11:
-                    channel_n *= 2
+                    if channel_n < 2 ** 10:
+                        channel_n *= 2
 
                 if idx + 1 <= cfg.N_DOWNSAMPLING:
                     l = utils.maxpool(name='maxpool_{}'.format(idx),
