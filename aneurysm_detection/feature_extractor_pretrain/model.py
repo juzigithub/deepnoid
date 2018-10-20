@@ -50,23 +50,50 @@ class Model:
     #             print(l)
     #     return l
 
-    def feature_extractor(self, inputs, channel_n, n_layer):
+    # def feature_extractor(self, inputs, channel_n, n_layer):
+    #     with tf.variable_scope('feature_extractor_pretrain'):
+    #         l = inputs
+    #         for idx in range(n_layer):
+    #             l = utils.residual_block_dw_dr(name='downconv_{}'.format(idx),
+    #                                            inputs=l,
+    #                                            channel_n=channel_n,
+    #                                            width_mul=1.0,
+    #                                            group_n=cfg.GROUP_N,
+    #                                            drop_rate=self.drop_rate,
+    #                                            act_fn=cfg.ACTIVATION_FUNC,
+    #                                            norm_type=cfg.NORMALIZATION_TYPE,
+    #                                            training=self.training,
+    #                                            idx=idx)
+    #
+    #             if channel_n < 2 ** 11:
+    #                 channel_n *= 2
+    #
+    #             if idx + 1 <= cfg.N_DOWNSAMPLING:
+    #                 l = utils.maxpool(name='maxpool_{}'.format(idx),
+    #                                   inputs=l,
+    #                                   pool_size=[2, 2],
+    #                                   strides=[2, 2],
+    #                                   padding='same')
+    #             print(l)
+    #     return l
+    def feature_extractor(self, inputs, channel_n):
         with tf.variable_scope('feature_extractor_pretrain'):
             l = inputs
-            for idx in range(n_layer):
-                l = utils.residual_block_dw_dr(name='downconv_{}'.format(idx),
-                                               inputs=l,
-                                               channel_n=channel_n,
-                                               width_mul=1.0,
-                                               group_n=cfg.GROUP_N,
-                                               drop_rate=self.drop_rate,
-                                               act_fn=cfg.ACTIVATION_FUNC,
-                                               norm_type=cfg.NORMALIZATION_TYPE,
-                                               training=self.training,
-                                               idx=idx)
+            for idx in range(cfg.N_DOWNSAMPLING + 1):
+                for i in range(cfg.N_EACH_DOWN_LAYERS[idx]):
+                    l = utils.residual_block_dw_dr(name='downconv_{}_{}'.format(idx, i),
+                                                   inputs=l,
+                                                   channel_n=channel_n,
+                                                   width_mul=1.0,
+                                                   group_n=cfg.GROUP_N,
+                                                   drop_rate=self.drop_rate,
+                                                   act_fn=cfg.ACTIVATION_FUNC,
+                                                   norm_type=cfg.NORMALIZATION_TYPE,
+                                                   training=self.training,
+                                                   idx=i)
 
-                if channel_n < 2 ** 11:
-                    channel_n *= 2
+                    if channel_n < 2 ** 10:
+                        channel_n *= 2
 
                 if idx + 1 <= cfg.N_DOWNSAMPLING:
                     l = utils.maxpool(name='maxpool_{}'.format(idx),
@@ -84,7 +111,8 @@ class Model:
             _, h, w, channel_n = l.get_shape().as_list()
 
             for idx in range(n_layer):
-                channel_n //= 2
+                if channel_n >= 2**6:
+                    channel_n //= 2
 
                 l = utils.residual_block_dw_dr(name='upconv_{}'.format(idx),
                                                inputs=l,
@@ -96,7 +124,7 @@ class Model:
                                                norm_type=cfg.NORMALIZATION_TYPE,
                                                training=self.training,
                                                idx=idx)
-                if idx >= cfg.PRETRAIN_N_LAYERS - cfg.N_DOWNSAMPLING:
+                if idx >= n_layer - cfg.N_DOWNSAMPLING:
                     h *= 2
                     w *= 2
                     l = utils.select_upsampling(name='upsampling_{}'.format(idx),
@@ -118,7 +146,7 @@ class Model:
 
         inputs = tf.identity(self.X)
         channel_n = cfg.INIT_N_FILTER
-        inputs = self.feature_extractor(inputs, channel_n, cfg.PRETRAIN_N_LAYERS)
+        inputs = self.feature_extractor(inputs, channel_n)
 
         # inputs_shape = tf.shape(inputs)
         inputs_shape = inputs.get_shape().as_list()
@@ -136,8 +164,8 @@ class Model:
         # inputs = tf.layers.dense(inputs, inputs_shape[1]*inputs_shape[2]*inputs_shape[3]/2, activation=tf.nn.elu)
         inputs = tf.layers.dense(inputs, inputs_shape[1] * inputs_shape[2] * inputs_shape[3], activation=tf.nn.elu)
         inputs = tf.reshape(inputs, reshaped_dim)
-
-        outputs = self.reconstructor(inputs, 3, cfg.PRETRAIN_N_LAYERS)
+        print(inputs)
+        outputs = self.reconstructor(inputs, 3, 5)
 
         # outputs = utils.flatten('flatten2', inputs)
         # outputs = tf.sigmoid(inputs)

@@ -33,6 +33,7 @@ DECAY_STAIRCASE = True
 NORMALIZATION_TYPE = 'group'    # batch, group
 PRETRAIN_N_LAYERS = 12
 N_DOWNSAMPLING = 3
+N_EACH_DOWN_LAYERS = [2, 3, 3, 4]
 UPSAMPLING_TYPE = 'resize'         # resize, transpose, add, concat, avgpool
 GROUP_N = 4                     # group size of group_conv & group_norm
 INIT_DROPOUT_RATE = 0.2

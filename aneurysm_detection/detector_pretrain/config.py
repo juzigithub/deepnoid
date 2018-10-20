@@ -3,14 +3,25 @@ import numpy as np
 
 ### Path info ###
 # snu #
+# MODE = 'linux'
+# GPU = '6'
+# INPUT_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/input_dcm_original/'
+# TXT_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/label/'
+# DCM_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/input_dcm_original/*/*/*/'
+# LABEL_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/label/*/*/*/'
+# NPZ_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/npz/'
+# yonsei #
 MODE = 'linux'
 GPU = '6'
-INPUT_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/input_dcm_original/'
-TXT_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/label/'
-DCM_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/input_dcm_original/*/*/*/'
-LABEL_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/label/*/*/*/'
-NPZ_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/train/npz/'
+# INPUT_PATH = '/mnt/sdb/mspark/data/brain_aneurysm_yonsei/npz/input/'
+# LABEL_PATH = '/mnt/sdb/mspark/data/brain_aneurysm_yonsei/npz/input'
+NPZ_PATH = '/mnt/sdb/mspark/data/brain_aneurysm_yonsei/npz/total/'
 
+TEST_INPUT_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/test/input_dcm_original/'
+TEST_LABEL_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/test/label/'
+TEST_NPZ_PATH = '/mnt/sdb/mspark/data/Brain_aneurysm_newest/test/npz/'
+
+###  File setting ###
 RESTORE = False                 # load weights file
 PATH_SLASH = '/' if MODE == 'linux' else '\\'
 
@@ -18,6 +29,8 @@ PATH_SLASH = '/' if MODE == 'linux' else '\\'
 IMG_SIZE = [256, 256]         # axial : [192, 192], sagittal : [155, 192], coronal : [155, 192]
 POOLED_SIZE = [8, 8]
 N_3D_CONTEXT = 9
+N_INPUT_CHANNEL = 3
+N_CLASS = 2
 
 ### Common ###
 EPOCHS = 100                     # epochs
@@ -25,6 +38,7 @@ SAVING_EPOCH = 1                # save model/img every SAVING_EPOCH
 BATCH_SIZE = 1
 INIT_N_FILTER = 48              # output n_channel(n_filter) of first conv layer
 ACTIVATION_FUNC = 'elu'         # relu, lrelu, elu, prelu, selu
+LAMBDA = [0.2, 0.8]   # weight of each loss [bg, ncr, ed, et]
 OPTIMIZER = 'adam'           # adam, rmsprop, sgd
 INIT_LEARNING_RATE = 1e-6
 DECAY_RATE = 0.9
@@ -33,6 +47,7 @@ DECAY_STAIRCASE = True
 NORMALIZATION_TYPE = 'group'    # batch, group
 PRETRAIN_N_LAYERS = 12
 N_DOWNSAMPLING = 3
+N_EACH_DOWN_LAYERS = [2, 3, 3, 4]
 UPSAMPLING_TYPE = 'resize'         # resize, transpose, add, concat, avgpool
 GROUP_N = 4                     # group size of group_conv & group_norm
 INIT_DROPOUT_RATE = 0.2
@@ -56,6 +71,6 @@ RPN_NMS_THRESHOLD = 0.7
 ### detector ###
 TRAIN_ROIS_PER_IMAGE = 200
 ROI_POSITIVE_RATIO = 0.33
-DETECTION_MIN_CONFIDENCE = 0.3 #################### 0.7
+DETECTION_MIN_CONFIDENCE = 0.9 #################### 0.7
 DETECTION_MAX_INSTANCES = 10
 DETECTION_NMS_THRESHOLD = 0.3

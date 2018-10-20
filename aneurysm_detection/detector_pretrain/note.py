@@ -22,5 +22,14 @@ import tensorflow as tf
 #     # img = scale(img)
 #     img = (img - np.mean(img)) / np.max(img)
 #     print('z-score',img.shape, np.min(img), np.max(img))
-a = np.array([1,2,3])
-print(a)
+
+# import pydicom as dicom
+
+# path = '/home/mspark/deepnoid/data/ser401img00001.dcm'
+# dcm = dicom.read_file(path)
+# print(dcm.PixelSpacing)
+# print(dcm.SliceThickness)
+
+a = 1
+
+print(type(a) == int)

@@ -102,7 +102,7 @@ class Train:
 
             for epoch in range(cfg.EPOCHS):
                 for i in range(5):
-                    tot_data = np.load(os.path.join(cfg.NPZ_PATH, 'feature_extractor_pretrain_input_ori_{}_{}.npz'.format(cfg.IMG_SIZE[0], i)))['chunk{}'.format(i)]
+                    tot_data = np.load(os.path.join(cfg.NPZ_PATH, 'input_3dce_feature_extractor_{}.npz'.format(i)))['chunk{}'.format(i)]
                     # tot_data = np.load(os.path.join(cfg.NPZ_PATH, 'feature_extractor_pretrain_input_ori_{}_{}.npy'.format(cfg.IMG_SIZE[0], i)))
                     len_tot_data = np.shape(tot_data)[0]
                     train_X = tot_data[:int(len_tot_data * 0.8)]
@@ -143,8 +143,6 @@ class Train:
                                         self.model.drop_rate: drop_rate}
 
                         cost, _ = sess.run([self.model.loss, self.optimizer], feed_dict=tr_feed_dict)
-
-                        print(cost)
 
                         # Update Loss Ratio for next step
 
@@ -188,12 +186,12 @@ class Train:
                         one_epoch_result_list.append(loss)
 
 
-                        if epoch % 5 == 0 :
+                        if epoch % 20 == 0 :
                             logit = np.reshape(logit, (-1, cfg.IMG_SIZE[0], cfg.IMG_SIZE[1], 3))
 
 
-                            cv2.imwrite(self.img_path + '/{}_{}_{}_original.png'.format(epoch, i, print_img_idx), utils.masking_rgb(batch_x[0,:,:,1]))
-                            cv2.imwrite(self.img_path + '/{}_{}_{}_reconstruction.png'.format(epoch, i, print_img_idx), utils.masking_rgb(logit[0,:,:,1]))
+                            cv2.imwrite(self.img_path + '/{}_{}_{}_original.png'.format(epoch, i, print_img_idx), utils.masking_rgb(batch_x[0,:,:,1]/np.max(batch_x[0,:,:,1])))
+                            cv2.imwrite(self.img_path + '/{}_{}_{}_reconstruction.png'.format(epoch, i, print_img_idx), utils.masking_rgb(logit[0,:,:,1]/np.max(logit[0,:,:,1])))
                     one_epoch_mean = np.mean(np.array(one_epoch_result_list))
                     self.result = '\nEpoch: {} / {}, Loss : {}\n'.format(epoch, cfg.EPOCHS, one_epoch_mean)
                     print(self.result)
